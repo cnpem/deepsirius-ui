@@ -18,9 +18,8 @@ const server = z.object({
     process.env.VERCEL ? z.string().min(1) : z.string().url(),
   ),
   // Add `.min(1) on ID and SECRET if you want to make sure they're not empty
-  DISCORD_CLIENT_ID: z.string(),
-  DISCORD_CLIENT_SECRET: z.string(),
   LDAP_URI: z.string(),
+  SSH_HOST: z.string(),
 });
 
 /**
@@ -41,9 +40,8 @@ const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-  DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
-  DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
   LDAP_URI: process.env.LDAP_URI,
+  SSH_HOST: process.env.SSH_HOST,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 

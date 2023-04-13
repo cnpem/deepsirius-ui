@@ -21,11 +21,11 @@ export const siteConfig: SiteConfig = {
     },
     {
       title: "First Steps",
-      href: "/sample",
+      href: "/first-steps",
     },
     {
       title: "Docs",
-      href: "/sample",
+      href: "/docs",
     },
   ],
   links: {

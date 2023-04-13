@@ -36,9 +36,10 @@ export function AvatarDrop() {
         {sessionData && (
           <DropdownMenuItem>
             <Icons.user className="mr-2 h-4 w-4" />
-            <span>{sessionData.user?.name}</span>
+            <span className="font-bold">{sessionData.user?.name}</span>
           </DropdownMenuItem>
         )}
+
         <DropdownMenuItem
           onClick={
             sessionData

@@ -19,7 +19,7 @@ import ldap from "ldapjs";
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
-      // id:string;
+      password:string|unknown;
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];
@@ -40,8 +40,16 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "LDAP",
       credentials: {
-        email: { label: "Email", type: "text", placeholder: "user.name@example.com" },
-        password: { label: "Password", type: "password", placeholder: "Password" },
+        email: {
+          label: "Email",
+          type: "text",
+          placeholder: "user.name@example.com",
+        },
+        password: {
+          label: "Password",
+          type: "password",
+          placeholder: "Password",
+        },
       },
       async authorize(credentials): Promise<User | null> {
         if (!credentials) {
@@ -86,18 +94,15 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    session({ session, token }) {
-      if (session.user) {
-        session.user = { name: token.name, email: token.email };
-      }
-      return session;
-    },
+  },
+  pages:{
+    signIn: "/auth/signin"
   },
   theme: {
     colorScheme: "auto", // "auto" | "dark" | "light"
     brandColor: "", // Hex color code
     logo: "/favicon.ico", // Absolute URL to image
-    buttonText: "" // Hex color code
+    buttonText: "", // Hex color code
   },
 };
 

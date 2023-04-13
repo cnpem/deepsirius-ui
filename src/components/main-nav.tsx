@@ -1,5 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { cn } from "~/lib/utils";
 import { type NavItem } from "~/types/nav";
@@ -15,12 +16,14 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 
-
 interface MainNavProps {
   items?: NavItem[];
 }
 
 export function MainNav({ items }: MainNavProps) {
+  const router = useRouter();
+  const pathname = router.pathname;
+
   return (
     <div className="flex gap-6 md:gap-10">
       <div className="hidden items-center space-x-2 md:flex">
@@ -38,7 +41,10 @@ export function MainNav({ items }: MainNavProps) {
                   key={index}
                   href={item.href}
                   className={cn(
-                    "flex items-center text-lg font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-100 sm:text-sm",
+                    pathname === item.href
+                      ? "text-blue-700 dark:text-sky-500"
+                      : "text-slate-500 dark:text-slate-400",
+                    "flex items-center text-lg font-semibold hover:text-slate-900 sm:text-sm dark:hover:text-slate-100",
                     item.disabled && "cursor-not-allowed opacity-80"
                   )}
                 >

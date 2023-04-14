@@ -9,6 +9,7 @@ import {
 import CredentialsProvider from "next-auth/providers/credentials";
 import { env } from "~/env.mjs";
 import ldap from "ldapjs";
+import fs from 'fs';
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -19,7 +20,7 @@ import ldap from "ldapjs";
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
-      password:string|unknown;
+      password: string | unknown;
       // ...other properties
       // role: UserRole;
     } & DefaultSession["user"];
@@ -59,14 +60,13 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
         // You might want to pull this call out so we're not making a new LDAP client on every login attemp
+        // tlsOption: https://stackoverflow.com/questions/31861109/tls-what-exactly-does-rejectunauthorized-mean-for-me
         const client = ldap.createClient({
           url: env.LDAP_URI,
+          tlsOptions:{ ca: [ fs.readFileSync(env.CA_CERT) ] },
         });
-
-        const name = credentials?.email.substring(
-          0,
-          credentials.email.lastIndexOf("@")
-        );
+        const { email, password } = credentials;
+        const name = email.substring(0, email.lastIndexOf("@"));
         // Essentially promisify the LDAPJS client.bind function
         return new Promise((resolve, reject) => {
           client.bind(credentials.email, credentials.password, (error) => {
@@ -76,8 +76,8 @@ export const authOptions: NextAuthOptions = {
               resolve({
                 id: name,
                 name: name,
-                email: credentials.email,
-                password: credentials.password,
+                email: email,
+                password: password,
               });
             }
           });
@@ -95,8 +95,8 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
   },
-  pages:{
-    signIn: "/auth/signin"
+  pages: {
+    signIn: "/auth/signin",
   },
   theme: {
     colorScheme: "auto", // "auto" | "dark" | "light"

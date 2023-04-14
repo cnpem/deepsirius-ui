@@ -20,6 +20,7 @@ const server = z.object({
   // Add `.min(1) on ID and SECRET if you want to make sure they're not empty
   LDAP_URI: z.string(),
   SSH_HOST: z.string(),
+  CA_CERT: z.string(),
 });
 
 /**
@@ -42,6 +43,8 @@ const processEnv = {
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   LDAP_URI: process.env.LDAP_URI,
   SSH_HOST: process.env.SSH_HOST,
+  CA_CERT: process.env.CA_CERT,
+
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 

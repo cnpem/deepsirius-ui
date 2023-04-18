@@ -15,45 +15,24 @@ import {
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { type NodeRendererProps, Tree } from "react-arborist";
+import { type NodeRendererProps, Tree, type NodeApi } from "react-arborist";
 import { File, Folder, FolderOpen } from "lucide-react";
-import { useEffect, useState } from "react";
-import useSWR, { preload } from 'swr';
+import { useCallback, useEffect, useState } from "react";
+import useSWR, { preload } from "swr";
+import { useImmer } from "use-immer";
+import { type Stats } from "fs";
 
 type nodeItem = {
-  custom: {id:string},
   name: string;
   path: string;
+  relativePath: string;
+  type: string;
+  isSymbolicLink: boolean;
+  sizeInBytes: number;
+  size: string;
+  stat: Stats;
   children?: nodeItem[];
 };
-type ResponseError = {
-  message: string
-}
-
-// const data: nodeItem[] = [
-//   { id: "1", name: "Unread", path: "/home"},
-//   { id: "2", name: "Threads",path: "/ibira/scratch/eu" },
-//   {
-//     id: "3",
-//     name: "Chat Rooms",
-//     path: "/home/matheus/",
-//     children: [
-//       { id: "c1", name: "General", path: "/usr/id" },
-//       { id: "c2", name: "Random", path: "/usr/local" },
-//       { id: "c3", name: "Open Source Projects",path: "/passagem/secreta/hehe" },
-//     ],
-//   },
-//   {
-//     id: "4",
-//     name: "Direct Messages",
-//     path: "/chama/no/zap/fml",
-//     children: [
-//       { id: "d1", name: "Alice", path: "/oi/alice" },
-//       { id: "d2", name: "Bob", path: "/vai/cagar/bob" },
-//       { id: "d3", name: "Charlie", path: "/oiiiii" },
-//     ],
-//   },
-// ];
 
 function Node({ node, style, dragHandle }: NodeRendererProps<nodeItem>) {
   const Icon = node.isLeaf ? File : node.isOpen ? FolderOpen : Folder;
@@ -61,13 +40,13 @@ function Node({ node, style, dragHandle }: NodeRendererProps<nodeItem>) {
   return (
     <div style={style} ref={dragHandle} onClick={() => node.toggle()}>
       {node.isSelected ? (
-        <div className="flex bg-slate-300  dark:bg-slate-600 rounded-sm">
-          <Icon className="scale-90 pl-1"/>
+        <div className="flex rounded-sm  bg-slate-300 dark:bg-slate-600">
+          <Icon className="scale-90 pl-1" />
           <span className="ml-1 pr-2">{node.data.name}</span>
         </div>
       ) : (
         <div className="flex">
-          <Icon className="scale-75"/>
+          <Icon className="scale-75" />
           <span className="ml-1">{node.data.name}</span>
         </div>
       )}
@@ -75,59 +54,130 @@ function Node({ node, style, dragHandle }: NodeRendererProps<nodeItem>) {
   );
 }
 
-const fetcher = (url:string) => fetch(url).then((res) => res.json()).then((item:nodeItem)=> new Array<nodeItem>(item))
+type fetchParams = {
+  path: string;
+  url: string;
+};
+function fetcher(props: fetchParams): Promise<nodeItem[]> {
+  const { url, path } = props;
+  const params = { path: path };
+  return fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(params),
+  })
+    .then((res) => {
+      if (res.ok) {
+        return res.json();
+      } else {
+        (err: string) => {
+          throw new Error(err);
+        };
+      }
+    })
+    .then((item: nodeItem) => new Array<nodeItem>(item))
+    .catch((err) => {
+      throw err;
+    });
+}
+function useTree(path: string) {
+  const { data, isLoading } = useSWR<nodeItem[]>(
+    { url: "/api/filesystem", path: path },
+    fetcher,
+    {
+      keepPreviousData: true,
+    }
+  );
 
-
+  return {
+    tree: data,
+    isLoading,
+  };
+}
 export function DialogDemo() {
   useEffect(() => {
-    preload('/api/filesystem', fetcher)
+    preload({ url: "/api/filesystem", path: path }, fetcher);
   }, []);
 
-  const [active, setActive] = useState("");
-  
-  const { data, isLoading } = useSWR<nodeItem[],ResponseError>('/api/filesystem', fetcher);
-  
-  console.log(data)
-  
-  if(isLoading)
-    return <div>{"Loading.."}</div>;
+  const [path, setPath] = useState("/home/matheus");
+  const [open, setOpen] = useState(false);
+  const { tree: initialTree, isLoading } = useTree("/home/matheus");
+  // const initialTree = fetcher({url:"/api/filesystem",path:"/home/matheus"});
+  // const { data:initialTree } = useSWR<nodeItem[]>(
+  //   { url: "/api/filesystem", path: path },
+  //   fetcher
+  // );
+  // const { tree: pathTree, isLoading } = useTree(path);
+
+  const [tree, setTree] = useImmer(initialTree);
+
+  function searchTree(element: nodeItem, matchingName: string) {
+    if (element.name == matchingName) {
+      return element;
+    } else if (element.children != null) {
+      let result = null;
+      for (let i = 0; result == null && i < element.children.length; i++) {
+        result = searchTree(element.children[i], matchingName);
+      }
+      return result;
+    }
+    return null;
+  }
+  const handleActivate = (node: NodeApi<nodeItem>) => {
+    setPath(node.data.path);
+    if (node.data.type === "directory") {
+      const candidate = fetcher({url:"/api/filesystem",path:node.data.path});
+      setTree((draft) => {
+        let n = searchTree(draft[0], node.data.name);
+        n = candidate;
+      });
+    }
+  }
+  if (isLoading) return <div>{"Loading.."}</div>;
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {data && <Button variant="outline">Load</Button>}
+        {tree && <Button variant="outline">Load</Button>}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent className="sm:max-w-[825px]">
         <DialogHeader>
-          <DialogTitle>Edit profile</DialogTitle>
+          <DialogTitle>Select workspace path</DialogTitle>
           <DialogDescription>
-            {"Make changes to your profile here. Click save when you're done."}
+            {
+              "Select the path to the existing workspace or a path to create one."
+            }
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="flex items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Active node:
-            </Label>
-            <Input id="active" disabled value={active} className="col-span-3" />
+          <div className="grid w-full items-center gap-1.5">
+            <Label htmlFor="email">Selected Path</Label>
+            <Input
+              id="path"
+              placeholder="path/to/somewhere"
+              disabled
+              value={path}
+            />
           </div>
           <div className="flex">
             <Tree
-              idAccessor={(d) => d.custom.id}
-              initialData={data}
+              idAccessor={(d) => d.stat.ino.toString()}
+              initialData={tree}
               openByDefault={false}
               disableDrag={true}
-              width={600}
-              className="flex w-full h-full"
+              width={800}
+              className="flex h-full w-full"
               rowClassName="flex w-full h-full"
-              onActivate={(node) => setActive(node.data.path)}
+              onActivate={(node) => handleActivate(node)}
             >
               {Node}
             </Tree>
           </div>
         </div>
         <DialogFooter>
-          <Button className="w-full" type="submit">Select</Button>
+          <Button className="w-full">Select</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

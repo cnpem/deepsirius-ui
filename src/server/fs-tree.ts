@@ -2,13 +2,13 @@ import * as dree from "dree";
 import { type ScanOptions } from "dree";
 
 const options: ScanOptions = {
-  depth: 2,
+  depth: 3,
   hash:false,
   exclude: ["node_modules", "__pycache__"],
   excludeEmptyDirectories: true,
   symbolicLinks:false,
   showHidden: false,
-  stat:true,
+  stat:false,
 };
 
 // export function getChildren(path: string) {

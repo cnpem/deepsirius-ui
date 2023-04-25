@@ -24,7 +24,6 @@ type nodeItem = {
   isSymbolicLink: boolean;
   sizeInBytes: number;
   size: string;
-  stat: Stats;
   children?: nodeItem[];
 };
 
@@ -97,7 +96,7 @@ function useTree(path: string) {
 }
 
 export function FsTreeView() {
-  const home = "/home/matheus";
+  const home = "/";
   const [path, setPath] = useState(home);
   const [open, setOpen] = useState(false);
   const { tree, mutate } = useTree(home);
@@ -178,7 +177,7 @@ export function FsTreeView() {
           </div>
           <div className="flex">
             <Tree
-              idAccessor={(d) => d.stat.ino.toString()}
+              idAccessor={(d) => d.path}
               data={tree}
               openByDefault={false}
               disableDrag={true}

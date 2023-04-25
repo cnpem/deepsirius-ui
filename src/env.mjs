@@ -29,6 +29,7 @@ const server = z.object({
  */
 const client = z.object({
   // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
+  NEXT_PUBLIC_TREE_PATH: z.string(),
 });
 
 /**
@@ -45,6 +46,7 @@ const processEnv = {
   SSH_HOST: process.env.SSH_HOST,
   CA_CERT: process.env.CA_CERT,
 
+  NEXT_PUBLIC_TREE_PATH: process.env.NEXT_PUBLIC_TREE_PATH,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
 };
 

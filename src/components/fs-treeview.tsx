@@ -14,7 +14,7 @@ import { type NodeRendererProps, Tree, type NodeApi } from "react-arborist";
 import { File, Folder, FolderOpen } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
-import { type Stats } from "fs";
+import { env } from "~/env.mjs";
 
 type nodeItem = {
   name: string;
@@ -96,10 +96,10 @@ function useTree(path: string) {
 }
 
 export function FsTreeView() {
-  const home = "/";
-  const [path, setPath] = useState(home);
+  const treePath = env.NEXT_PUBLIC_TREE_PATH;
+  const [path, setPath] = useState(treePath);
   const [open, setOpen] = useState(false);
-  const { tree, mutate } = useTree(home);
+  const { tree, mutate } = useTree(treePath);
   // const [tree, setTree] = useState(new Array<nodeItem>());
 
   // useEffect(()=>{
@@ -154,7 +154,7 @@ export function FsTreeView() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {tree && <Button onClick={()=>setPath(home)} variant="outline">...</Button>}
+        {tree && <Button onClick={()=>setPath(treePath)} variant="outline">...</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[825px]">
         <DialogHeader>

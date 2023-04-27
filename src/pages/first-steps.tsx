@@ -2,9 +2,15 @@ import { Layout } from "~/components/layout";
 import { type NextPage } from "next";
 import Head from "next/head";
 import { FsTreeView } from "~/components/fs-treeview";
+import { useKeyPress } from "~/hooks/key-press";
 ("use client");
 
 const FirstSteps: NextPage = () => {
+  const onKeyPress = (event:KeyboardEvent) => {
+    console.log(`key pressed: ${event.key}`);
+  };
+
+  useKeyPress(['B', 'b'], onKeyPress);
   return (
     <Layout>
       <Head>
@@ -25,3 +31,4 @@ const FirstSteps: NextPage = () => {
   );
 };
 export default FirstSteps;
+

@@ -9,7 +9,7 @@ import {
 import CredentialsProvider from "next-auth/providers/credentials";
 import { env } from "~/env.mjs";
 import ldap from "ldapjs";
-import fs from 'fs';
+import fs from "fs";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -63,7 +63,7 @@ export const authOptions: NextAuthOptions = {
         // tlsOption: https://stackoverflow.com/questions/31861109/tls-what-exactly-does-rejectunauthorized-mean-for-me
         const client = ldap.createClient({
           url: env.LDAP_URI,
-          tlsOptions:{ ca: [ fs.readFileSync(env.CA_CERT) ] },
+          tlsOptions: { ca: [fs.readFileSync(env.CA_CERT)] },
         });
         const { email, password } = credentials;
         const name = email.substring(0, email.lastIndexOf("@"));

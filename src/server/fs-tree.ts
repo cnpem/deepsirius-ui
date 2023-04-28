@@ -2,13 +2,14 @@ import * as dree from "dree";
 import { type ScanOptions } from "dree";
 
 const options: ScanOptions = {
-  depth: 3,
-  hash: false,
+  depth: 2,
+  hash:false,
   exclude: ["node_modules", "__pycache__"],
-  excludeEmptyDirectories: true,
-  symbolicLinks: false,
+  excludeEmptyDirectories: false,
+  symbolicLinks:false,
   showHidden: false,
-  stat: false,
+  stat:false,
+  skipErrors: true,
 };
 
 export async function getChildren(path: string): Promise<dree.Dree> {

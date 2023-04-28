@@ -11,11 +11,14 @@ export const config = {
   api: {
     responseLimit: false,
   },
-}
+};
 
-export default async function handler(req: ExtendedNextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: ExtendedNextApiRequest,
+  res: NextApiResponse
+) {
   const path = req.body.path;
-  
+
   // getChildren(path)
   //   .then((tree) => {
   //     res.status(200).json(tree);
@@ -23,10 +26,10 @@ export default async function handler(req: ExtendedNextApiRequest, res: NextApiR
   //   .catch((err) => {
   //     res.status(500).json(err);
   //   });
-  try{
+  try {
     const tree = await getChildren(path);
     res.status(200).json(tree);
-  } catch{
-    res.status(500).json({error: "failed to fetch directory"});
+  } catch {
+    res.status(500).json({ error: "failed to fetch directory" });
   }
 }

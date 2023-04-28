@@ -3,12 +3,12 @@ import { type ScanOptions } from "dree";
 
 const options: ScanOptions = {
   depth: 2,
-  hash:false,
+  hash: false,
   exclude: ["node_modules", "__pycache__"],
   excludeEmptyDirectories: false,
-  symbolicLinks:false,
+  symbolicLinks: false,
   showHidden: false,
-  stat:false,
+  stat: false,
   skipErrors: true,
 };
 

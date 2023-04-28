@@ -13,9 +13,7 @@ const AuthShowcase: React.FC = () => {
         {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
       </p>
       {sessionData ? (
-        <Button
-          onClick={() => void signOut({ callbackUrl: "/" })}
-        >
+        <Button onClick={() => void signOut({ callbackUrl: "/" })}>
           {"Sign Out"}
         </Button>
       ) : (

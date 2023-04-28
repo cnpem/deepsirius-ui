@@ -8,7 +8,9 @@ import { useHotkeys } from "react-hotkeys-hook";
 const AuthShowcase: React.FC = () => {
   const { data: sessionData } = useSession();
 
-  useHotkeys("ctrl+q", () => sessionData ? void signOut() : console.log("i quit!"));
+  useHotkeys("ctrl+q", () =>
+    sessionData ? void signOut() : console.log("i quit!")
+  );
 
   return (
     <div className="flex flex-col items-center justify-center gap-4">

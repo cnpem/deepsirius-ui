@@ -44,7 +44,7 @@ export function MainNav({ items }: MainNavProps) {
                     pathname === item.href
                       ? "text-blue-700 dark:text-sky-500"
                       : "text-slate-500 dark:text-slate-400",
-                    "flex items-center text-lg font-semibold hover:text-slate-900 sm:text-sm dark:hover:text-slate-100",
+                    "flex items-center text-lg font-semibold hover:text-slate-900 dark:hover:text-slate-100 sm:text-sm",
                     item.disabled && "cursor-not-allowed opacity-80"
                   )}
                 >

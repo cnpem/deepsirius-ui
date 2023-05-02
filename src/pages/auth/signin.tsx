@@ -1,5 +1,4 @@
 import type { GetServerSidePropsContext } from "next";
-import { getServerSession } from "next-auth";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -8,7 +7,7 @@ import { Layout } from "~/components/layout";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { authOptions } from "~/server/auth";
+import { getServerAuthSession } from "~/server/auth";
 import { Icons } from "~/components/icons";
 import Head from "next/head";
 
@@ -114,7 +113,7 @@ export default function SignIn() {
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const session = await getServerAuthSession(context);
 
   // If the user is already logged in, redirect.
   // Note: Make sure not to redirect to the same page

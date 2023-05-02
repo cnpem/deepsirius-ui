@@ -10,6 +10,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { env } from "~/env.mjs";
 import ldap from "ldapjs";
 import fs from "fs";
+import { homedir } from "os";
+import { copySshKeyToRemoteHost, generateSshKeyIfNeeded } from "./remote-job";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -86,11 +88,19 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
-      if (user) {
+    async jwt({ token, user }) {
+      if (user && user.name && user.password) {
+        const keyPath = `${homedir()}/.ssh/remotejob_rsa`;
+        await generateSshKeyIfNeeded(keyPath);
+        await copySshKeyToRemoteHost(
+          keyPath,
+          user.name,
+          env.SSH_HOST,
+          user.password
+        );
         token.email = user.email;
         token.name = user.name;
-        token.password = user.password;
+        token.sshKeyPath = keyPath;
       }
       return token;
     },

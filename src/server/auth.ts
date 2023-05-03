@@ -92,12 +92,7 @@ export const authOptions: NextAuthOptions = {
       if (user && user.name && user.password) {
         const keyPath = `${homedir()}/.ssh/remotejob_rsa`;
         await generateSshKeyIfNeeded(keyPath);
-        await copySshKeyToRemoteHost(
-          keyPath,
-          user.name,
-          env.SSH_HOST,
-          user.password
-        );
+        copySshKeyToRemoteHost(keyPath, user.name, env.SSH_HOST, user.password);
         token.email = user.email;
         token.name = user.name;
         token.sshKeyPath = keyPath;

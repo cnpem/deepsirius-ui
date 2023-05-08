@@ -17,7 +17,6 @@
     "class-variance-authority": "^0.5.1",
     "clsx": "^1.2.1",
     "cmdk": "^0.2.0",
-    "directory-tree": "^3.5.1",
     "dree": "^4.5.2",
     "ldapjs": "^3.0.2",
     "lucide-react": "^0.138.0",

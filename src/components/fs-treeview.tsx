@@ -1,12 +1,12 @@
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogContent,
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -16,6 +16,13 @@ import { useState } from "react";
 import { type nodeItem } from "~/types/nodeItem";
 import { useTree, treeFetcher } from "~/hooks/tree";
 import { env } from "~/env.mjs";
+import { Skeleton } from "./ui/skeleton";
+
+type FsTreeProps = {
+  path: string;
+  handlePathChange: (path: string) => void;
+  width: number;
+};
 
 function Node({ node, style, dragHandle }: NodeRendererProps<nodeItem>) {
   const Icon =
@@ -25,7 +32,7 @@ function Node({ node, style, dragHandle }: NodeRendererProps<nodeItem>) {
     <div style={style} ref={dragHandle} onClick={() => node.toggle()}>
       {node.isSelected ? (
         <div className="flex rounded-sm  bg-slate-300 dark:bg-slate-600">
-          <Icon className="scale-90 pl-1" />
+          <Icon className="scale-100 pl-1" />
           <span className="ml-1 pr-2">{node.data.name}</span>
         </div>
       ) : (
@@ -38,11 +45,42 @@ function Node({ node, style, dragHandle }: NodeRendererProps<nodeItem>) {
   );
 }
 
-export function FsTreeView() {
+export function FsTreeDialog() {
   const treePath = env.NEXT_PUBLIC_TREE_PATH;
   const [path, setPath] = useState(treePath);
   const [open, setOpen] = useState(false);
-  const { tree, mutate } = useTree(treePath);
+
+  const handleOpenChange = (open: boolean) => {
+    setOpen(open);
+    setPath(treePath);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline">...</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[825px]">
+        <DialogHeader>
+          <DialogTitle>Select workspace path</DialogTitle>
+          <DialogDescription>
+            {
+              "Select the path to the existing workspace or a path to create one."
+            }
+          </DialogDescription>
+        </DialogHeader>
+        <FsTree path={path} handlePathChange={setPath} width={800} />
+        <DialogFooter>
+          <Button className="w-full">Select</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function FsTree({ path, handlePathChange, width }: FsTreeProps) {
+  const treePath = env.NEXT_PUBLIC_TREE_PATH;
+  const { tree, mutate, isLoading } = useTree(treePath);
 
   const handleReplaceNode = (nodePath: string, newNode: nodeItem) => {
     if (tree && tree[0]) {
@@ -72,7 +110,7 @@ export function FsTreeView() {
     return node;
   }
   const handleActivate = (node: NodeApi<nodeItem>) => {
-    setPath(node.data.path);
+    handlePathChange(node.data.path);
     if (node.isOpen && node.data.type === "directory") {
       treeFetcher({ url: "/api/filesystem", path: node.data.path })
         .then((updatedNode) => {
@@ -84,53 +122,57 @@ export function FsTreeView() {
     }
   };
 
+  if (isLoading) {
+    return <TreeSkeleton />;
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {tree && (
-          <Button onClick={() => setPath(treePath)} variant="outline">
-            ...
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[825px]">
-        <DialogHeader>
-          <DialogTitle>Select workspace path</DialogTitle>
-          <DialogDescription>
-            {
-              "Select the path to the existing workspace or a path to create one."
-            }
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="email">Selected Path</Label>
-            <Input
-              id="path"
-              placeholder="path/to/somewhere"
-              disabled
-              value={path}
-            />
-          </div>
+    <div className="sm:max-w-[825px]">
+      <div className="grid gap-4 py-4">
+        <div className="grid w-full items-center gap-1.5">
+          <Label htmlFor="email">Selected Path</Label>
+          <Input
+            id="path"
+            placeholder="path/to/somewhere"
+            disabled
+            value={path}
+          />
+        </div>
+        <div className="flex">
+          <Tree
+            idAccessor={(d) => d.path}
+            data={tree}
+            openByDefault={false}
+            disableDrag={true}
+            width={width}
+            className="flex h-full w-full"
+            rowClassName="flex w-full h-full"
+            onActivate={(node) => handleActivate(node)}
+          >
+            {Node}
+          </Tree>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TreeSkeleton() {
+  return (
+    <div className="sm">
+      <div className="grid gap-4 py-4">
+        <div className="grid w-full items-center gap-1.5">
+          <Label htmlFor="email">Selected Path</Label>
           <div className="flex">
-            <Tree
-              idAccessor={(d) => d.path}
-              data={tree}
-              openByDefault={false}
-              disableDrag={true}
-              width={800}
-              className="flex h-full w-full"
-              rowClassName="flex w-full h-full"
-              onActivate={(node) => handleActivate(node)}
-            >
-              {Node}
-            </Tree>
+            <Skeleton className="h-10 w-full" />
           </div>
         </div>
-        <DialogFooter>
-          <Button className="w-full">Select</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <div className="grid grid-cols-6 grid-rows-3 gap-1 sm:max-w-[250px]">
+          <Skeleton className="col-start-1 row-start-1 h-4 w-[80px]" />
+          <Skeleton className="col-start-1 row-start-2 h-4 w-[80px]" />
+          <Skeleton className="col-start-2 row-start-3 h-4 w-[80px]" />
+        </div>
+      </div>
+    </div>
   );
 }

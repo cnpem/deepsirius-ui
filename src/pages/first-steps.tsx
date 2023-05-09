@@ -1,7 +1,7 @@
 import { Layout } from "~/components/layout";
 import { type NextPage } from "next";
 import Head from "next/head";
-import { FsTreeView } from "~/components/fs-treeview";
+import { FsTreeDialog } from "~/components/fs-treeview";
 ("use client");
 
 const FirstSteps: NextPage = () => {
@@ -18,7 +18,7 @@ const FirstSteps: NextPage = () => {
             Eu sou um{" "}
             <span className="text-[hsl(280,100%,70%)]">exemplinho</span>!
           </h1>
-          <FsTreeView />
+          <FsTreeDialog />
         </div>
       </main>
     </Layout>

@@ -18,19 +18,37 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import { useCallback } from "react";
 import { HeroNode } from "~/components/flow";
+import {
+  NetworkNode,
+  WorkspaceNode,
+} from "~/components/workboard/custom-nodes";
 
 const nodeTypes: NodeTypes = {
   special: HeroNode,
+  workspace: WorkspaceNode,
+  network: NetworkNode,
 };
 
 const initialNodes: Node[] = [
   {
     id: "1",
-    position: { x: 0, y: 0 },
+    position: { x: 100, y: 100 },
     data: { label: "Oin", name: "Miles Morales" },
     type: "special",
   },
-  { id: "2", position: { x: 0, y: 100 }, data: { label: "Hue" } },
+  { id: "2", position: { x: 200, y: 300 }, data: { label: "Hue" } },
+  {
+    id: "3",
+    position: { x: 400, y: 400 },
+    data: { path: "Hue1" },
+    type: "workspace",
+  },
+  {
+    id: "4",
+    position: { x: 800, y: 400 },
+    data: { path: "Hue2" },
+    type: "network",
+  },
 ];
 const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
 

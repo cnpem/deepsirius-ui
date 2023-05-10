@@ -8,22 +8,36 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   addEdge,
-  Connection,
-  Edge,
+  type Connection,
+  type Edge,
+  BackgroundVariant,
+  type NodeTypes,
+  type Node,
 } from "reactflow";
 
 import "reactflow/dist/style.css";
 import { useCallback } from "react";
+import { HeroNode } from "~/components/flow";
 
-const initialNodes = [
-  { id: "1", position: { x: 0, y: 0 }, data: { label: "1" } },
-  { id: "2", position: { x: 0, y: 100 }, data: { label: "2" } },
+const nodeTypes: NodeTypes = {
+  special: HeroNode,
+};
+
+const initialNodes: Node[] = [
+  {
+    id: "1",
+    position: { x: 0, y: 0 },
+    data: { label: "Oin", name: "Miles Morales" },
+    type: "special",
+  },
+  { id: "2", position: { x: 0, y: 100 }, data: { label: "Hue" } },
 ];
 const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
 
 const Workboard: NextPage = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const variant = BackgroundVariant.Dots;
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -44,10 +58,11 @@ const Workboard: NextPage = () => {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            nodeTypes={nodeTypes}
           >
-            <Controls className=" [&>button]:dark:bg-slate-700" />
+            <Controls className=" dark:fill-slate-100 [&>button:hover]:dark:bg-slate-500 [&>button]:dark:bg-slate-700 " />
             <MiniMap className="dark:bg-slate-700" />
-            <Background variant={"dots"} gap={12} size={1} />
+            <Background variant={variant} gap={12} size={1} />
           </ReactFlow>
         </div>
       </main>

@@ -15,8 +15,8 @@ export const siteConfig: SiteConfig = {
   description: "Deep Learning UI",
   mainNav: [
     {
-      title: "Foo",
-      href: "/foo",
+      title: "Workboard",
+      href: "/workboard",
     },
     {
       title: "First Steps",

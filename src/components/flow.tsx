@@ -1,5 +1,6 @@
 import React from "react";
 import { Handle, type Node, type NodeProps, Position } from "reactflow";
+import { Button } from "./ui/button";
 
 type NodeData = {
   label?: string;
@@ -15,12 +16,30 @@ function NodeWrapper({
   label: string;
   children: React.ReactNode;
 }) {
+  const [isActivated, setIsActivated] = React.useState(false);
   return (
     <div className="flex h-full flex-col overflow-hidden rounded border border-gray-300 shadow">
       <div className="border-b border-gray-300  px-2 py-1 text-center font-mono text-xs uppercase">
         {label}
       </div>
-      <div className="flex-1 bg-white p-2 dark:bg-slate-700">{children}</div>
+      <div className="flex p-2">
+        <Button
+          className="w-full"
+          variant={"ghost"}
+          onClick={() => setIsActivated((p) => !p)}
+        >
+          {isActivated ? "👍" : "👎"}
+        </Button>
+      </div>
+      {isActivated ? (
+        <div className="flex-1 bg-green-100 p-2 dark:bg-slate-700">
+          {children}
+        </div>
+      ) : (
+        <div className="flex-1 bg-red-100 p-2 dark:bg-slate-700">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

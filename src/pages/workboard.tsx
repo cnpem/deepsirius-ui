@@ -51,7 +51,7 @@ const Workboard: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center ">
-        <div className="h-[50vw] w-[100vw]">
+        <div className="flex h-screen w-full">
           <ReactFlow
             nodes={nodes}
             edges={edges}

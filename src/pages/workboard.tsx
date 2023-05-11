@@ -76,6 +76,7 @@ const Workboard: NextPage = () => {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            attributionPosition="top-right"
             nodeTypes={nodeTypes}
           >
             <Controls className=" dark:fill-slate-100 [&>button:hover]:dark:bg-slate-500 [&>button]:dark:bg-slate-700 " />

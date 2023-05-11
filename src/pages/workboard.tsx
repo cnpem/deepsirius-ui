@@ -17,10 +17,10 @@ import ReactFlow, {
 
 import "reactflow/dist/style.css";
 import { useCallback } from "react";
-import { HeroNode } from "~/components/flow";
 import {
   NetworkNode,
   WorkspaceNode,
+  HeroNode,
 } from "~/components/workboard/custom-nodes";
 
 const nodeTypes: NodeTypes = {

@@ -19,7 +19,7 @@ type FormData = {
 function Form() {
   const router = useRouter();
   // const { callbackUrl } = router.query || "/foo";
-  const callbackUrl = "/foo";
+  const callbackUrl = "/workboard";
   const [error, setError] = useState("");
 
   const {
@@ -119,7 +119,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   // Note: Make sure not to redirect to the same page
   // To avoid an infinite loop!
   if (session) {
-    return { redirect: { destination: "/foo" } };
+    return { redirect: { destination: "/workboard" } };
   }
 
   return {

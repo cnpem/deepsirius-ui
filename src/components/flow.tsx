@@ -50,7 +50,7 @@ export function HeroNode({ data }: NodeProps<NodeData>) {
     <NodeWrapper label={label}>
       <Handle type="target" position={Position.Top} />
       <div className="flex h-full flex-col items-center justify-center">
-        <div className="text-4xl font-bold text-gray-900">🕷</div>
+        <div className="text-4xl font-bold text-gray-900">🕷 </div>
         <div>{name}</div>
       </div>
       <Handle type="source" position={Position.Bottom} />

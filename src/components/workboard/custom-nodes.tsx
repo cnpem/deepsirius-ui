@@ -5,6 +5,7 @@ import {
   type NodeProps,
   Position,
   useNodeId,
+  useNodes,
 } from "reactflow";
 import { Input } from "~/components/ui/input";
 import {
@@ -58,9 +59,17 @@ type WorkspaceNode = Node<WorkspaceNodeData>;
 export function WorkspaceNode({ data }: NodeProps<WorkspaceNodeData>) {
   const { label = "workspace", path = "" } = data;
   const nodeId = useNodeId() || "";
+
   return (
     <NodeWrapper label={label + nodeId}>
-      <Handle type="target" position={Position.Left} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        onConnect={(e) => {
+          console.log("hue");
+          console.log(e.source);
+        }}
+      />
       <div className="flex h-full flex-col items-center justify-center">
         <div>{`I'm the ${label} ${nodeId}`}</div>
         <div>{path}</div>
@@ -91,9 +100,25 @@ type NetworkNode = Node<NetworkNodeData>;
 export function NetworkNode({ data }: NodeProps<NetworkNodeData>) {
   const { label = "network", path = "" } = data;
   const nodeId = useNodeId() || "";
+  const nodes = useNodes();
+
+  // console.log(nodes);
+
+  // const node1 = nodes.find((node) => node.id === '1');
+  // console.log(node1);
+  const handleConnection = (c) => {
+    console.log("handling connection to " + { nodeId });
+    const sourcenode = nodes.find((node) => node.id === c.source);
+    console.log(sourcenode);
+  };
+
   return (
     <NodeWrapper label={label + nodeId}>
-      <Handle type="target" position={Position.Top} />
+      <Handle
+        type="target"
+        position={Position.Top}
+        onConnect={handleConnection}
+      />
       <div className="flex h-full flex-col items-center justify-center">
         {`I'm the ${label}`}
         <div>{path}</div>

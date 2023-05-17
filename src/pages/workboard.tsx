@@ -18,39 +18,41 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import { useCallback } from "react";
 import {
+  DatasetNode,
   NetworkNode,
-  WorkspaceNode,
-  HeroNode,
+  InferenceNode,
 } from "~/components/workboard/custom-nodes";
 
 const nodeTypes: NodeTypes = {
-  special: HeroNode,
-  workspace: WorkspaceNode,
+  dataset: DatasetNode,
   network: NetworkNode,
+  inference: InferenceNode,
 };
 
 const initialNodes: Node[] = [
   {
     id: "1",
-    position: { x: 100, y: 100 },
-    data: { label: "Oin", name: "Miles Morales" },
-    type: "special",
+    position: { x: 200, y: 400 },
+    data: { more: "Im number 3" },
+    type: "dataset",
   },
-  { id: "2", position: { x: 200, y: 300 }, data: { label: "Hue" } },
   {
-    id: "3",
+    id: "2",
     position: { x: 400, y: 400 },
-    data: { path: "Hue1" },
-    type: "workspace",
-  },
-  {
-    id: "4",
-    position: { x: 800, y: 400 },
-    data: { path: "Hue2" },
+    data: { more: "Im number 4" },
     type: "network",
   },
+  {
+    id: "3",
+    position: { x: 800, y: 400 },
+    data: { more: "Im number 4" },
+    type: "inference",
+  },
 ];
-const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
+const initialEdges = [
+  { id: "e1-2", source: "1", target: "2" },
+  { id: "e2-3", source: "2", target: "3" },
+];
 
 const Workboard: NextPage = () => {
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
@@ -79,7 +81,7 @@ const Workboard: NextPage = () => {
             attributionPosition="top-right"
             nodeTypes={nodeTypes}
           >
-            <Controls className=" dark:fill-slate-100 [&>button:hover]:dark:bg-slate-500 [&>button]:dark:bg-slate-700 " />
+            <Controls className="dark:fill-slate-100 [&>button:hover]:dark:bg-slate-500 [&>button]:dark:bg-slate-700" />
             <MiniMap className="dark:bg-slate-700" />
             <Background variant={variant} gap={12} size={1} />
           </ReactFlow>

@@ -17,11 +17,9 @@ import ReactFlow, {
 
 import "reactflow/dist/style.css";
 import { useCallback } from "react";
-import {
-  DatasetNode,
-  NetworkNode,
-  InferenceNode,
-} from "~/components/workboard/custom-nodes";
+import { NetworkNode } from "~/components/workboard/network-node";
+import { DatasetNode } from "~/components/workboard/dataset-node";
+import { InferenceNode } from "~/components/workboard/inference-node";
 
 const nodeTypes: NodeTypes = {
   dataset: DatasetNode,

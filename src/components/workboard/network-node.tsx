@@ -18,6 +18,53 @@ import { Label } from "~/components/ui/label";
 import { Icons } from "~/components/icons";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { createMachine } from "xstate";
+import { useMachine } from "@xstate/react";
+
+const nodeMachine = createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5QFsCGaDGALAlgOzADp9UMAXHANzAGJSLLUywBtABgF1FQAHAe1g4KfPNxAAPRAHY2AVkIAWNgDYATLIA0IAJ6JVADgDMhWQF9TWtJlwFC9KrVhlUAJzIACMi9T58UdlxIIPyCwqJBkgj6ssYAjLJqmjqIsfqqJuaW6KQ2RABGAK6w2jTYYBgA1u5OTEUBYiFCOCJikQqG8upaugixygqKZhYgVjn4+UUlZZXVzmR1sYG8Ak0tEdJyiipdyb2Gqpkj2djjhIXFpVjlVTXzsCyqS8ErYa0pygCc3e-Kg4ejJ1s5ymqDwGDAABt6kFGq91ggZPIlIlvghVIZDP9jrlCGAXC4+C4aC4wF5tNDlqFmuFQJE+l9dqo+oQPkMstZTrAChhwbBYDQAGbjeYECnPKlrWmIfT6X7KKSpKRJHr6WIZQ54PgQOBiAG5BovalvBAAWmUqLNWI5thI5AcBolNIkiAUHw+hH2qp2PQMCitY1s9moDtWTrpbFibEIsWR3r0hmU-sBE2KIbhUoQrvdnticbRsXdrKTOLxBJcaaN8IUqlRqjY2eUjabzcbUmLnO5vPgMMNkudvQjUZj22VKVUvw+fRb0-M5iAA */
+  id: "nodemachine",
+  initial: "inactive",
+  states: {
+    inactive: {
+      on: {
+        activate: "active",
+      },
+    },
+
+    active: {
+      on: { "start training": "busy" },
+    },
+
+    busy: {
+      on: {
+        "check status": [
+          {
+            target: "busy",
+            cond: "training",
+          },
+          {
+            target: "success",
+            cond: "completed",
+          },
+          {
+            target: "error",
+            cond: "error",
+          },
+        ],
+        cancel: "active",
+      },
+    },
+
+    error: {
+      on: { retry: "busy" },
+    },
+    success: {
+      on: { finetune: "busy" },
+    },
+  },
+  predictableActionArguments: true,
+});
 
 type NetworkParams = {
   label: string;
@@ -110,9 +157,10 @@ type NetworkNode = Node<NodeData>;
 export function NetworkNode({ data }: NodeProps<NodeData>) {
   const { label = "network", status = "inactive" } = data;
   const nodeId = useNodeId() || "";
+  const [state, send] = useMachine(nodeMachine);
 
   return (
-    <NodeWrapper label={label + nodeId} status={status}>
+    <NodeWrapper label={label + nodeId} state={state.value.toString()}>
       <Handle type="target" position={Position.Top} />
       <div className="flex h-full flex-col items-center justify-center">
         <div>{`I'm the ${label} ${nodeId}`}</div>
@@ -121,6 +169,16 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
         <AccordionItem value="item-1">
           <AccordionTrigger>Lets props!</AccordionTrigger>
           <AccordionContent>
+            <div>my state now: {state.value.toString()}</div>
+            <div className="flex p-2">
+              <Button onClick={() => send("inactive")}>inactive</Button>
+              <Button onClick={() => send("activate")}>active</Button>
+              <Button onClick={() => send("start training")}>
+                start training
+              </Button>
+              <Button onClick={() => send("check status")}>check status</Button>
+              <Button onClick={() => send("cancel")}>cancel</Button>
+            </div>
             <Form />
           </AccordionContent>
         </AccordionItem>

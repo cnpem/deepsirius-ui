@@ -44,7 +44,7 @@ const initialNodes: Node[] = [
     id: "3",
     position: { x: 800, y: 400 },
     data: { more: "Im number 4" },
-    type: "inference",
+    type: "network",
   },
 ];
 const initialEdges = [

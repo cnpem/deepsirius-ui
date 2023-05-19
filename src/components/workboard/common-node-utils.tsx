@@ -15,78 +15,49 @@ import {
 } from "~/components/ui/accordion";
 import { Button } from "../ui/button";
 
-type NodeStatus = "inactive" | "active" | "busy" | "success" | "error";
-
 export type NodeData = {
   label?: string;
-  status: NodeStatus;
+  status: string;
 };
 
 function SwitchBackground({
-  status,
+  state,
   children,
 }: {
-  status: NodeStatus;
+  state: string;
   children: React.ReactNode;
 }) {
-  switch (status) {
-    case "active": {
-      return (
-        <div className="flex-1 bg-green-100 p-2 dark:bg-green-700">
-          {children}
-        </div>
-      );
-    }
-    case "inactive": {
-      return (
-        <div className="flex-1 bg-gray-100 p-2 dark:bg-gray-400">
-          {children}
-        </div>
-      );
-    }
-    case "busy": {
-      return (
-        <div className="flex-1 bg-yellow-100 p-2 dark:bg-yellow-600">
-          {children}
-        </div>
-      );
-    }
-    case "success": {
-      return (
-        <div className="dark:bg-blue-00 flex-1 bg-blue-200 p-2">{children}</div>
-      );
-    }
-    case "error": {
-      return (
-        <div className="flex-1 bg-red-200 p-2 dark:bg-red-800">{children}</div>
-      );
-    }
-  }
+  return (
+    <div
+      data-state={state}
+      className="flex-1 
+    data-[state=active]:bg-green-100 data-[state=busy]:bg-yellow-100
+    data-[state=error]:bg-red-100 data-[state=inactive]:bg-gray-100
+    data-[state=success]:bg-blue-100 data-[state=active]:dark:bg-green-700
+    data-[state=busy]:dark:bg-yellow-700 data-[state=error]:dark:bg-red-700
+    data-[state=inactive]:dark:bg-gray-700 data-[state=success]:dark:bg-blue-700
+  "
+    >
+      {children}
+    </div>
+  );
 }
 
 export function NodeWrapper({
   label,
+  state,
   children,
 }: {
   label: string;
-  status: NodeStatus;
+  state: string;
   children: React.ReactNode;
 }) {
-  const [status, setStatus] = React.useState<NodeStatus>("inactive");
   return (
     <div className="flex h-full flex-col overflow-hidden rounded border border-slate-300 shadow active:border-slate-800 dark:border-slate-500 dark:active:border-slate-100">
       <div className="border-b border-slate-300  px-2 py-1 text-center font-mono text-xs uppercase dark:border-slate-500">
         {label}
       </div>
-      <div className="flex p-2">
-        <Button onClick={() => setStatus("inactive")}>inactive</Button>
-        <Button onClick={() => setStatus("active")}>active</Button>
-        <Button onClick={() => setStatus("busy")}>busy</Button>
-        <Button onClick={() => setStatus("success")}>success</Button>
-        <Button onClick={() => setStatus("error")}>error</Button>
-      </div>
-      {/* <div>{children}</div> */}
-      <SwitchBackground status={status}>{children}</SwitchBackground>
+      <SwitchBackground state={state}>{children}</SwitchBackground>
     </div>
   );
 }

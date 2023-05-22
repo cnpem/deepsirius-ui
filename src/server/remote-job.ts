@@ -1,6 +1,9 @@
-import { exec } from "child_process";
-import { existsSync } from "fs";
-import { NodeSSH, type Config } from "node-ssh";
+import { exec } from 'child_process';
+import { existsSync } from 'fs';
+import fs from 'fs';
+import { type Config, NodeSSH } from 'node-ssh';
+import os from 'os';
+import path from 'path';
 
 /**
  * Generate an SSH key if it does not exist at the given path
@@ -8,7 +11,7 @@ import { NodeSSH, type Config } from "node-ssh";
  */
 export async function generateSshKeyIfNeeded(path: string): Promise<void> {
   if (!existsSync(path)) {
-    console.log("generating ssh key");
+    console.log('generating ssh key');
     const command = `ssh-keygen -t rsa -b 4096 -f ${path}`;
     await executeCommand(command);
   }
@@ -25,7 +28,7 @@ export function copySshKeyToRemoteHost(
   keyPath: string,
   username: string,
   host: string,
-  password: string
+  password: string,
 ): void {
   const sshOptions: Config = {
     host,
@@ -35,10 +38,10 @@ export function copySshKeyToRemoteHost(
     tryKeyboard: true,
     algorithms: {
       kex: [
-        "diffie-hellman-group1-sha1",
-        "diffie-hellman-group14-sha1",
-        "diffie-hellman-group-exchange-sha1",
-        "diffie-hellman-group-exchange-sha256",
+        'diffie-hellman-group1-sha1',
+        'diffie-hellman-group14-sha1',
+        'diffie-hellman-group-exchange-sha1',
+        'diffie-hellman-group-exchange-sha256',
       ],
     },
   };
@@ -47,7 +50,7 @@ export function copySshKeyToRemoteHost(
   conn
     .connect(sshOptions)
     .then(() => {
-      console.log("connected");
+      console.log('connected');
       return;
     })
     .catch((err) => {
@@ -58,15 +61,15 @@ export function copySshKeyToRemoteHost(
         .connect(sshOptions)
         .then(() => {
           conn
-            .putFile(`${keyPath}.pub`, ".remotejob")
+            .putFile(`${keyPath}.pub`, '.remotejob')
             .then(() => {
-              console.log("copied key");
+              console.log('copied key');
               conn
                 .execCommand(
-                  `echo $(cat .remotejob) >> .ssh/authorized_keys && rm .remotejob`
+                  `echo $(cat .remotejob) >> .ssh/authorized_keys && rm .remotejob`,
                 )
                 .then(() => {
-                  console.log("added key to authorized_keys");
+                  console.log('added key to authorized_keys');
                   conn.dispose();
                   return;
                 })
@@ -102,7 +105,7 @@ export function sshConnectAndRunCommand(
   { keyPath, password }: { keyPath?: string; password?: string },
   username: string,
   host: string,
-  command: string
+  command: string,
 ): void {
   const sshOptions: Config = {
     host,
@@ -113,10 +116,10 @@ export function sshConnectAndRunCommand(
     tryKeyboard: true,
     algorithms: {
       kex: [
-        "diffie-hellman-group1-sha1",
-        "diffie-hellman-group14-sha1",
-        "diffie-hellman-group-exchange-sha1",
-        "diffie-hellman-group-exchange-sha256",
+        'diffie-hellman-group1-sha1',
+        'diffie-hellman-group14-sha1',
+        'diffie-hellman-group-exchange-sha1',
+        'diffie-hellman-group-exchange-sha256',
       ],
     },
   };
@@ -125,7 +128,7 @@ export function sshConnectAndRunCommand(
   conn
     .connect(sshOptions)
     .then(() => {
-      console.log("connected");
+      console.log('connected');
       conn
         .execCommand(command)
         .then((result) => {
@@ -158,3 +161,74 @@ async function executeCommand(command: string): Promise<string> {
     });
   });
 }
+
+// Function to listen to job state
+export async function checkJobState(jobId: string) {
+  try {
+    const command = `sacct -j ${jobId} --format=State --parsable2`;
+
+    const output = await executeCommand(command);
+    const lines = output.split('\n');
+    const state = lines[1]?.split('|')[0];
+
+    return state;
+  } catch (error) {
+    console.error('Error occurred:', error);
+  }
+}
+
+// Function to cancel a Slurm job
+export function cancelJob(jobId: string) {
+  return new Promise((resolve, reject) => {
+    const command = `scancel ${jobId}`;
+    executeCommand(command)
+      .then((output) => {
+        resolve(output);
+      })
+      .catch((error) => {
+        reject(error);
+      });
+  });
+}
+
+// Function to create a temporary script file with sbatch content
+function createTempScript(sbatchContent: string) {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deepsirius-'));
+  const scriptPath = path.join(tempDir, 'temp_script.sbatch');
+  fs.writeFileSync(scriptPath, sbatchContent, { mode: '0700' });
+  return scriptPath;
+}
+
+type jobInfo = {
+  jobId?: string;
+  jobName?: string;
+};
+// Function to submit an sbatch job with a temporary script file
+export function submitJob(sbatchContent: string): Promise<jobInfo> {
+  return new Promise((resolve, reject) => {
+    const scriptPath = createTempScript(sbatchContent);
+    const command = `sbatch --parsable ${scriptPath}`;
+    executeCommand(command)
+      .then((output) => {
+        const outputLines = output.split('\n');
+        const jobId = outputLines[0];
+        const jobName = outputLines[1];
+        resolve({ jobId, jobName });
+      })
+      .catch((error) => {
+        reject(error);
+      });
+  });
+}
+
+export const sbatchDummyContent = `#!/bin/bash
+#SBATCH --job-name=deepsirius-ui
+#SBATCH --output=output-do-pai.txt
+#SBATCH --error=error-dos-outros.txt
+#SBATCH --ntasks=1
+#SBATCH --partition=dev-gcd
+
+
+echo "Hello, world!"
+sleep 10
+echo "Job completed."`;

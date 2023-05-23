@@ -1,26 +1,26 @@
-import type { GetServerSidePropsContext } from "next";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/router";
-import { useState } from "react";
-import { type SubmitHandler, useForm } from "react-hook-form";
-import { Layout } from "~/components/layout";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { getServerAuthSession } from "~/server/auth";
-import { Icons } from "~/components/icons";
-import Head from "next/head";
+import type { GetServerSidePropsContext } from 'next';
+import { signIn } from 'next-auth/react';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
+import { type SubmitHandler, useForm } from 'react-hook-form';
+import { Icons } from '~/components/icons';
+import { Layout } from '~/components/layout';
+import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import { getServerAuthSession } from '~/server/auth';
 
 type FormData = {
   email: string;
   password: string;
 };
-
 function Form() {
   const router = useRouter();
-  // const { callbackUrl } = router.query || "/foo";
-  const callbackUrl = "/workboard";
-  const [error, setError] = useState("");
+  const query = router.query;
+  const callbackUrl = (query.callbackUrl as string) || '/workboard';
+  // const callbackUrl = '/workboard';
+  const [error, setError] = useState('');
 
   const {
     register,
@@ -29,7 +29,7 @@ function Form() {
   } = useForm<FormData>();
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
-      const res = await signIn("credentials", {
+      const res = await signIn('credentials', {
         email: data.email,
         password: data.password,
         callbackUrl: callbackUrl,
@@ -38,7 +38,7 @@ function Form() {
       if (!res?.error) {
         await router.push(callbackUrl);
       } else {
-        setError("Invalid email or password!");
+        setError('Invalid email or password!');
       }
     } catch (err) {
       console.log(err);
@@ -72,7 +72,7 @@ function Form() {
         )}
         <Input
           placeholder="user.name@example.com"
-          {...register("email", { required: "Email is required!" })}
+          {...register('email', { required: 'Email is required!' })}
         />
       </div>
       <div className="grid w-full items-center gap-1.5">
@@ -85,7 +85,9 @@ function Form() {
         <Input
           type="password"
           placeholder="Password"
-          {...register("password", { required: "Password is required!" })}
+          {...register('password', {
+            required: 'Password is required!',
+          })}
         />
       </div>
       <Button className="w-full" type="submit">
@@ -119,7 +121,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   // Note: Make sure not to redirect to the same page
   // To avoid an infinite loop!
   if (session) {
-    return { redirect: { destination: "/workboard" } };
+    return { redirect: { destination: '/workboard' } };
   }
 
   return {

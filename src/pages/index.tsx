@@ -1,15 +1,15 @@
-import { type NextPage } from "next";
-import { signIn, signOut, useSession } from "next-auth/react";
-import Head from "next/head";
-import Link from "next/link";
-import { Layout } from "~/components/layout";
-import { useHotkeys } from "react-hotkeys-hook";
+import { type NextPage } from 'next';
+import { signIn, signOut, useSession } from 'next-auth/react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useHotkeys } from 'react-hotkeys-hook';
+import { Layout } from '~/components/layout';
 
 const AuthShowcase: React.FC = () => {
   const { data: sessionData } = useSession();
 
-  useHotkeys("ctrl+q", () =>
-    sessionData ? void signOut() : console.log("i quit!")
+  useHotkeys('ctrl+q', () =>
+    sessionData ? void signOut() : console.log('i quit!'),
   );
 
   return (
@@ -19,9 +19,13 @@ const AuthShowcase: React.FC = () => {
       </p>
       <button
         className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={sessionData ? () => void signOut() : () => void signIn()}
+        onClick={
+          sessionData
+            ? () => void signOut()
+            : () => void signIn(undefined, { callbackUrl: '/workboard' })
+        }
       >
-        {sessionData ? "Sign out" : "Sign in"}
+        {sessionData ? 'Sign out' : 'Sign in'}
       </button>
     </div>
   );

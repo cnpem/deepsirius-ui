@@ -1,17 +1,19 @@
-import { type GetServerSidePropsContext } from "next";
+import fs from 'fs';
+import ldap from 'ldapjs';
+import { type GetServerSidePropsContext } from 'next';
 import {
-  getServerSession,
-  type NextAuthOptions,
   type DefaultSession,
   type DefaultUser,
+  type NextAuthOptions,
   type User,
-} from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { env } from "~/env.mjs";
-import ldap from "ldapjs";
-import fs from "fs";
-import { homedir } from "os";
-import { copySshKeyToRemoteHost, generateSshKeyIfNeeded } from "./remote-job";
+  getServerSession,
+} from 'next-auth';
+import { type DefaultJWT } from 'next-auth/jwt';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { homedir } from 'os';
+import { env } from '~/env.mjs';
+
+import { copySshKeyToRemoteHost, generateSshKeyIfNeeded } from './remote-job';
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -19,17 +21,20 @@ import { copySshKeyToRemoteHost, generateSshKeyIfNeeded } from "./remote-job";
  *
  * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
  */
-declare module "next-auth" {
+declare module 'next-auth' {
   interface Session extends DefaultSession {
     user: {
-      password: string | unknown;
       // ...other properties
       // role: UserRole;
-    } & DefaultSession["user"];
+    } & DefaultSession['user'];
   }
 
   interface User extends DefaultUser {
     password?: string;
+  }
+
+  interface JWT extends DefaultJWT {
+    sshKeyPath?: string;
   }
 }
 
@@ -41,17 +46,17 @@ declare module "next-auth" {
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: "LDAP",
+      name: 'LDAP',
       credentials: {
         email: {
-          label: "Email",
-          type: "text",
-          placeholder: "user.name@example.com",
+          label: 'Email',
+          type: 'text',
+          placeholder: 'user.name@example.com',
         },
         password: {
-          label: "Password",
-          type: "password",
-          placeholder: "Password",
+          label: 'Password',
+          type: 'password',
+          placeholder: 'Password',
         },
       },
       async authorize(credentials): Promise<User | null> {
@@ -68,12 +73,12 @@ export const authOptions: NextAuthOptions = {
           tlsOptions: { ca: [fs.readFileSync(env.CA_CERT)] },
         });
         const { email, password } = credentials;
-        const name = email.substring(0, email.lastIndexOf("@"));
+        const name = email.substring(0, email.lastIndexOf('@'));
         // Essentially promisify the LDAPJS client.bind function
         return new Promise((resolve, reject) => {
           client.bind(credentials.email, credentials.password, (error) => {
             if (error) {
-              reject(new Error("CredentialsSignin"));
+              reject(new Error('CredentialsSignin'));
             } else {
               resolve({
                 id: name,
@@ -101,13 +106,13 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/auth/signin",
+    signIn: '/auth/signin',
   },
   theme: {
-    colorScheme: "auto", // "auto" | "dark" | "light"
-    brandColor: "", // Hex color code
-    logo: "/favicon.ico", // Absolute URL to image
-    buttonText: "", // Hex color code
+    colorScheme: 'auto', // "auto" | "dark" | "light"
+    brandColor: '', // Hex color code
+    logo: '/favicon.ico', // Absolute URL to image
+    buttonText: '', // Hex color code
   },
 };
 
@@ -117,8 +122,8 @@ export const authOptions: NextAuthOptions = {
  * @see https://next-auth.js.org/configuration/nextjs
  */
 export const getServerAuthSession = (ctx: {
-  req: GetServerSidePropsContext["req"];
-  res: GetServerSidePropsContext["res"];
+  req: GetServerSidePropsContext['req'];
+  res: GetServerSidePropsContext['res'];
 }) => {
   return getServerSession(ctx.req, ctx.res, authOptions);
 };

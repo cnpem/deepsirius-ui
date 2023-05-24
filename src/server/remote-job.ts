@@ -106,12 +106,12 @@ export function sshConnectAndRunCommand(
   username: string,
   host: string,
   command: string,
-): void {
+): Promise<string> {
   const sshOptions: Config = {
     host,
     port: 22,
     username,
-    privateKey: keyPath ? keyPath : undefined,
+    privateKeyPath: keyPath ? keyPath : undefined,
     password: password ? password : undefined,
     tryKeyboard: true,
     algorithms: {
@@ -125,25 +125,17 @@ export function sshConnectAndRunCommand(
   };
 
   const conn = new NodeSSH();
-  conn
-    .connect(sshOptions)
-    .then(() => {
+  return new Promise((resolve) => {
+    void conn.connect(sshOptions).then(() => {
       console.log('connected');
-      conn
-        .execCommand(command)
-        .then((result) => {
-          console.log(result);
-          conn.dispose();
-        })
-        .catch((err) => {
-          console.log(err);
-          conn.dispose();
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      conn.dispose();
+      void conn.execCommand(command).then((result) => {
+        console.log('STDOUT: ' + result.stdout);
+        console.log('STDERR: ' + result.stderr);
+        resolve(result.stdout);
+        conn.dispose();
+      });
     });
+  });
 }
 
 /**
@@ -163,29 +155,61 @@ async function executeCommand(command: string): Promise<string> {
 }
 
 // Function to listen to job state
-export async function checkJobState(jobId: string) {
-  try {
-    const command = `sacct -j ${jobId} --format=State --parsable2`;
+export function checkJobState(
+  keyPath: string,
+  username: string,
+  host: string,
+  jobId: string,
+) {
+  const command = `sacct -j ${jobId} --format=State --parsable2`;
 
-    const output = await executeCommand(command);
-    const lines = output.split('\n');
-    const state = lines[1]?.split('|')[0];
-
-    return state;
-  } catch (error) {
-    console.error('Error occurred:', error);
-  }
+  return new Promise((resolve, reject) => {
+    sshConnectAndRunCommand(
+      {
+        keyPath: keyPath,
+        password: undefined,
+      },
+      username,
+      host,
+      command,
+    )
+      .then((output) => {
+        const lines = output.trim().split('\n');
+        const state = lines[1];
+        console.log('Job state:', state);
+        resolve(state);
+      })
+      .catch((error) => {
+        console.error(error);
+        reject(error);
+      });
+  });
 }
 
 // Function to cancel a Slurm job
-export function cancelJob(jobId: string) {
+export function cancelJob(
+  keyPath: string,
+  username: string,
+  host: string,
+  jobId: string,
+) {
   return new Promise((resolve, reject) => {
     const command = `scancel ${jobId}`;
-    executeCommand(command)
+    sshConnectAndRunCommand(
+      {
+        keyPath: keyPath,
+        password: undefined,
+      },
+      username,
+      host,
+      command,
+    )
       .then((output) => {
+        console.log(output);
         resolve(output);
       })
       .catch((error) => {
+        console.error(error);
         reject(error);
       });
   });
@@ -196,27 +220,71 @@ function createTempScript(sbatchContent: string) {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deepsirius-'));
   const scriptPath = path.join(tempDir, 'temp_script.sbatch');
   fs.writeFileSync(scriptPath, sbatchContent, { mode: '0700' });
-  return scriptPath;
+  return { tempDir, scriptPath };
 }
 
-type jobInfo = {
-  jobId?: string;
-  jobName?: string;
-};
 // Function to submit an sbatch job with a temporary script file
-export function submitJob(sbatchContent: string): Promise<jobInfo> {
-  return new Promise((resolve, reject) => {
-    const scriptPath = createTempScript(sbatchContent);
-    const command = `sbatch --parsable ${scriptPath}`;
-    executeCommand(command)
-      .then((output) => {
-        const outputLines = output.split('\n');
-        const jobId = outputLines[0];
-        const jobName = outputLines[1];
-        resolve({ jobId, jobName });
+export function submitJob(
+  keyPath: string,
+  username: string,
+  host: string,
+  sbatchContent: string,
+): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    const { tempDir, scriptPath } = createTempScript(sbatchContent);
+    const sshOptions: Config = {
+      host,
+      port: 22,
+      username,
+      privateKeyPath: keyPath,
+      tryKeyboard: true,
+      algorithms: {
+        kex: [
+          'diffie-hellman-group1-sha1',
+          'diffie-hellman-group14-sha1',
+          'diffie-hellman-group-exchange-sha1',
+          'diffie-hellman-group-exchange-sha256',
+        ],
+      },
+    };
+
+    const deepsirius_script = 'deepSirius_script.sbatch';
+    const conn = new NodeSSH();
+    conn
+      .connect(sshOptions)
+      .then(() => {
+        conn
+          .putFile(scriptPath, deepsirius_script)
+          .then(() => {
+            // console.log('copied script');
+            executeCommand(`rm -rf ${tempDir}`)
+              .then(() => {
+                // console.log('removed script');
+                conn
+                  .execCommand(`sbatch --parsable ${deepsirius_script}`)
+                  .then((result) => {
+                    // console.log('STDOUT: ' + result.stdout);
+                    // console.log('STDERR: ' + result.stderr);
+                    const outputLines = result.stdout.trim().split('\n');
+                    const jobId = outputLines[0];
+                    resolve(jobId);
+                    conn.dispose();
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    conn.dispose();
+                  });
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       })
-      .catch((error) => {
-        reject(error);
+      .catch((err) => {
+        console.log(err);
       });
   });
 }
@@ -230,5 +298,5 @@ export const sbatchDummyContent = `#!/bin/bash
 
 
 echo "Hello, world!"
-sleep 10
+sleep 60
 echo "Job completed."`;

@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import type { JWT } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
 import { env } from '~/env.mjs';
 import { sbatchDummyContent, submitJob } from '~/server/remote-job';
@@ -8,7 +7,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const token: JWT | null = await getToken({ req });
+  const token = await getToken({ req });
   const sshKeyPath = token?.sshKeyPath || '';
   const username = token?.name || '';
   if (!token) {

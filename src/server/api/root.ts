@@ -1,4 +1,5 @@
 import { exampleRouter } from '~/server/api/routers/example';
+import { sillyRouter } from '~/server/api/routers/sillyrouter';
 import { createTRPCRouter } from '~/server/api/trpc';
 
 import { remoteJobRouter } from './routers/remote-job';
@@ -11,6 +12,7 @@ import { remoteJobRouter } from './routers/remote-job';
 export const appRouter = createTRPCRouter({
   example: exampleRouter,
   remotejob: remoteJobRouter,
+  silly: sillyRouter,
 });
 
 // export type definition of API

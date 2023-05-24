@@ -20,7 +20,9 @@ import {
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import type { AppRouter } from '~/server/api/root';
 import { sbatchDummyContent, submitJob } from '~/server/remote-job';
+import { api } from '~/utils/api';
 
 import { type NodeData, NodeWrapper } from './common-node-utils';
 
@@ -106,6 +108,7 @@ type FormData = {
 
 function Form() {
   const [error, setError] = useState('');
+  const mutation = api.silly.login.useMutation();
 
   const {
     register,
@@ -115,6 +118,8 @@ function Form() {
   const onSubmit: SubmitHandler<FormData> = (data) => {
     try {
       console.log(data);
+      const mail = data.email;
+      mutation.mutate({ name: mail });
     } catch (err) {
       console.log(err);
     }
@@ -163,6 +168,12 @@ function Form() {
       <Button className="w-full" type="submit">
         Submit
       </Button>
+      <div>{mutation.data?.user.name}</div>
+      <div>
+        {mutation.error && (
+          <p>Something went wrong! {mutation.error.message}</p>
+        )}
+      </div>
     </form>
   );
 }

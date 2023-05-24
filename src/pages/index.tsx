@@ -41,6 +41,7 @@ const AuthShowcase: React.FC = () => {
 
 const Home: NextPage = () => {
   const hello = api.example.hello.useQuery({ text: 'from tRPC' });
+
   return (
     <Layout>
       <Head>

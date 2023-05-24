@@ -25,6 +25,7 @@
 import { TRPCError, initTRPC } from '@trpc/server';
 import { type CreateNextContextOptions } from '@trpc/server/adapters/next';
 import { type Session } from 'next-auth';
+import { getToken } from 'next-auth/jwt';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
 import { getServerAuthSession } from '~/server/auth';
@@ -32,6 +33,7 @@ import { prisma } from '~/server/db';
 
 type CreateContextOptions = {
   session: Session | null;
+  sshKeyPath: string | undefined;
 };
 
 /**
@@ -47,6 +49,7 @@ type CreateContextOptions = {
 const createInnerTRPCContext = (opts: CreateContextOptions) => {
   return {
     session: opts.session,
+    sshKeyPath: opts.sshKeyPath,
     prisma,
   };
 };
@@ -62,9 +65,12 @@ export const createTRPCContext = async (opts: CreateNextContextOptions) => {
 
   // Get the session from the server using the getServerSession wrapper function
   const session = await getServerAuthSession({ req, res });
+  const token = await getToken({ req });
+  const sshKeyPath = token?.sshKeyPath;
 
   return createInnerTRPCContext({
     session,
+    sshKeyPath,
   });
 };
 

@@ -35,7 +35,9 @@ declare module 'next-auth' {
   interface User extends DefaultUser {
     password?: string;
   }
+}
 
+declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
     sshKeyPath?: string;
   }
@@ -108,6 +110,7 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user && user.name && user.password) {
+        // TODO: This is a hacky way to generate a key path. We should probably use a temp directory
         const keyPath = `${homedir()}/.ssh/remotejob_rsa`;
         await generateSshKeyIfNeeded(keyPath);
         copySshKeyToRemoteHost(keyPath, user.name, env.SSH_HOST, user.password);

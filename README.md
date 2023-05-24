@@ -10,9 +10,9 @@ If you are not familiar with the different technologies used in this project, pl
 
 - [x] [Next.js](https://nextjs.org)
 - [x] [NextAuth.js](https://next-auth.js.org)
-- [ ] [Prisma](https://prisma.io)
+- [x] [Prisma](https://prisma.io)
 - [x] [Tailwind CSS](https://tailwindcss.com)
-- [ ] [tRPC](https://trpc.io)
+- [x] [tRPC](https://trpc.io)
 
 ## Learn More
 

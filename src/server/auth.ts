@@ -1,3 +1,4 @@
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import fs from 'fs';
 import ldap from 'ldapjs';
 import { type GetServerSidePropsContext } from 'next';
@@ -13,6 +14,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { homedir } from 'os';
 import { env } from '~/env.mjs';
 
+import { prisma } from './db';
 import { copySshKeyToRemoteHost, generateSshKeyIfNeeded } from './remote-job';
 
 /**
@@ -24,6 +26,7 @@ import { copySshKeyToRemoteHost, generateSshKeyIfNeeded } from './remote-job';
 declare module 'next-auth' {
   interface Session extends DefaultSession {
     user: {
+      id: string;
       // ...other properties
       // role: UserRole;
     } & DefaultSession['user'];
@@ -44,6 +47,7 @@ declare module 'next-auth' {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: 'LDAP',
@@ -92,7 +96,16 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  session: {
+    strategy: 'jwt',
+  },
   callbacks: {
+    session: ({ session, token }) => {
+      if (session.user && token.sub) {
+        session.user.id = token.sub;
+      }
+      return session;
+    },
     async jwt({ token, user }) {
       if (user && user.name && user.password) {
         const keyPath = `${homedir()}/.ssh/remotejob_rsa`;

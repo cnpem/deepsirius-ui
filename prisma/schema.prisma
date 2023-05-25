@@ -65,3 +65,61 @@ model VerificationToken {
 
     @@unique([identifier, token])
 }
+
+model Workspace {
+    id       String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    path      String @unique
+    networks Network[]
+    datasets Dataset[]
+    inferences Inference[]
+    jobs      Job[]
+}
+
+model Network {
+    id          String   @id @default(cuid())
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    name        String
+    description String?
+    workspace   Workspace @relation(fields: [workspaceId], references: [id])
+    workspaceId String
+    status      String
+    jobId       String?
+}
+
+model Dataset {
+    id          String   @id @default(cuid())
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    name        String
+    workspace   Workspace @relation(fields: [workspaceId], references: [id])
+    workspaceId String
+    status      String
+    jobId       String?
+}
+
+model Inference {
+    id          String   @id @default(cuid())
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    input       String
+    output      String
+    workspace   Workspace @relation(fields: [workspaceId], references: [id])
+    workspaceId String
+    status      String
+    jobId       String?
+}
+
+model Job {
+    id          String   @id @default(cuid())
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    name        String
+    description String?
+    workspace   Workspace @relation(fields: [workspaceId], references: [id])
+    workspaceId String
+    status      String
+    jobId       String
+}

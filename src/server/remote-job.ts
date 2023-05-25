@@ -163,7 +163,7 @@ export function checkJobState(
 ) {
   const command = `sacct -j ${jobId} --format=State --parsable2`;
 
-  return new Promise((resolve, reject) => {
+  return new Promise<string | undefined>((resolve, reject) => {
     sshConnectAndRunCommand(
       {
         keyPath: keyPath,
@@ -193,7 +193,7 @@ export function cancelJob(
   host: string,
   jobId: string,
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise<string | undefined>((resolve, reject) => {
     const command = `scancel ${jobId}`;
     sshConnectAndRunCommand(
       {
@@ -204,9 +204,9 @@ export function cancelJob(
       host,
       command,
     )
-      .then((output) => {
-        console.log(output);
-        resolve(output);
+      .then(() => {
+        console.log({ jobId: jobId, status: 'CANCELLED' });
+        resolve('CANCELLED');
       })
       .catch((error) => {
         console.error(error);
@@ -298,5 +298,5 @@ export const sbatchDummyContent = `#!/bin/bash
 
 
 echo "Hello, world!"
-sleep 60
+sleep 30
 echo "Job completed."`;

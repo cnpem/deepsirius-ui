@@ -11,11 +11,11 @@ export const sillyRouter = createTRPCRouter({
         name: z.string(),
       }),
     )
-    .mutation((opts: { input: { name: any } }) => {
+    .mutation(({ input }) => {
       // Here some login stuff would happen
       return {
         user: {
-          name: opts.input.name,
+          name: input.name,
           role: 'SOMEROLE',
         },
       };

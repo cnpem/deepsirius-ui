@@ -10,7 +10,8 @@ import {
 } from 'reactflow';
 import { interval } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { assign, createMachine } from 'xstate';
+import { DoneInvokeEvent, assign, createMachine, send, sendTo } from 'xstate';
+import { sendParent } from 'xstate/lib/actions';
 import {
   Accordion,
   AccordionContent,
@@ -20,19 +21,31 @@ import {
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import type { AppRouter } from '~/server/api/root';
-import { sbatchDummyContent, submitJob } from '~/server/remote-job';
-import { api } from '~/utils/api';
+import { RouterOutputs, api } from '~/utils/api';
 
 import { type NodeData, NodeWrapper } from './common-node-utils';
 
 const nodeMachine = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QDsD2EwFsCGBjAFgJbJgB0xeALoQG5gDEVt2lYA2gAwC6ioADqliFqqZLxAAPRAFoArADZSATgDMARiXyATCs0cVADhXyANCACeiFQBZFSrQesGA7CtcGOsg-IC+Ps2gYOATEZEx09LCU2ABOlAAElDHYxMRQnDxIIAJCImJZUghq3qROSkoGOhw6HqYWVrbKDrbOzt7V9n4B6Fh4RCSkAEYArrDm9AAqAJIAwgDSGeI5woSi4oWGWqRaHC7WzvKy+sYqZpYIWtZqpLo7arryztayugZdIIG9IQMjY-QAcgB5QEABUWWWWeXWiB01wMtQ08nkalaWi0Zxh+lKsg0WjU92csms70+wX6ZDAMRiqBi9BiYCS5nB-EEKzWBUQxUUZQqVRqHDq52snlKzS8Kn0HhUshJPTJoVIsGGuFwcFg9AAZqFKMMSMzsqyoRyiiUeZUJfzBYhbComo55I4OKoicTZRh4FlSX1QktDat8qBCtJYcp1EpnEojpclPcMUU1LJlDiY0oOsjNL5-B85d6BhRcNQ6L7cv7oQhpMVbaoNBGo9YY6d6hcVFstMijPpw2phZ43V9yaRwmBi2yA5JEPJrKUDOU29V9E9G+cbM5RY4XG5DJ5vH35T9RucWSX2YGrC9SoupRwDqnZHGbFsbDjbNZdBVZE9d7mKVSaSOjaeCCTtO5SOG0bgcK+cbCom9iOOKkr6DKWZet8ZBKiqar-qWxrAWa+xGM4kFLtaeHNA6wrOtYrp+EAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QDsD2EwFsCGBjAFgJbJgB0xeALoQG5gDEVt2lYA2gAwC6ioADqliFqqZLxAAPRAEYAbAGZSAThUqAHEoDsHaQCYALAFZdAGhABPRGumlDHex13ylhvfv3yAvp7NoMOAmIyJjp6WEpsACdKAAJKSOxiYihOHiQQASERMXSpBH0OTVJ9XWkNQ3lS-VklfTNLBGtbB0dnVwMPb190LDwiElIAIwBXWHNSPjBkCGT6CFEyYhpUAGsyWGHBzGEAKVRB1PFM4UJRcTz5bWKOWV0FXQrDNUN6q2l9UnlqkqUONVlZNJNF0QH5eoEBiMxhMpjNkFB6GBIpFUJEJgAbFgAM1RmFIGy2u32h3Sx2y5ysrlId0MskM1WMl3prwQrg+dhamku0nksjUILBAX6ZCh40iw2QyFm8wGS1WZEFfSCQ1GYolUvhCDluBYp2QqRJ-EEJzOuUpNhpdIZTk0zIsiCUD1ImmsXy+uic8kqAp6QuVotI4sl0oW5GQyzWpEVEJFqsD6uSWvDqB12QN0jSRqyeopjUB1LpVrpNrtDTU8g4zusum08lp0kZPv8SshcaDGoRMsWycj0eFKuh7cT2t1ogNukzGWN5LNeYthfpxaZdXtjRd1NdFYb8nedyb4P7AaH8Lmoblvd9Ldjg4TmpHae4bHkk7JOdnFSUxQqPM02iU0g4WkWU0XRP1rMoQIKDR-33P1WxvYMTx1ZBcDAdFDSnbNTVAPJAUrN1fy5X4viA1cFEUW0HC5TQgUqXRYKvUgkRRSJ6EiMB4nMDDX2wyREFuFk3VIFppAgwoGVkBiY3xYZcFQ2BYHoLEgkoCV2G4I5pzfHDEGMFkAKca5bhqPkAM0dxvB8UEengdI+yCTSsJyHSEAAWlkFl3Kk-sKFwag6Eck1nL4-JTFXNRdGElonBcNxOis+yBhCMBApnFzdGeYpSjUNR9BopRnH0WoWQiqKHBi9p3C8BLL2k0VUu0kKipZRdqQ5Dgis0AFCn5GrmzquNJmmZIGt4vItGApQ1E+D0VFkG4MtkX9vP9NtbygUbgryJ5Iv+ECaxrFQd3kEqa1IQsdxrDwcrylaBmY1FNtzUTy3OjhalKFwtC9TQWt0StnnsPQcu0Dx6L6g9lQ2OS4FsrMgue94iicDw8powwpsMF5VwK-DZGqH6OGcUpqu8IA */
   id: 'nodemachine',
   initial: 'inactive',
+  schema: {
+    context: {} as { jobId: string; jobStatus: string },
+    services: {} as {
+      submitJob: { data: { jobId: string } | undefined };
+      jobStatus: { data: { jobStatus: string } | undefined };
+    },
+    events: {} as
+      | { type: 'activate' }
+      | { type: 'start training' }
+      | { type: 'check status' }
+      | { type: 'cancel' }
+      | { type: 'retry' }
+      | { type: 'finetune' },
+  },
   context: {
-    counter: 0,
     jobId: '',
+    jobStatus: '',
   },
   states: {
     inactive: {
@@ -42,36 +55,65 @@ const nodeMachine = createMachine({
     },
 
     active: {
-      on: { 'start training': 'busy' },
-    },
-
-    busy: {
-      invoke: {
-        src: (context) =>
-          interval(1000).pipe(
-            map(() =>
-              context.counter > 3 ? { type: 'NOOP' } : { type: 'TICK' },
-            ),
-          ),
-      },
       on: {
-        TICK: {
-          target: 'busy',
-          actions: assign({
-            counter: (context) => context.counter + 1,
-          }),
+        'start training': 'busy',
+      },
+    },
+    busy: {
+      initial: 'pending',
+      states: {
+        pending: {
+          invoke: {
+            id: 'submitJob',
+            src: 'submitJob',
+            onDone: {
+              target: 'running',
+              actions: assign({ jobId: (context, event) => event.data.jobId }),
+            },
+            onError: {
+              target: '#nodemachine.error',
+            },
+          },
         },
-        NOOP: {
-          target: 'inactive',
-          actions: assign({
-            counter: 0,
-          }),
+        running: {
+          invoke: {
+            src: 'jobStatus',
+            onDone: [
+              {
+                target: '#nodemachine.success',
+                cond: 'isCompleted',
+              },
+              {
+                target: '#nodemachine.error',
+                cond: 'isFailed',
+              },
+              {
+                target: '#nodemachine.error',
+                cond: 'isCancelled',
+              },
+              {
+                target: 'running',
+                actions: assign({
+                  jobStatus: (context, event) => event.data.jobStatus,
+                }),
+              },
+            ],
+          },
+          on: {
+            cancel: {
+              actions: 'cancelJob',
+            },
+          },
         },
       },
     },
-
     error: {
-      on: { retry: 'busy' },
+      on: {
+        retry: {
+          target: 'busy',
+          actions: assign({ jobStatus: '' }),
+        },
+      },
     },
     success: {
       on: { finetune: 'busy' },
@@ -182,10 +224,55 @@ type NetworkNode = Node<NodeData>;
 export function NetworkNode({ data }: NodeProps<NodeData>) {
   const { label = 'network' } = data;
   const nodeId = useNodeId() || '';
-  const [state, send] = useMachine(nodeMachine);
+  const createDummyJob = api.remotejob.test.useMutation();
+  const checkDummyJob = api.remotejob.status.useMutation();
+  const cancelJob = api.remotejob.cancel.useMutation();
+
+  const [state, send] = useMachine(nodeMachine, {
+    guards: {
+      isCompleted: (context) => {
+        console.log(context);
+        return context.jobStatus === 'COMPLETED';
+      },
+      isFailed: (context) => {
+        return context.jobStatus === 'FAILED';
+      },
+      isCancelled: (context) => {
+        return context.jobStatus === 'CANCELLED';
+      },
+    },
+    actions: {
+      cancelJob: (context) => {
+        cancelJob.mutate({ jobId: context.jobId });
+      },
+    },
+    services: {
+      submitJob: () => {
+        return new Promise((resolve, reject) => {
+          createDummyJob
+            .mutateAsync()
+            .then((data) => {
+              resolve(data);
+            })
+            .catch((err) => reject(err));
+        });
+      },
+
+      jobStatus: (context) => {
+        return new Promise((resolve, reject) => {
+          checkDummyJob
+            .mutateAsync({ jobId: context.jobId })
+            .then((data) => {
+              resolve(data);
+            })
+            .catch((err) => reject(err));
+        });
+      },
+    },
+  });
 
   return (
-    <NodeWrapper label={label + nodeId} state={state.value.toString()}>
+    <NodeWrapper label={label + nodeId} state={state.value}>
       <Handle type="target" position={Position.Top} />
       <div className="flex h-full flex-col items-center justify-center">
         <div>{`I'm the ${label} ${nodeId}`}</div>
@@ -194,15 +281,19 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
         <AccordionItem value="item-1">
           <AccordionTrigger>Lets props!</AccordionTrigger>
           <AccordionContent>
-            <div>my state now: {state.value.toString()}</div>
+            <div>
+              my state now:{' '}
+              {typeof state.value === 'object'
+                ? (state.value.busy as string)
+                : state.value.toString()}
+            </div>
             <div className="flex p-2">
-              <Button onClick={() => send('inactive')}>inactive</Button>
               <Button onClick={() => send('activate')}>active</Button>
               <Button onClick={() => send('start training')}>
                 start training
               </Button>
-              <Button onClick={() => send('check status')}>check status</Button>
               <Button onClick={() => send('cancel')}>cancel</Button>
+              <Button onClick={() => send('retry')}>retry</Button>
             </div>
             <Form />
           </AccordionContent>

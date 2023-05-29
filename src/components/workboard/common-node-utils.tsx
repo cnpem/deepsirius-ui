@@ -1,19 +1,21 @@
-import React from "react";
+import React from 'react';
 import {
   Handle,
   type Node,
   type NodeProps,
   Position,
   useNodeId,
-} from "reactflow";
-import { Input } from "~/components/ui/input";
+} from 'reactflow';
+import { type StateValue } from 'xstate';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "~/components/ui/accordion";
-import { Button } from "../ui/button";
+} from '~/components/ui/accordion';
+import { Input } from '~/components/ui/input';
+
+import { Button } from '../ui/button';
 
 export type NodeData = {
   label?: string;
@@ -49,15 +51,16 @@ export function NodeWrapper({
   children,
 }: {
   label: string;
-  state: string;
+  state: StateValue;
   children: React.ReactNode;
 }) {
+  const nstate = typeof state === 'object' ? 'busy' : state;
   return (
     <div className="flex h-full flex-col overflow-hidden rounded border border-slate-300 shadow active:border-slate-800 dark:border-slate-500 dark:active:border-slate-100">
       <div className="border-b border-slate-300  px-2 py-1 text-center font-mono text-xs uppercase dark:border-slate-500">
         {label}
       </div>
-      <SwitchBackground state={state}>{children}</SwitchBackground>
+      <SwitchBackground state={nstate}>{children}</SwitchBackground>
     </div>
   );
 }

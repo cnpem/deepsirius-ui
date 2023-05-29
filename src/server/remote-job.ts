@@ -127,10 +127,10 @@ export function sshConnectAndRunCommand(
   const conn = new NodeSSH();
   return new Promise((resolve) => {
     void conn.connect(sshOptions).then(() => {
-      console.log('connected');
+      // console.log('connected');
       void conn.execCommand(command).then((result) => {
-        console.log('STDOUT: ' + result.stdout);
-        console.log('STDERR: ' + result.stderr);
+        // console.log('STDOUT: ' + result.stdout);
+        // console.log('STDERR: ' + result.stderr);
         resolve(result.stdout);
         conn.dispose();
       });
@@ -175,8 +175,8 @@ export function checkJobState(
     )
       .then((output) => {
         const lines = output.trim().split('\n');
-        const state = lines[1];
-        console.log('Job state:', state);
+        const state = lines[2];
+        // console.log('Job state:', state);
         resolve(state);
       })
       .catch((error) => {
@@ -205,7 +205,7 @@ export function cancelJob(
       command,
     )
       .then(() => {
-        console.log({ jobId: jobId, status: 'CANCELLED' });
+        // console.log({ jobId: jobId, status: 'CANCELLED' });
         resolve('CANCELLED');
       })
       .catch((error) => {
@@ -298,5 +298,5 @@ export const sbatchDummyContent = `#!/bin/bash
 
 
 echo "Hello, world!"
-sleep 30
+sleep 10
 echo "Job completed."`;

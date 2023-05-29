@@ -8,10 +8,7 @@ import {
   Position,
   useNodeId,
 } from 'reactflow';
-import { interval } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { DoneInvokeEvent, assign, createMachine, send, sendTo } from 'xstate';
-import { sendParent } from 'xstate/lib/actions';
+import { assign, createMachine } from 'xstate';
 import {
   Accordion,
   AccordionContent,
@@ -21,28 +18,18 @@ import {
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { RouterOutputs, api } from '~/utils/api';
+import { api } from '~/utils/api';
 
 import { type NodeData, NodeWrapper } from './common-node-utils';
 
+interface JobEvent {
+  type: 'done.invoke';
+  data: { jobId?: string; jobStatus?: string };
+}
 const nodeMachine = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QDsD2EwFsCGBjAFgJbJgB0xeALoQG5gDEVt2lYA2gAwC6ioADqliFqqZLxAAPRAEYAbAGZSAThUqAHEoDsHaQCYALAFZdAGhABPRGumlDHex13ylhvfv3yAvp7NoMOAmIyJjp6WEpsACdKAAJKSOxiYihOHiQQASERMXSpBH0OTVJ9XWkNQ3lS-VklfTNLBGtbB0dnVwMPb190LDwiElIAIwBXWHNSPjBkCGT6CFEyYhpUAGsyWGHBzGEAKVRB1PFM4UJRcTz5bWKOWV0FXQrDNUN6q2l9UnlqkqUONVlZNJNF0QH5eoEBiMxhMpjNkFB6GBIpFUJEJgAbFgAM1RmFIGy2u32h3Sx2y5ysrlId0MskM1WMl3prwQrg+dhamku0nksjUILBAX6ZCh40iw2QyFm8wGS1WZEFfSCQ1GYolUvhCDluBYp2QqRJ-EEJzOuUpNhpdIZTk0zIsiCUD1ImmsXy+uic8kqAp6QuVotI4sl0oW5GQyzWpEVEJFqsD6uSWvDqB12QN0jSRqyeopjUB1LpVrpNrtDTU8g4zusum08lp0kZPv8SshcaDGoRMsWycj0eFKuh7cT2t1ogNukzGWN5LNeYthfpxaZdXtjRd1NdFYb8nedyb4P7AaH8Lmoblvd9Ldjg4TmpHae4bHkk7JOdnFSUxQqPM02iU0g4WkWU0XRP1rMoQIKDR-33P1WxvYMTx1ZBcDAdFDSnbNTVAPJAUrN1fy5X4viA1cFEUW0HC5TQgUqXRYKvUgkRRSJ6EiMB4nMDDX2wyREFuFk3VIFppAgwoGVkBiY3xYZcFQ2BYHoLEgkoCV2G4I5pzfHDEGMFkAKca5bhqPkAM0dxvB8UEengdI+yCTSsJyHSEAAWlkFl3Kk-sKFwag6Eck1nL4-JTFXNRdGElonBcNxOis+yBhCMBApnFzdGeYpSjUNR9BopRnH0WoWQiqKHBi9p3C8BLL2k0VUu0kKipZRdqQ5Dgis0AFCn5GrmzquNJmmZIGt4vItGApQ1E+D0VFkG4MtkX9vP9NtbygUbgryJ5Iv+ECaxrFQd3kEqa1IQsdxrDwcrylaBmY1FNtzUTy3OjhalKFwtC9TQWt0StnnsPQcu0Dx6L6g9lQ2OS4FsrMgue94iicDw8powwpsMF5VwK-DZGqH6OGcUpqu8IA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QDsD2EwFsCGBjAFgJbJgB0xeALoQG5gDEVt2lYA2gAwC6ioADqliFqqZLxAAPRAEYAbAGZSAThUr5AJgAsAdl1L18gDQgAnogAc00gFYOdjtZW3918wF83xtBhwFiZJjp6WEpsACdKAAJKMOxiYihOHiQQASERMRSpBE0ObVJNdWlzbXNNWW15bXUla2MzBEsbewcnDhd3TxBvLDwiElIAIwBXWBNSPjBkCAT6CFEyYhpUAGsyWGHBzGEAKVRBpPE04UJRcWyqjgKOWS0lDirpDWtteosq0jya2SVZaRf5PJpB4vOhen4BiMxhMpjNkFB6GAwmFUGEJgAbFgAM1RmFIGy2u32hxSxwy5ws1is6lk1j+2lkjIU6lepkQ1g+6hpHOkmmstk05lkIO6YN8-TIUPGYWGyGQs3mAyWqzIPXF-iGo2lsvl8IQytwLFOyCSJP4ghOZyyFj+pG59KZzNZDXMvztL3MRVyCjp2hFar6GqlpBlcoVC3IyGWa1IAYhkq1IZ1CX1UdQhoypukyXN6WNFMaVLttIdTI0zosHGpL20SnM5ip0lK6n9YsDkMTod1CMVizTMbjEs10K7KYNRtEpvUOdSFvJ1satvtTcd5bejUFpG0HrpJbp5VbPnbCZHyfhcwjyoHbfjw+1Yb148z3DY8hnZPzC45SgKPP+T3aaQgPXbd1AKb5aWqDl1CrQ9wSHYNR3PQ1kFwMB0TNWc8ytUBsj+K55E0KpbHMeQSKpdcSwKBkOW0dp5DKQE4PVAYkRRMJ6DCMAYhMTCPxwyREFuddCMUFoniBDhzHo5jj3xYZcDQ2BYHoLF-EoWV2G4I450-XD2XUddpA4cpSCedRPQkqSqj9OD4BSQd-B07DMn0hAAFpZHXTzPhaPz7FkTRZNvChcGoOhnMtVzBJyQy2UaMC-McWp2nUVxgqHQIwEi+c3Is6xwOKSpXAZTQyvXT1fPsZLnDSzpQSPW8pRyvSYs0JR1zpcxlBo3RblpHRbIa+Cg0TSZpgSFqBOyJQKwSqwTNqYjilm6QlAy0bTwfKApui7JXDAoVtCbe4OC5PlzAq2xSAYiyigO316tFRqhzY1FdoLIDSNIWR6KKUrSjqeLa3ye5SiqDQWWkoKukcgYNkUuB7NzKLPv+fIDCI+tXE0Yy5uMhibHa2jikBIFbI8IA */
   id: 'nodemachine',
   initial: 'inactive',
-  schema: {
-    context: {} as { jobId: string; jobStatus: string },
-    services: {} as {
-      submitJob: { data: { jobId: string } | undefined };
-      jobStatus: { data: { jobStatus: string } | undefined };
-    },
-    events: {} as
-      | { type: 'activate' }
-      | { type: 'start training' }
-      | { type: 'check status' }
-      | { type: 'cancel' }
-      | { type: 'retry' }
-      | { type: 'finetune' },
-  },
   context: {
     jobId: '',
     jobStatus: '',
@@ -68,7 +55,9 @@ const nodeMachine = createMachine({
             src: 'submitJob',
             onDone: {
               target: 'running',
-              actions: assign({ jobId: (context, event) => event.data.jobId }),
+              actions: assign({
+                jobId: (context, event: JobEvent) => event.data.jobId ?? '',
+              }),
             },
             onError: {
               target: '#nodemachine.error',
@@ -94,7 +83,8 @@ const nodeMachine = createMachine({
               {
                 target: 'running',
                 actions: assign({
-                  jobStatus: (context, event) => event.data.jobStatus,
+                  jobStatus: (context, event: JobEvent) =>
+                    event.data.jobStatus ?? '',
                 }),
               },
             ],
@@ -231,7 +221,6 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
   const [state, send] = useMachine(nodeMachine, {
     guards: {
       isCompleted: (context) => {
-        console.log(context);
         return context.jobStatus === 'COMPLETED';
       },
       isFailed: (context) => {

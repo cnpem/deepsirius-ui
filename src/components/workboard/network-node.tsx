@@ -1,6 +1,4 @@
 import { useMachine } from '@xstate/react';
-import { useState } from 'react';
-import { type SubmitHandler, useForm } from 'react-hook-form';
 import {
   Handle,
   type Node,
@@ -20,7 +18,9 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { api } from '~/utils/api';
 
+import { DynamicForm } from '../ui/dynamic-forms/DynamicForm';
 import { type NodeData, NodeWrapper } from './common-node-utils';
+import { networkFormData } from './network-form-data';
 
 interface JobEvent {
   type: 'done.invoke';
@@ -112,103 +112,56 @@ const nodeMachine = createMachine({
   predictableActionArguments: true,
 });
 
-type NetworkParams = {
-  label: string;
-  status: string;
-  patchsize: {
-    xy?: string | null;
-    z?: string | null;
-    xyz?: string | null;
-  };
-  trainingParams: {
-    batchSize: number;
-    iterations: number;
-    epochs: number;
-    learningRate: number;
-    optimizer: string;
-    lossFunction: string;
-  };
-  jobParams: {
-    GPUs: string;
-  };
-};
+// interface FormProps {
+//   fields: NetworkParams[];
+// }
 
-type FormData = {
-  email: string;
-  password: string;
-};
+// export const Form = ({ fields }: FormProps) => {
+//   const formMethods = useForm();
+//   const error = false;
 
-function Form() {
-  const [error, setError] = useState('');
-  const mutation = api.silly.login.useMutation();
+//   // const onSubmit: SubmitHandler<NetworkParams> = (data) => {
+//   //   try {
+//   //     console.log(data);
+//   //     // mutation.mutate({ name: data.label });
+//   //   } catch (err) {
+//   //     console.log(err);
+//   //   }
+//   // };
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormData>();
-  const onSubmit: SubmitHandler<FormData> = (data) => {
-    try {
-      console.log(data);
-      const mail = data.email;
-      mutation.mutate({ name: mail });
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  return (
-    <form
-      className="w-full space-y-12 sm:w-[400px]"
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onSubmit={handleSubmit(onSubmit)}
-    >
-      {error && (
-        <div className="flex w-full items-center justify-center rounded-sm bg-red-700 font-semibold text-white">
-          <p role="alert">{error}</p>
-        </div>
-      )}
-      <div className="grid w-full items-center gap-1.5">
-        <Label htmlFor="email">Email</Label>
-        {errors.email && (
-          <p role="alert" className="text-red-600">
-            {errors.email?.message}
-          </p>
-        )}
-        <Input
-          placeholder="user.name@example.com"
-          autoComplete="just-an-invalid-value"
-          {...register('email', { required: 'Email is required!' })}
-        />
-      </div>
-      <div className="grid w-full items-center gap-1.5">
-        <Label htmlFor="password">Password</Label>
-        {errors.password && (
-          <p role="alert" className="text-red-600">
-            {errors.password?.message}
-          </p>
-        )}
-        <Input
-          type="password"
-          placeholder="Password"
-          autoComplete="just-an-invalid-value" // browsers throw an error when this property isn't set. Setting
-          {...register('password', {
-            required: 'Password is required!',
-          })}
-        />
-      </div>
-      <Button className="w-full" type="submit">
-        Submit
-      </Button>
-      <div>{mutation.data?.user.name}</div>
-      <div>
-        {mutation.error && (
-          <p>Something went wrong! {mutation.error.message}</p>
-        )}
-      </div>
-    </form>
-  );
-}
+//   return (
+//     <form
+//       className="w-full space-y-12 sm:w-[400px]"
+//       // eslint-disable-next-line @typescript-eslint/no-misused-promises
+//       // onSubmit={handleSubmit(onSubmit)}
+//     >
+//       {error && (
+//         <div className="flex w-full items-center justify-center rounded-sm bg-red-700 font-semibold text-white">
+//           <p role="alert">{error}</p>
+//         </div>
+//       )}
+//       <div className="grid w-full items-center gap-1.5">
+//       <FormProvider {...formMethods}>
+//         {fields.map((d, i) => (
+//           <div key={i}>
+//             <label htmlFor={d.fieldName}>{d.label}</label>
+// 			// input controls will be rendered here
+//           </div>
+//         ))}
+//       </FormProvider>
+//       </div>
+//       <Button className="w-full" type="submit">
+//         Submit
+//       </Button>
+//       {/* <div>{mutation.data?.user.name}</div> */}
+//       {/* <div>
+//         {mutation.error && (
+//           <p>Something went wrong! {mutation.error.message}</p>
+//         )}
+//       </div> */}
+//     </form>
+//   );
+// }
 
 type NetworkNode = Node<NodeData>;
 export function NetworkNode({ data }: NodeProps<NodeData>) {
@@ -283,12 +236,16 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
               </Button>
               <Button onClick={() => send('cancel')}>cancel</Button>
               <Button onClick={() => send('retry')}>retry</Button>
+              <Button onClick={() => send('finetune')}>finetune</Button>
             </div>
-            <Form />
+            <DynamicForm
+              fields={networkFormData}
+              onSubmit={() => send('start training')}
+            />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      <Handle type="source" position={Position.Bottom} />
+      {/* <Handle type="source" position={Position.Bottom}/> */}
     </NodeWrapper>
   );
 }

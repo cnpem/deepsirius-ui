@@ -30,3 +30,7 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 ## How to Jira
 
 <ISSUE-ID> my awesome commit message!!
+
+Can also close issues!
+
+*Closes* / *Resolves* / *Fixes* <ISSUE-ID>

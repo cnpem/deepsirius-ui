@@ -1,4 +1,5 @@
 import { useMachine } from '@xstate/react';
+import { useState } from 'react';
 import {
   Handle,
   type Node,
@@ -14,8 +15,6 @@ import {
   AccordionTrigger,
 } from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
 import { api } from '~/utils/api';
 
 import { DynamicForm } from '../ui/dynamic-forms/DynamicForm';
@@ -112,62 +111,11 @@ const nodeMachine = createMachine({
   predictableActionArguments: true,
 });
 
-// interface FormProps {
-//   fields: NetworkParams[];
-// }
-
-// export const Form = ({ fields }: FormProps) => {
-//   const formMethods = useForm();
-//   const error = false;
-
-//   // const onSubmit: SubmitHandler<NetworkParams> = (data) => {
-//   //   try {
-//   //     console.log(data);
-//   //     // mutation.mutate({ name: data.label });
-//   //   } catch (err) {
-//   //     console.log(err);
-//   //   }
-//   // };
-
-//   return (
-//     <form
-//       className="w-full space-y-12 sm:w-[400px]"
-//       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-//       // onSubmit={handleSubmit(onSubmit)}
-//     >
-//       {error && (
-//         <div className="flex w-full items-center justify-center rounded-sm bg-red-700 font-semibold text-white">
-//           <p role="alert">{error}</p>
-//         </div>
-//       )}
-//       <div className="grid w-full items-center gap-1.5">
-//       <FormProvider {...formMethods}>
-//         {fields.map((d, i) => (
-//           <div key={i}>
-//             <label htmlFor={d.fieldName}>{d.label}</label>
-// 			// input controls will be rendered here
-//           </div>
-//         ))}
-//       </FormProvider>
-//       </div>
-//       <Button className="w-full" type="submit">
-//         Submit
-//       </Button>
-//       {/* <div>{mutation.data?.user.name}</div> */}
-//       {/* <div>
-//         {mutation.error && (
-//           <p>Something went wrong! {mutation.error.message}</p>
-//         )}
-//       </div> */}
-//     </form>
-//   );
-// }
-
 type NetworkNode = Node<NodeData>;
 export function NetworkNode({ data }: NodeProps<NodeData>) {
   const { label = 'network' } = data;
   const nodeId = useNodeId() || '';
-  const createDummyJob = api.remotejob.test.useMutation();
+  const createDummyJob = api.remotejob.create.useMutation();
   const checkDummyJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
 
@@ -189,10 +137,23 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
       },
     },
     services: {
-      submitJob: () => {
+      submitJob: (_, event) => {
         return new Promise((resolve, reject) => {
+          const inputFormData = event.data;
+          console.log('data submit: ', inputFormData);
+          const jobInput = {
+            jobName: 'deepsirius-ui',
+            output: 'output-do-pai-custom.txt',
+            error: 'error-dos-outros-custom.txt',
+            ntasks: 1,
+            partition: 'dev-gcd',
+            command:
+              'echo "' +
+              JSON.stringify(inputFormData) +
+              '" \n sleep 5 \n echo "job completed."',
+          };
           createDummyJob
-            .mutateAsync()
+            .mutateAsync(jobInput)
             .then((data) => {
               resolve(data);
             })
@@ -240,7 +201,13 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
             </div>
             <DynamicForm
               fields={networkFormData}
-              onSubmit={() => send('start training')}
+              onSubmit={(data, e) => {
+                const stringData = JSON.stringify(data);
+                send({
+                  type: 'start training',
+                  data: { formdata: stringData },
+                });
+              }}
             />
           </AccordionContent>
         </AccordionItem>

@@ -1,45 +1,5 @@
 import { DynamicFieldData } from '~/components/ui/dynamic-forms/dynamic-control-types';
 
-type Unet2D = {
-  name: 'unet2D';
-  patchSizes: {
-    xy: '448²' | '512²' | '627²' | '896²' | '1120²';
-  };
-};
-
-type Unet3D = {
-  name: 'unet2D';
-  patchSizes: {
-    xyz: '96³' | '128³' | '512³';
-  };
-};
-
-type Vnet = {
-  name: 'unet2D';
-  patchSizes: {
-    xy: '32²' | '64²' | '128²' | '256²' | '512²';
-    z: '16' | '32' | '64' | '128' | '256' | '512';
-  };
-};
-
-export type NetworkType = 'Unet2D' | 'Unet3D' | 'Vnet';
-
-export type NetworkParams = {
-  label: string;
-  networkType: NetworkType;
-  trainingParams: {
-    batchSize: number;
-    iterations: number;
-    epochs: number;
-    learningRate: number;
-    optimizer: 'Adam' | 'Gradient Descent';
-    lossFunction: 'Cross Entropy' | 'Dice' | 'Cross Entropy + Dice';
-  };
-  jobParams: {
-    GPUs: '1' | '2' | '4';
-  };
-};
-
 export const networkFormData: DynamicFieldData[] = [
   {
     fieldName: 'NetworkType',

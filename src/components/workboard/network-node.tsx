@@ -20,6 +20,7 @@ import { api } from '~/utils/api';
 import { DynamicForm } from '../ui/dynamic-forms/DynamicForm';
 import { type NodeData, NodeWrapper } from './common-node-utils';
 import { networkFormData } from './network-form-data';
+import { NetworkForm } from './node-component-forms/network-form';
 
 interface JobEvent {
   type: 'done.invoke';
@@ -199,7 +200,8 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
               <Button onClick={() => send('retry')}>retry</Button>
               <Button onClick={() => send('finetune')}>finetune</Button>
             </div>
-            <DynamicForm
+            {/* killing this  */}
+            {/* <DynamicForm
               fields={networkFormData}
               onSubmit={(data, e) => {
                 const stringData = JSON.stringify(data);
@@ -208,7 +210,9 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
                   data: { formdata: stringData },
                 });
               }}
-            />
+            /> */}
+            {/* replacing for this TODO: pass onSubmit as an argument */}
+            <NetworkForm />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

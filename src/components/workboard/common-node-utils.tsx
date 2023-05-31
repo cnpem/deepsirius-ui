@@ -37,7 +37,7 @@ function SwitchBackground({
     data-[state=error]:bg-red-100 data-[state=inactive]:bg-gray-100
     data-[state=success]:bg-blue-100 data-[state=active]:dark:bg-green-700
     data-[state=busy]:dark:bg-yellow-700 data-[state=error]:dark:bg-red-700
-    data-[state=inactive]:dark:bg-gray-700 data-[state=success]:dark:bg-blue-700
+    data-[state=inactive]:dark:bg-gray-800 data-[state=success]:dark:bg-blue-700
   "
     >
       {children}

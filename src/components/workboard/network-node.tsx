@@ -1,6 +1,4 @@
 import { useMachine } from '@xstate/react';
-import { useState } from 'react';
-import { type SubmitHandler, useForm } from 'react-hook-form';
 import {
   Handle,
   type Node,
@@ -16,8 +14,6 @@ import {
   AccordionTrigger,
 } from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
 import { api } from '~/utils/api';
 
 import { type NodeData, NodeWrapper } from './common-node-utils';
@@ -26,9 +22,9 @@ interface JobEvent {
   type: 'done.invoke';
   data: { jobId?: string; jobStatus?: string };
 }
-const nodeMachine = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QDsD2EwFsCGBjAFgJbJgB0xeALoQG5gDEVt2lYA2gAwC6ioADqliFqqZLxAAPRAEYAbAGZSAThUr5AJgAsAdl1L18gDQgAnogAc00gFYOdjtZW3918wF83xtBhwFiZJjp6WEpsACdKAAJKMOxiYihOHiQQASERMRSpBE0ObVJNdWlzbXNNWW15bXUla2MzBEsbewcnDhd3TxBvLDwiElIAIwBXWBNSPjBkCAT6CFEyYhpUAGsyWGHBzGEAKVRBpPE04UJRcWyqjgKOWS0lDirpDWtteosq0jya2SVZaRf5PJpB4vOhen4BiMxhMpjNkFB6GAwmFUGEJgAbFgAM1RmFIGy2u32hxSxwy5ws1is6lk1j+2lkjIU6lepkQ1g+6hpHOkmmstk05lkIO6YN8-TIUPGYWGyGQs3mAyWqzIPXF-iGo2lsvl8IQytwLFOyCSJP4ghOZyyFj+pG59KZzNZDXMvztL3MRVyCjp2hFar6GqlpBlcoVC3IyGWa1IAYhkq1IZ1CX1UdQhoypukyXN6WNFMaVLttIdTI0zosHGpL20SnM5ip0lK6n9YsDkMTod1CMVizTMbjEs10K7KYNRtEpvUOdSFvJ1satvtTcd5bejUFpG0HrpJbp5VbPnbCZHyfhcwjyoHbfjw+1Yb148z3DY8hnZPzC45SgKPP+T3aaQgPXbd1AKb5aWqDl1CrQ9wSHYNR3PQ1kFwMB0TNWc8ytUBsj+K55E0KpbHMeQSKpdcSwKBkOW0dp5DKQE4PVAYkRRMJ6DCMAYhMTCPxwyREFuddCMUFoniBDhzHo5jj3xYZcDQ2BYHoLF-EoWV2G4I450-XD2XUddpA4cpSCedRPQkqSqj9OD4BSQd-B07DMn0hAAFpZHXTzPhaPz7FkTRZNvChcGoOhnMtVzBJyQy2UaMC-McWp2nUVxgqHQIwEi+c3Is6xwOKSpXAZTQyvXT1fPsZLnDSzpQSPW8pRyvSYs0JR1zpcxlBo3RblpHRbIa+Cg0TSZpgSFqBOyJQKwSqwTNqYjilm6QlAy0bTwfKApui7JXDAoVtCbe4OC5PlzAq2xSAYiyigO316tFRqhzY1FdoLIDSNIWR6KKUrSjqeLa3ye5SiqDQWWkoKukcgYNkUuB7NzKLPv+fIDCI+tXE0Yy5uMhibHa2jikBIFbI8IA */
-  id: 'nodemachine',
+const networkState = createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5QDswBcDuB7ATgawDoBLZAQwGM0iA3MAYgqutLTAG0AGAXUVAAcssIlSzJeIAB6IAjADYALAQ7Ll0gBwBWAJwbZ06QHYANCACeiNdILytt2wCY1N+-M0BfNydSZchRjXpYNFIcNAACNBxSEhIoTh4kEAEhETFEqQR5DgNre3UDDntZDjkAZnkTcwRLazsHJy0Xd08Qb2x8AgAjAFdYUwI+MGQIWLoIUTBiZGosPEnYbs6AW2EAKSxO+PFk4SJRcQzSgusOWRdZDTU1A2kOLUqLI6UDey1CrQNZLSc1Dy90dqEHp9AZDEbIKB0MA4HC4AYAGxYADNcEsCAtlmsNltEjtUgcLBorEUNNoDFpXAYNBUzIgNE97CTqWp7KVZKVSX9WgDfF1ev0cN1kMhRuNUFMZnMCG1ecCBUKRRCECQZuQWHtkPEcfxBLt9ulCcSLmSKddqQ8EKaCBpspZ7NkdPJZAYuTKOnKCILhaKJhLZpM3UD+Z6FbFldMsGrUlrpAkdSkNQTqnoCEyPqaqTSqppStbsuTyQoOKVWa6ee7g17FZCxZMVf7peWgyCq2H61GNVr7HGkrr8Qbk0bSenKebaZaSkpbRwbXkDGoKWWfBWW6GIWNffWpYG+avvUr2+rRFrSj28YmB-StNZ6bd7RoDFkORaqfZclpZGoORSjhyl4Dd3lfdITVZByDAeFtV7BN9VADI9A4AhyiOe1SmLF42QtC5ZGsT5SS-DR7CJeR7H-XloVhHA6BwdAcFMKDz1gyREDOC1kKnFQzlOEpCLIjoFnIcDYFgOgkRIdAhXYbhtj7C84LpewLVuJ0CGkEsDCpbRWVsDwWmQLAIDgcRAxkmC0nkhAAFpZAtay+MIEh-FoUy9XM5jMkU8cajqepnFcDR7IIJywBc-sLMcDRcnUT8sm4xkNAtbyfMcPyrkCuVQrk9ybAtXQ1AID5sKuIoKRsdLg0GYZYkypiMg+RK8iUGx5BtLRpFealSnKvdqxqtyMkuN81GdORdA+PJvkSm0kJZNQOAXF4Fw+QKKNwPqk30L8CGKLRynJB9Fty+RcwfC5PiyJ8LkCgShPgXFZNqmRpHkHJWWO0ov2kUlXjUC0dFzO59FeFLPnKXS3CAA */
+  id: 'network',
   initial: 'inactive',
   context: {
     jobId: '',
@@ -60,7 +56,7 @@ const nodeMachine = createMachine({
               }),
             },
             onError: {
-              target: '#nodemachine.error',
+              target: '#network.error',
             },
           },
         },
@@ -69,15 +65,15 @@ const nodeMachine = createMachine({
             src: 'jobStatus',
             onDone: [
               {
-                target: '#nodemachine.success',
+                target: '#network.success',
                 cond: 'isCompleted',
               },
               {
-                target: '#nodemachine.error',
+                target: '#network.error',
                 cond: 'isFailed',
               },
               {
-                target: '#nodemachine.error',
+                target: '#network.error',
                 cond: 'isCancelled',
               },
               {
@@ -133,83 +129,6 @@ type NetworkParams = {
   };
 };
 
-type FormData = {
-  email: string;
-  password: string;
-};
-
-function Form() {
-  const [error, setError] = useState('');
-  const mutation = api.silly.login.useMutation();
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormData>();
-  const onSubmit: SubmitHandler<FormData> = (data) => {
-    try {
-      console.log(data);
-      const mail = data.email;
-      mutation.mutate({ name: mail });
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  return (
-    <form
-      className="w-full space-y-12 sm:w-[400px]"
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onSubmit={handleSubmit(onSubmit)}
-    >
-      {error && (
-        <div className="flex w-full items-center justify-center rounded-sm bg-red-700 font-semibold text-white">
-          <p role="alert">{error}</p>
-        </div>
-      )}
-      <div className="grid w-full items-center gap-1.5">
-        <Label htmlFor="email">Email</Label>
-        {errors.email && (
-          <p role="alert" className="text-red-600">
-            {errors.email?.message}
-          </p>
-        )}
-        <Input
-          placeholder="user.name@example.com"
-          autoComplete="just-an-invalid-value"
-          {...register('email', { required: 'Email is required!' })}
-        />
-      </div>
-      <div className="grid w-full items-center gap-1.5">
-        <Label htmlFor="password">Password</Label>
-        {errors.password && (
-          <p role="alert" className="text-red-600">
-            {errors.password?.message}
-          </p>
-        )}
-        <Input
-          type="password"
-          placeholder="Password"
-          autoComplete="just-an-invalid-value" // browsers throw an error when this property isn't set. Setting
-          {...register('password', {
-            required: 'Password is required!',
-          })}
-        />
-      </div>
-      <Button className="w-full" type="submit">
-        Submit
-      </Button>
-      <div>{mutation.data?.user.name}</div>
-      <div>
-        {mutation.error && (
-          <p>Something went wrong! {mutation.error.message}</p>
-        )}
-      </div>
-    </form>
-  );
-}
-
 type NetworkNode = Node<NodeData>;
 export function NetworkNode({ data }: NodeProps<NodeData>) {
   const { label = 'network' } = data;
@@ -218,7 +137,7 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
   const checkDummyJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
 
-  const [state, send] = useMachine(nodeMachine, {
+  const [state, send] = useMachine(networkState, {
     guards: {
       isCompleted: (context) => {
         return context.jobStatus === 'COMPLETED';
@@ -259,7 +178,6 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
       },
     },
   });
-
   return (
     <NodeWrapper label={label + nodeId} state={state.value}>
       <Handle type="target" position={Position.Top} />
@@ -270,12 +188,6 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
         <AccordionItem value="item-1">
           <AccordionTrigger>Lets props!</AccordionTrigger>
           <AccordionContent>
-            <div>
-              my state now:{' '}
-              {typeof state.value === 'object'
-                ? (state.value.busy as string)
-                : state.value.toString()}
-            </div>
             <div className="flex p-2">
               <Button onClick={() => send('activate')}>active</Button>
               <Button onClick={() => send('start training')}>
@@ -284,7 +196,6 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
               <Button onClick={() => send('cancel')}>cancel</Button>
               <Button onClick={() => send('retry')}>retry</Button>
             </div>
-            <Form />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

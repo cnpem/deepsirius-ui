@@ -38,3 +38,4 @@ Can also close issues!
 ```shell
 git commit -m "Closes / Resolves / Fixes ISSUE-ID"
 ```
+Bitbucket!

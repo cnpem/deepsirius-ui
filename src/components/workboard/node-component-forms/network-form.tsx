@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '~/components/ui/button';
 import {
@@ -47,8 +47,13 @@ const networkFormSchema = z.object({
 export type NetworkForm = z.infer<typeof networkFormSchema>;
 export type networkFormCallback = (data: NetworkForm) => void;
 
-export function NetworkForm() {
-  // 1. Define your form.
+// a function that receives a function as a parameter
+// and returns a function that receives a parameter of type NetworkForm
+// and returns void
+type NetworkFormProps = {
+  onSubmitHandler: networkFormCallback;
+};
+export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
   const form = useForm<NetworkForm>({
     resolver: zodResolver(networkFormSchema),
     defaultValues: {
@@ -63,16 +68,32 @@ export function NetworkForm() {
     },
   });
 
-  // 2. Define a submit handler.
-  // function onSubmit(values: NetworkForm) {
-  //   // Do something with the form values.
-  //   // ✅ This will be type-safe and validated.
-  //   console.log('hey');
-  //   console.log(values);
-  // }
-  const onSubmit = (data: NetworkForm, e) => {
-    console.log(data);
-    // onSubmitHandler(data);
+  type FieldItem = {
+    label: string;
+    value: string;
+  };
+
+  type FormFieldItems = FieldItem[];
+
+  const networkOpts: FormFieldItems = [
+    { label: 'unet2D', value: 'unet2d' },
+    { label: 'unet3D', value: 'unet3d' },
+    { label: 'vnet', value: 'vnet' },
+  ];
+
+  const optmizerOpts: FormFieldItems = [
+    { label: 'Adam', value: 'adam' },
+    { label: 'SGD', value: 'SGD' },
+  ];
+
+  const lossOpts: FormFieldItems = [
+    { label: 'Cross Entropy', value: 'CrossEntropy' },
+    { label: 'Dice', value: 'dice' },
+    { label: 'Cross Entropy + Dice', value: 'xent_dice' },
+  ];
+
+  const onSubmit = () => {
+    onSubmitHandler(form.getValues());
   };
   return (
     <Form {...form}>
@@ -106,54 +127,19 @@ export function NetworkForm() {
                   defaultValue={field.value}
                   className="flex items-center justify-center space-x-2"
                 >
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>unet2D</FormLabel>
-                    <RadioGroupItem value="unet2d" />
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>unet3D</FormLabel>
-                    <RadioGroupItem value="unet3d" />
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>vnet</FormLabel>
-                    <RadioGroupItem value="vnet" />
-                  </div>
+                  {networkOpts.map((option) => (
+                    <div
+                      key={option.value}
+                      className="flex items-center space-x-1"
+                    >
+                      <FormLabel>{option.label}</FormLabel>
+                      <RadioGroupItem value={option.value} />
+                    </div>
+                  ))}
                 </RadioGroup>
               </FormControl>
               <FormDescription>
-                Select the type of network you would like to create.
-              </FormDescription>
-            </FormItem>
-          )}
-        />
-        <FormField
-          name="jobGPUs"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Number of GPUs</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex items-center justify-center space-x-2"
-                >
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>1</FormLabel>
-                    <RadioGroupItem value="1" />
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>2</FormLabel>
-                    <RadioGroupItem value="2" />
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>4</FormLabel>
-                    <RadioGroupItem value="4" />
-                  </div>
-                </RadioGroup>
-              </FormControl>
-              <FormDescription>
-                Select the number of GPUs you would like to use.
+                Select the type of network you would like to use.
               </FormDescription>
             </FormItem>
           )}
@@ -211,21 +197,22 @@ export function NetworkForm() {
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Optimizer</FormLabel>
+              <FormLabel>Network Type</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                   className="flex items-center justify-center space-x-2"
                 >
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>Adam</FormLabel>
-                    <RadioGroupItem value="adam" />
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>SGD</FormLabel>
-                    <RadioGroupItem value="SGD" />
-                  </div>
+                  {optmizerOpts.map((option) => (
+                    <div
+                      key={option.value}
+                      className="flex items-center space-x-1"
+                    >
+                      <FormLabel>{option.label}</FormLabel>
+                      <RadioGroupItem value={option.value} />
+                    </div>
+                  ))}
                 </RadioGroup>
               </FormControl>
               <FormDescription>
@@ -239,25 +226,22 @@ export function NetworkForm() {
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Loss Function</FormLabel>
+              <FormLabel>Network Type</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                   className="flex items-center justify-center space-x-2"
                 >
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>Cross Entropy</FormLabel>
-                    <RadioGroupItem value="CrossEntropy" />
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>Dice</FormLabel>
-                    <RadioGroupItem value="dice" />
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <FormLabel>Cross Entropy + Dice</FormLabel>
-                    <RadioGroupItem value="xent_dice" />
-                  </div>
+                  {lossOpts.map((option) => (
+                    <div
+                      key={option.value}
+                      className="flex items-center space-x-1"
+                    >
+                      <FormLabel>{option.label}</FormLabel>
+                      <RadioGroupItem value={option.value} />
+                    </div>
+                  ))}
                 </RadioGroup>
               </FormControl>
               <FormDescription>

@@ -16,6 +16,7 @@ import {
 import { Input } from '~/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group';
 
+// TODO: create schema in and form controls for custom options for each network type (patch dimensions)
 const networkFormSchema = z.object({
   // field of type z.string() with no spaces or special characters allowed
   networkUserLabel: z

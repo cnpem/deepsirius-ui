@@ -32,15 +32,18 @@ export const remoteJobRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const sbatchContent = `#!/bin/bash
-        #SBATCH --job-name=${input.jobName}
-        #SBATCH --output=${input.output}
-        #SBATCH --error=${input.error}
-        #SBATCH --ntasks=${input.ntasks}
-        #SBATCH --partition=${input.partition}
-        
-        
-        ${input.command}`;
+      const sbatchContent = [
+        '#!/bin/bash',
+        `#SBATCH --job-name=${input.jobName}`,
+        `#SBATCH --output=${input.output}`,
+        `#SBATCH --error=${input.error}`,
+        `#SBATCH --ntasks=${input.ntasks}`,
+        `#SBATCH --partition=${input.partition}`,
+        `${input.command}`,
+      ].join('\n');
+
+      console.log('data: ', sbatchContent);
+
       const sshKeyPath = ctx.sshKeyPath ?? '';
       const username = ctx.session.user.name ?? '';
 

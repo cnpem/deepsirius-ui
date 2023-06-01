@@ -1,4 +1,5 @@
 import { useMachine } from '@xstate/react';
+import { useState } from 'react';
 import {
   Handle,
   type Node,
@@ -16,7 +17,9 @@ import {
 import { Button } from '~/components/ui/button';
 import { api } from '~/utils/api';
 
+import { DynamicForm } from '../ui/dynamic-forms/DynamicForm';
 import { type NodeData, NodeWrapper } from './common-node-utils';
+import { networkFormData } from './network-form-data';
 
 interface JobEvent {
   type: 'done.invoke';
@@ -108,32 +111,11 @@ const networkState = createMachine({
   predictableActionArguments: true,
 });
 
-type NetworkParams = {
-  label: string;
-  status: string;
-  patchsize: {
-    xy?: string | null;
-    z?: string | null;
-    xyz?: string | null;
-  };
-  trainingParams: {
-    batchSize: number;
-    iterations: number;
-    epochs: number;
-    learningRate: number;
-    optimizer: string;
-    lossFunction: string;
-  };
-  jobParams: {
-    GPUs: string;
-  };
-};
-
 type NetworkNode = Node<NodeData>;
 export function NetworkNode({ data }: NodeProps<NodeData>) {
   const { label = 'network' } = data;
   const nodeId = useNodeId() || '';
-  const createDummyJob = api.remotejob.test.useMutation();
+  const createDummyJob = api.remotejob.create.useMutation();
   const checkDummyJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
 
@@ -155,10 +137,23 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
       },
     },
     services: {
-      submitJob: () => {
+      submitJob: (_, event) => {
         return new Promise((resolve, reject) => {
+          const inputFormData = event.data;
+          console.log('data submit: ', inputFormData);
+          const jobInput = {
+            jobName: 'deepsirius-ui',
+            output: 'output-do-pai-custom.txt',
+            error: 'error-dos-outros-custom.txt',
+            ntasks: 1,
+            partition: 'dev-gcd',
+            command:
+              'echo "' +
+              JSON.stringify(inputFormData) +
+              '" \n sleep 5 \n echo "job completed."',
+          };
           createDummyJob
-            .mutateAsync()
+            .mutateAsync(jobInput)
             .then((data) => {
               resolve(data);
             })
@@ -195,11 +190,22 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
               </Button>
               <Button onClick={() => send('cancel')}>cancel</Button>
               <Button onClick={() => send('retry')}>retry</Button>
+              <Button onClick={() => send('finetune')}>finetune</Button>
             </div>
+            <DynamicForm
+              fields={networkFormData}
+              onSubmit={(data, e) => {
+                const stringData = JSON.stringify(data);
+                send({
+                  type: 'start training',
+                  data: { formdata: stringData },
+                });
+              }}
+            />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      <Handle type="source" position={Position.Bottom} />
+      {/* <Handle type="source" position={Position.Bottom}/> */}
     </NodeWrapper>
   );
 }

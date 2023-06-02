@@ -15,6 +15,7 @@ import {
 } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group';
+import { Switch } from '~/components/ui/switch';
 
 // TODO: create schema in and form controls for custom options for each network type (patch dimensions)
 const networkFormSchema = z.object({
@@ -28,16 +29,19 @@ const networkFormSchema = z.object({
       message:
         'Network label name must contain only letters, numbers underscores and no spaces.',
     }),
+  //
+  // field dropClassifier of type z.boolean()
+  dropClassifier: z.boolean(),
   // field of  with options of 'unet2D', 'unet3D', 'vnet'
   networkType: z.enum(['unet2d', 'unet3d', 'vnet']),
   // field of type z.enum() with options of '1', '2', '4'
   jobGPUs: z.enum(['1', '2', '4']),
   // field of type z.number() with a minimum value of 1
-  iterations: z.number().gte(1, { message: 'Must be >= 1' }),
+  iterations: z.coerce.number().gte(1, { message: 'Must be >= 1' }),
   // field of type z.number() with a minimum value of 1
-  epochs: z.number().gte(1, { message: 'Must be >= 1' }),
+  epochs: z.coerce.number().gte(1, { message: 'Must be >= 1' }),
   // field of type z.number() with a minimum value of 0
-  learningRate: z.number().gt(0, { message: 'Must be greater than 0' }),
+  learningRate: z.coerce.number().gt(0, { message: 'Must be greater than 0' }),
   // field of type z.enum() with options of 'Adam', 'SGD'
   optimizer: z.enum(['adam', 'SGD']),
   // field of type z.enum() with options of 'CrossEntropy', 'dice', 'xent_dice'
@@ -60,6 +64,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
     defaultValues: {
       networkUserLabel: 'NewName',
       networkType: 'unet2d',
+      dropClassifier: false,
       jobGPUs: '1',
       iterations: 1,
       epochs: 1,
@@ -77,8 +82,8 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
   type FormFieldItems = FieldItem[];
 
   const networkOpts: FormFieldItems = [
-    { label: 'unet2D', value: 'unet2d' },
-    { label: 'unet3D', value: 'unet3d' },
+    { label: 'unet 2D', value: 'unet2d' },
+    { label: 'unet 3D', value: 'unet3d' },
     { label: 'vnet', value: 'vnet' },
   ];
 
@@ -111,7 +116,6 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
               <FormControl>
                 <Input {...field} />
               </FormControl>
-              <FormDescription>Give your network a name!</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -139,9 +143,27 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
                   ))}
                 </RadioGroup>
               </FormControl>
-              <FormDescription>
-                Select the type of network you would like to use.
-              </FormDescription>
+            </FormItem>
+          )}
+        />
+        <div className="flex items-center justify-center space-x-2">
+          TODO: Patch Size
+        </div>
+        {/* form field for field name "dropClassifier using a Switch" */}
+        <FormField
+          name="dropClassifier"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Drop Classifier</FormLabel>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
             </FormItem>
           )}
         />
@@ -154,10 +176,6 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
               <FormControl>
                 <Input {...field} type="number" />
               </FormControl>
-              <FormDescription>
-                Select the number of iterations you would like to use.
-              </FormDescription>
-              <FormMessage />
             </FormItem>
           )}
         />
@@ -170,9 +188,6 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
               <FormControl>
                 <Input {...field} type="number" />
               </FormControl>
-              <FormDescription>
-                Select the number of epochs you would like to use.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -186,9 +201,6 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
               <FormControl>
                 <Input {...field} type="number" />
               </FormControl>
-              <FormDescription>
-                Select the learning rate you would like to use.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -216,9 +228,6 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
                   ))}
                 </RadioGroup>
               </FormControl>
-              <FormDescription>
-                Select the optimizer you would like to use.
-              </FormDescription>
             </FormItem>
           )}
         />
@@ -245,9 +254,6 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
                   ))}
                 </RadioGroup>
               </FormControl>
-              <FormDescription>
-                Select the loss function you would like to use.
-              </FormDescription>
             </FormItem>
           )}
         />

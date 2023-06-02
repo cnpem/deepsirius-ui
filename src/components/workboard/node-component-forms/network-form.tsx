@@ -7,7 +7,6 @@ import { Button } from '~/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -18,7 +17,7 @@ import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group';
 import { Switch } from '~/components/ui/switch';
 
 // TODO: create schema in and form controls for custom options for each network type (patch dimensions)
-const networkFormSchema = z.object({
+const networkBaseSchema = z.object({
   // field of type z.string() with no spaces or special characters allowed
   networkUserLabel: z
     .string()
@@ -32,8 +31,6 @@ const networkFormSchema = z.object({
   //
   // field dropClassifier of type z.boolean()
   dropClassifier: z.boolean(),
-  // field of  with options of 'unet2D', 'unet3D', 'vnet'
-  networkType: z.enum(['unet2d', 'unet3d', 'vnet']),
   // field of type z.enum() with options of '1', '2', '4'
   jobGPUs: z.enum(['1', '2', '4']),
   // field of type z.number() with a minimum value of 1
@@ -45,16 +42,37 @@ const networkFormSchema = z.object({
   // field of type z.enum() with options of 'Adam', 'SGD'
   optimizer: z.enum(['adam', 'SGD']),
   // field of type z.enum() with options of 'CrossEntropy', 'dice', 'xent_dice'
-  // meaning cross entropy, dice or both combi
+  // meaning cross entropy, dice or both combined
   lossFunction: z.enum(['CrossEntropy', 'dice', 'xent_dice']),
 });
+
+// field of  with options of 'unet2D', 'unet3D', 'vnet'
+const networkType = z.enum(['unet2d', 'unet3d', 'vnet']);
+
+const unet2dSchema = networkBaseSchema.extend({
+  networkTypeName: z.literal(networkType.enum.unet2d),
+  hue: z.enum(['1', '2', '4']),
+});
+
+const unet3dSchema = networkBaseSchema.extend({
+  networkTypeName: z.literal(networkType.enum.unet3d),
+  hue: z.enum(['5', '6', '7']),
+});
+
+const vnetSchema = networkBaseSchema.extend({
+  networkTypeName: z.literal(networkType.enum.vnet),
+  hue: z.enum(['8', '9', '10']),
+});
+
+const networkFormSchema = z.discriminatedUnion('networkTypeName', [
+  unet2dSchema,
+  unet3dSchema,
+  vnetSchema,
+]);
 
 export type NetworkForm = z.infer<typeof networkFormSchema>;
 export type networkFormCallback = (data: NetworkForm) => void;
 
-// a function that receives a function as a parameter
-// and returns a function that receives a parameter of type NetworkForm
-// and returns void
 type NetworkFormProps = {
   onSubmitHandler: networkFormCallback;
 };
@@ -63,7 +81,8 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
     resolver: zodResolver(networkFormSchema),
     defaultValues: {
       networkUserLabel: 'NewName',
-      networkType: 'unet2d',
+      networkTypeName: 'unet2d',
+      hue: '1',
       dropClassifier: false,
       jobGPUs: '1',
       iterations: 1,
@@ -87,6 +106,29 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
     { label: 'vnet', value: 'vnet' },
   ];
 
+  const selectHueOpts: FormFieldItems = (network: string) => {
+    switch (network) {
+      case 'unet2d':
+        return [
+          { label: '1', value: '1' },
+          { label: '2', value: '2' },
+          { label: '4', value: '4' },
+        ];
+      case 'unet3d':
+        return [
+          { label: '5', value: '5' },
+          { label: '6', value: '6' },
+          { label: '7', value: '7' },
+        ];
+      case 'vnet':
+        return [
+          { label: '8', value: '8' },
+          { label: '9', value: '9' },
+          { label: '10', value: '10' },
+        ];
+    }
+  };
+
   const optmizerOpts: FormFieldItems = [
     { label: 'Adam', value: 'adam' },
     { label: 'SGD', value: 'SGD' },
@@ -101,6 +143,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
   const onSubmit = () => {
     onSubmitHandler(form.getValues());
   };
+
   return (
     <Form {...form}>
       <form
@@ -121,7 +164,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           )}
         />
         <FormField
-          name="networkType"
+          name="networkTypeName"
           control={form.control}
           render={({ field }) => (
             <FormItem>
@@ -146,10 +189,34 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
             </FormItem>
           )}
         />
-        <div className="flex items-center justify-center space-x-2">
-          TODO: Patch Size
-        </div>
-        {/* form field for field name "dropClassifier using a Switch" */}
+        <FormField
+          name="hue"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>hue</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={selectHueOpts(form.watch('networkTypeName'))}
+                  className="flex items-center justify-center space-x-2"
+                >
+                  {selectHueOpts(form.watch('networkTypeName')).map(
+                    (option) => (
+                      <div
+                        key={option.value}
+                        className="flex items-center space-x-1"
+                      >
+                        <FormLabel>{option.label}</FormLabel>
+                        <RadioGroupItem value={option.value} />
+                      </div>
+                    ),
+                  )}
+                </RadioGroup>
+              </FormControl>
+            </FormItem>
+          )}
+        />
         <FormField
           name="dropClassifier"
           control={form.control}

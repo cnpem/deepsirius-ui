@@ -27,7 +27,18 @@ You can check out the [create-t3-app GitHub repository](https://github.com/t3-os
 
 Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
 
-## How to Jira
+## How to Jira (from git commits through gitlab)
+
+This publishes a comment to the issue identified by ISSUE-ID, but it comments with the user account set up in the gitlab repo.
+
+This results in comments like:
+
+> Comment:
+> MATHEUS LUIS BERNARDI
+> about 17 hours ago
+> Bruno Vasco de Paula Carlos mentioned this issue in commit 4837d9eb of Matheus Luís Bernardi / deepsirius-ui:
+
+### Commiting:
 
 ```shell
 git commit -m "ISSUE-ID my awesome commit message!!"
@@ -38,4 +49,3 @@ Can also close issues!
 ```shell
 git commit -m "Closes / Resolves / Fixes ISSUE-ID"
 ```
-Bitbucket! \o/

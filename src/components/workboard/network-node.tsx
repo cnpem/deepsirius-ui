@@ -23,9 +23,22 @@ interface JobEvent {
   type: 'done.invoke';
   data: { jobId?: string; jobStatus?: string };
 }
+
 const networkState = createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QDswBcDuB7ATgawDoBLZAQwGM0iA3MAYgqutLTAG0AGAXUVAAcssIlSzJeIAB6IAjADYALAQ7Ll0gBwBWAJwbZ06QHYANCACeiNdILytt2wCY1N+-M0BfNydSZchRjXpYNFIcNAACNBxSEhIoTh4kEAEhETFEqQR5DgNre3UDDntZDjkAZnkTcwRLazsHJy0Xd08Qb2x8AgAjAFdYUwI+MGQIWLoIUTBiZGosPEnYbs6AW2EAKSxO+PFk4SJRcQzSgusOWRdZDTU1A2kOLUqLI6UDey1CrQNZLSc1Dy90dqEHp9AZDEbIKB0MA4HC4AYAGxYADNcEsCAtlmsNltEjtUgcLBorEUNNoDFpXAYNBUzIgNE97CTqWp7KVZKVSX9WgDfF1ev0cN1kMhRuNUFMZnMCG1ecCBUKRRCECQZuQWHtkPEcfxBLt9ulCcSLmSKddqQ8EKaCBpspZ7NkdPJZAYuTKOnKCILhaKJhLZpM3UD+Z6FbFldMsGrUlrpAkdSkNQTqnoCEyPqaqTSqppStbsuTyQoOKVWa6ee7g17FZCxZMVf7peWgyCq2H61GNVr7HGkrr8Qbk0bSenKebaZaSkpbRwbXkDGoKWWfBWW6GIWNffWpYG+avvUr2+rRFrSj28YmB-StNZ6bd7RoDFkORaqfZclpZGoORSjhyl4Dd3lfdITVZByDAeFtV7BN9VADI9A4AhyiOe1SmLF42QtC5ZGsT5SS-DR7CJeR7H-XloVhHA6BwdAcFMKDz1gyREDOC1kKnFQzlOEpCLIjoFnIcDYFgOgkRIdAhXYbhtj7C84LpewLVuJ0CGkEsDCpbRWVsDwWmQLAIDgcRAxkmC0nkhAAFpZAtay+MIEh-FoUy9XM5jMkU8cajqepnFcDR7IIJywBc-sLMcDRcnUT8sm4xkNAtbyfMcPyrkCuVQrk9ybAtXQ1AID5sKuIoKRsdLg0GYZYkypiMg+RK8iUGx5BtLRpFealSnKvdqxqtyMkuN81GdORdA+PJvkSm0kJZNQOAXF4Fw+QKKNwPqk30L8CGKLRynJB9Fty+RcwfC5PiyJ8LkCgShPgXFZNqmRpHkHJWWO0ov2kUlXjUC0dFzO59FeFLPnKXS3CAA */
   id: 'network',
+  schema: {
+    context: {} as {
+      jobId: string;
+      jobStatus: string;
+    },
+    events: {} as
+      | { type: 'activate' }
+      | { type: 'start training'; data: { formData: string } }
+      | { type: 'cancel' }
+      | { type: 'retry' }
+      | { type: 'finetune' },
+  },
   initial: 'inactive',
   context: {
     jobId: '',
@@ -137,8 +150,9 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
     services: {
       submitJob: (_, event) => {
         return new Promise((resolve, reject) => {
-          const inputFormData = event.data;
-          console.log('data submit: ', inputFormData);
+          const formData =
+            event.type === 'start training' ? event.data.formData : '';
+          console.log('data submit: ', formData);
           const jobInput = {
             jobName: 'deepsirius-ui',
             output: 'output-do-pai-custom.txt',
@@ -147,7 +161,7 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
             partition: 'dev-gcd',
             command:
               'echo "' +
-              JSON.stringify(inputFormData) +
+              JSON.stringify(formData) +
               '" \n sleep 5 \n echo "job completed."',
           };
           createDummyJob
@@ -196,14 +210,14 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
                 const stringData = JSON.stringify(data);
                 send({
                   type: 'start training',
-                  data: { formdata: stringData },
+                  data: { formData: stringData },
                 });
               }}
             />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      {/* <Handle type="source" position={Position.Bottom}/> */}
+      <Handle type="source" position={Position.Bottom} />
     </NodeWrapper>
   );
 }

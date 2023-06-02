@@ -1,21 +1,5 @@
 import React from 'react';
-import {
-  Handle,
-  type Node,
-  type NodeProps,
-  Position,
-  useNodeId,
-} from 'reactflow';
 import { type StateValue } from 'xstate';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '~/components/ui/accordion';
-import { Input } from '~/components/ui/input';
-
-import { Button } from '../ui/button';
 
 export type NodeData = {
   label?: string;
@@ -37,7 +21,7 @@ function SwitchBackground({
     data-[state=error]:bg-red-100 data-[state=inactive]:bg-gray-100
     data-[state=success]:bg-blue-100 data-[state=active]:dark:bg-green-700
     data-[state=busy]:dark:bg-yellow-700 data-[state=error]:dark:bg-red-700
-    data-[state=inactive]:dark:bg-gray-800 data-[state=success]:dark:bg-blue-700
+    data-[state=inactive]:dark:bg-muted data-[state=success]:dark:bg-blue-700
   "
     >
       {children}

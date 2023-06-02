@@ -14,10 +14,17 @@ import {
 } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select';
 import { Switch } from '~/components/ui/switch';
 
-// TODO: create schema in and form controls for custom options for each network type (patch dimensions)
-const networkBaseSchema = z.object({
+const patchSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
+const networkFormSchema = z.object({
   // field of type z.string() with no spaces or special characters allowed
   networkUserLabel: z
     .string()
@@ -44,31 +51,11 @@ const networkBaseSchema = z.object({
   // field of type z.enum() with options of 'CrossEntropy', 'dice', 'xent_dice'
   // meaning cross entropy, dice or both combined
   lossFunction: z.enum(['CrossEntropy', 'dice', 'xent_dice']),
+  // field of type z.enum() with options of 'unet2D', 'unet3D', 'vnet'
+  networkTypeName: z.enum(['unet2d', 'unet3d', 'vnet']),
+  // field of type z.enum() with options of powers of 2
+  patchSize: z.enum(patchSizes),
 });
-
-// field of  with options of 'unet2D', 'unet3D', 'vnet'
-const networkType = z.enum(['unet2d', 'unet3d', 'vnet']);
-
-const unet2dSchema = networkBaseSchema.extend({
-  networkTypeName: z.literal(networkType.enum.unet2d),
-  hue: z.enum(['1', '2', '4']),
-});
-
-const unet3dSchema = networkBaseSchema.extend({
-  networkTypeName: z.literal(networkType.enum.unet3d),
-  hue: z.enum(['5', '6', '7']),
-});
-
-const vnetSchema = networkBaseSchema.extend({
-  networkTypeName: z.literal(networkType.enum.vnet),
-  hue: z.enum(['8', '9', '10']),
-});
-
-const networkFormSchema = z.discriminatedUnion('networkTypeName', [
-  unet2dSchema,
-  unet3dSchema,
-  vnetSchema,
-]);
 
 export type NetworkForm = z.infer<typeof networkFormSchema>;
 export type networkFormCallback = (data: NetworkForm) => void;
@@ -80,15 +67,15 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
   const form = useForm<NetworkForm>({
     resolver: zodResolver(networkFormSchema),
     defaultValues: {
-      networkUserLabel: 'NewName',
+      networkUserLabel: '',
       networkTypeName: 'unet2d',
-      hue: '1',
       dropClassifier: false,
       jobGPUs: '1',
       iterations: 1,
       epochs: 1,
       learningRate: 0.00001,
       optimizer: 'adam',
+      patchSize: '32',
       lossFunction: 'CrossEntropy',
     },
   });
@@ -105,29 +92,6 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
     { label: 'unet 3D', value: 'unet3d' },
     { label: 'vnet', value: 'vnet' },
   ];
-
-  const selectHueOpts: FormFieldItems = (network: string) => {
-    switch (network) {
-      case 'unet2d':
-        return [
-          { label: '1', value: '1' },
-          { label: '2', value: '2' },
-          { label: '4', value: '4' },
-        ];
-      case 'unet3d':
-        return [
-          { label: '5', value: '5' },
-          { label: '6', value: '6' },
-          { label: '7', value: '7' },
-        ];
-      case 'vnet':
-        return [
-          { label: '8', value: '8' },
-          { label: '9', value: '9' },
-          { label: '10', value: '10' },
-        ];
-    }
-  };
 
   const optmizerOpts: FormFieldItems = [
     { label: 'Adam', value: 'adam' },
@@ -147,7 +111,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={void form.handleSubmit(onSubmit)}
         className="grid items-center justify-center"
       >
         <FormField
@@ -157,7 +121,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
             <FormItem>
               <FormLabel>Network Label</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} placeholder="MyFancyNetwork" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -167,19 +131,15 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           name="networkTypeName"
           control={form.control}
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Network Type</FormLabel>
+            <FormItem className="flex items-center justify-center rounded-lg py-4">
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  className="flex items-center justify-center space-x-2"
+                  className="flex space-x-2"
                 >
                   {networkOpts.map((option) => (
-                    <div
-                      key={option.value}
-                      className="flex items-center space-x-1"
-                    >
+                    <div key={option.value} className="items-center space-x-1">
                       <FormLabel>{option.label}</FormLabel>
                       <RadioGroupItem value={option.value} />
                     </div>
@@ -190,41 +150,11 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           )}
         />
         <FormField
-          name="hue"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>hue</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={selectHueOpts(form.watch('networkTypeName'))}
-                  className="flex items-center justify-center space-x-2"
-                >
-                  {selectHueOpts(form.watch('networkTypeName')).map(
-                    (option) => (
-                      <div
-                        key={option.value}
-                        className="flex items-center space-x-1"
-                      >
-                        <FormLabel>{option.label}</FormLabel>
-                        <RadioGroupItem value={option.value} />
-                      </div>
-                    ),
-                  )}
-                </RadioGroup>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <FormField
           name="dropClassifier"
           control={form.control}
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Drop Classifier</FormLabel>
-              </div>
+            <FormItem className="flex flex-row items-center justify-between rounded-lg py-2">
+              <FormLabel className="text-base">Drop Classifier</FormLabel>
               <FormControl>
                 <Switch
                   checked={field.value}
@@ -276,13 +206,13 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           name="optimizer"
           control={form.control}
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Network Type</FormLabel>
+            <FormItem className="flex flex-row items-center justify-between rounded-lg py-2">
+              <FormLabel>Optimizer</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  className="flex items-center justify-center space-x-2"
+                  className="flex justify-end"
                 >
                   {optmizerOpts.map((option) => (
                     <div
@@ -303,24 +233,45 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Network Type</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex items-center justify-center space-x-2"
-                >
-                  {lossOpts.map((option) => (
-                    <div
-                      key={option.value}
-                      className="flex items-center space-x-1"
-                    >
-                      <FormLabel>{option.label}</FormLabel>
-                      <RadioGroupItem value={option.value} />
-                    </div>
+              <FormLabel>Loss Function</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a verified email to display" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {lossOpts.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
                   ))}
-                </RadioGroup>
-              </FormControl>
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="patchSize"
+          render={({ field }) => (
+            <FormItem className="py-2">
+              <FormLabel>Patch Size</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a verified email to display" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {patchSizes.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
             </FormItem>
           )}
         />

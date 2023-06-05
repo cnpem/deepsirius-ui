@@ -48,8 +48,7 @@ function Form() {
   return (
     <form
       className="w-full space-y-12 sm:w-[400px]"
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={(...args) => void handleSubmit(onSubmit)(...args)}
     >
       <div className="grid items-center justify-center">
         <Icons.logo />

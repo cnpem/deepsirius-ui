@@ -111,7 +111,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
   return (
     <Form {...form}>
       <form
-        onSubmit={void form.handleSubmit(onSubmit)}
+        onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
         className="grid items-center justify-center"
       >
         <FormField

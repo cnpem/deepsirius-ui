@@ -1,11 +1,5 @@
 import { useMachine } from '@xstate/react';
-import {
-  Handle,
-  type Node,
-  type NodeProps,
-  Position,
-  useNodeId,
-} from 'reactflow';
+import { Handle, type Node, type NodeProps, Position } from 'reactflow';
 import { assign, createMachine } from 'xstate';
 import {
   Accordion,
@@ -16,12 +10,23 @@ import {
 import { Button } from '~/components/ui/button';
 import { api } from '~/utils/api';
 
-import { type NodeData, NodeWrapper } from './common-node-utils';
-import { NetworkForm } from './node-component-forms/network-form';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '../ui/card';
+import { type NodeData } from './common-node-utils';
+import {
+  NetworkForm,
+  type NetworkFormType,
+} from './node-component-forms/network-form';
 
 interface JobEvent {
   type: 'done.invoke';
-  data: { jobId?: string; jobStatus?: string };
+  data: { jobId?: string; jobStatus?: string; formData?: NetworkFormType };
 }
 
 const networkState = createMachine({
@@ -31,18 +36,20 @@ const networkState = createMachine({
     context: {} as {
       jobId: string;
       jobStatus: string;
+      networkLabel: string;
     },
     events: {} as
       | { type: 'activate' }
-      | { type: 'start training'; data: { formData: string } }
+      | { type: 'start training'; data: { formData: NetworkFormType } }
       | { type: 'cancel' }
-      | { type: 'retry' }
-      | { type: 'finetune' },
+      | { type: 'retry'; data: { formData: NetworkFormType } }
+      | { type: 'finetune'; data: { formData: NetworkFormType } },
   },
   initial: 'inactive',
   context: {
     jobId: '',
     jobStatus: '',
+    networkLabel: 'network',
   },
   states: {
     inactive: {
@@ -67,6 +74,8 @@ const networkState = createMachine({
               target: 'running',
               actions: assign({
                 jobId: (context, event: JobEvent) => event.data.jobId ?? '',
+                networkLabel: (context, event: JobEvent) =>
+                  event.data.formData?.networkUserLabel ?? 'network',
               }),
             },
             onError: {
@@ -116,7 +125,12 @@ const networkState = createMachine({
       },
     },
     success: {
-      on: { finetune: 'busy' },
+      on: {
+        finetune: {
+          target: 'busy',
+          actions: assign({ jobStatus: '' }),
+        },
+      },
     },
   },
   predictableActionArguments: true,
@@ -124,10 +138,8 @@ const networkState = createMachine({
 
 type NetworkNode = Node<NodeData>;
 export function NetworkNode({ data }: NodeProps<NodeData>) {
-  const { label = 'network' } = data;
-  const nodeId = useNodeId() || '';
-  const createDummyJob = api.remotejob.create.useMutation();
-  const checkDummyJob = api.remotejob.status.useMutation();
+  const createJob = api.remotejob.create.useMutation();
+  const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
 
   const [state, send] = useMachine(networkState, {
@@ -151,7 +163,9 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
       submitJob: (_, event) => {
         return new Promise((resolve, reject) => {
           const formData =
-            event.type === 'start training' ? event.data.formData : '';
+            event.type !== 'cancel' && event.type !== 'activate'
+              ? event.data.formData
+              : '';
           console.log('data submit: ', formData);
           const jobInput = {
             jobName: 'deepsirius-ui',
@@ -164,10 +178,10 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
               JSON.stringify(formData) +
               '" \n sleep 5 \n echo "job completed."',
           };
-          createDummyJob
+          createJob
             .mutateAsync(jobInput)
             .then((data) => {
-              resolve(data);
+              resolve({ ...data, formData });
             })
             .catch((err) => reject(err));
         });
@@ -175,7 +189,7 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
 
       jobStatus: (context) => {
         return new Promise((resolve, reject) => {
-          checkDummyJob
+          checkJob
             .mutateAsync({ jobId: context.jobId })
             .then((data) => {
               resolve(data);
@@ -185,39 +199,117 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
       },
     },
   });
+  const status = typeof state.value === 'object' ? 'busy' : state.value;
   return (
-    <NodeWrapper label={label + nodeId} state={state.value}>
-      <Handle type="target" position={Position.Top} />
-      <div className="flex h-full flex-col items-center justify-center">
-        <div>{`I'm the ${label} ${nodeId}`}</div>
-      </div>
-      <Accordion type="single" collapsible>
-        <AccordionItem value="item-1">
-          <AccordionTrigger>Lets props!</AccordionTrigger>
-          <AccordionContent>
-            <div className="flex p-2">
-              <Button onClick={() => send('activate')}>active</Button>
-              <Button onClick={() => send('start training')}>
-                start training
-              </Button>
-              <Button onClick={() => send('cancel')}>cancel</Button>
-              <Button onClick={() => send('retry')}>retry</Button>
-              <Button onClick={() => send('finetune')}>finetune</Button>
+    <Card
+      data-state={status}
+      className="w-[380px] data-[state=active]:bg-green-100 data-[state=busy]:bg-yellow-100
+    data-[state=error]:bg-red-100 data-[state=inactive]:bg-gray-100
+    data-[state=success]:bg-blue-100 data-[state=active]:dark:bg-teal-800
+    data-[state=busy]:dark:bg-amber-700 data-[state=error]:dark:bg-rose-700
+    data-[state=inactive]:dark:bg-muted data-[state=success]:dark:bg-cyan-700"
+    >
+      <Handle type="target" position={Position.Left} />
+      <CardHeader>
+        <CardTitle>{state.context.networkLabel}</CardTitle>
+        <CardDescription>{status}</CardDescription>
+      </CardHeader>
+      {state.matches('active') && (
+        <CardContent>
+          <Accordion type="single" collapsible>
+            <AccordionItem value="item-1">
+              <AccordionTrigger>Lets props!</AccordionTrigger>
+              <AccordionContent>
+                <NetworkForm
+                  onSubmitHandler={(data) => {
+                    send({
+                      type: 'start training',
+                      data: { formData: data },
+                    });
+                  }}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      )}
+      {state.matches('busy') && (
+        <>
+          <CardContent>
+            <div className="flex flex-col">
+              <dt className="mb-2 text-3xl font-extrabold text-center">
+                {state.context.jobId}
+              </dt>
+              <dd className="text-gray-500 dark:text-gray-400 text-center">
+                {state.context.jobStatus}
+              </dd>
             </div>
-            <NetworkForm
-              onSubmitHandler={(data) => {
-                console.log(data);
-                const stringData = JSON.stringify(data);
-                send({
-                  type: 'start training',
-                  data: { formData: stringData },
-                });
-              }}
-            />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-      <Handle type="source" position={Position.Bottom} />
-    </NodeWrapper>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button onClick={() => send('cancel')}>cancel</Button>
+          </CardFooter>
+        </>
+      )}
+      {state.matches('error') && (
+        <CardContent>
+          <div className="flex flex-col">
+            <dt className="mb-2 text-3xl font-extrabold text-center">
+              {state.context.jobId}
+            </dt>
+            <dd className="text-gray-500 dark:text-gray-400 text-center">
+              {state.context.jobStatus}
+            </dd>
+          </div>
+          <Accordion type="single" collapsible>
+            <AccordionItem value="item-1">
+              <AccordionTrigger>Retry?</AccordionTrigger>
+              <AccordionContent>
+                <NetworkForm
+                  onSubmitHandler={(data) => {
+                    send({
+                      type: 'retry',
+                      data: { formData: data },
+                    });
+                  }}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      )}
+      {state.matches('success') && (
+        <CardContent>
+          <div className="flex flex-col">
+            <dt className="mb-2 text-3xl font-extrabold text-center">
+              {state.context.jobId}
+            </dt>
+            <dd className="text-gray-500 dark:text-gray-400 text-center">
+              {state.context.jobStatus}
+            </dd>
+          </div>
+          <Accordion type="single" collapsible>
+            <AccordionItem value="item-1">
+              <AccordionTrigger>Finetune?</AccordionTrigger>
+              <AccordionContent>
+                <NetworkForm
+                  onSubmitHandler={(data) => {
+                    send({
+                      type: 'finetune',
+                      data: { formData: data },
+                    });
+                  }}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      )}
+      {state.matches('inactive') && (
+        <CardFooter className="flex justify-start">
+          <Button onClick={() => send('activate')}>activate</Button>
+        </CardFooter>
+      )}
+      <Handle type="source" position={Position.Right} />
+    </Card>
   );
 }

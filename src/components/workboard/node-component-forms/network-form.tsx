@@ -57,14 +57,14 @@ const networkFormSchema = z.object({
   patchSize: z.enum(patchSizes),
 });
 
-export type NetworkForm = z.infer<typeof networkFormSchema>;
-export type networkFormCallback = (data: NetworkForm) => void;
+export type NetworkFormType = z.infer<typeof networkFormSchema>;
+export type networkFormCallback = (data: NetworkFormType) => void;
 
 type NetworkFormProps = {
   onSubmitHandler: networkFormCallback;
 };
 export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
-  const form = useForm<NetworkForm>({
+  const form = useForm<NetworkFormType>({
     resolver: zodResolver(networkFormSchema),
     defaultValues: {
       networkUserLabel: '',
@@ -110,10 +110,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
-        className="grid items-center justify-center"
-      >
+      <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
         <FormField
           name="networkUserLabel"
           control={form.control}
@@ -153,129 +150,155 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           name="dropClassifier"
           control={form.control}
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg py-2">
-              <FormLabel className="text-base">Drop Classifier</FormLabel>
+            <FormItem className="">
               <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
+                <div className=" flex items-center space-x-4 py-4">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      Drop Classifier
+                    </p>
+                  </div>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </div>
               </FormControl>
             </FormItem>
           )}
         />
-        <FormField
-          name="iterations"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Iterations</FormLabel>
-              <FormControl>
-                <Input {...field} type="number" />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <FormField
-          name="epochs"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Epochs</FormLabel>
-              <FormControl>
-                <Input {...field} type="number" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          name="learningRate"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Learning Rate</FormLabel>
-              <FormControl>
-                <Input {...field} type="number" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-3 gap-4">
+          <FormField
+            name="iterations"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Iterations</FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="epochs"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Epochs</FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="learningRate"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Learning Rate</FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           name="optimizer"
           control={form.control}
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg py-2">
-              <FormLabel>Optimizer</FormLabel>
+            <FormItem className="">
               <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex justify-end"
-                >
-                  {optmizerOpts.map((option) => (
-                    <div
-                      key={option.value}
-                      className="flex items-center space-x-1"
-                    >
-                      <FormLabel>{option.label}</FormLabel>
-                      <RadioGroupItem value={option.value} />
-                    </div>
-                  ))}
-                </RadioGroup>
+                <div className=" flex items-center space-x-4 rounded-md py-4">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      Optimizer
+                    </p>
+                  </div>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex justify-end"
+                  >
+                    {optmizerOpts.map((option) => (
+                      <div
+                        key={option.value}
+                        className="flex items-center space-x-1"
+                      >
+                        <FormLabel id="optimizer">{option.label}</FormLabel>
+                        <RadioGroupItem value={option.value} />
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
               </FormControl>
             </FormItem>
           )}
         />
-        <FormField
-          name="lossFunction"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Loss Function</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a verified email to display" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {lossOpts.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="patchSize"
-          render={({ field }) => (
-            <FormItem className="py-2">
-              <FormLabel>Patch Size</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a verified email to display" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {patchSizes.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">Submit</Button>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            name="lossFunction"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Loss Function</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a verified email to display" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {lossOpts.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="patchSize"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Patch Size</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a verified email to display" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {patchSizes.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <footer className="flex py-4">
+          <Button className="w-full" type="submit">
+            Submit
+          </Button>
+        </footer>
       </form>
     </Form>
   );

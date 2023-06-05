@@ -132,7 +132,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Network Label</FormLabel>
+              <FormLabel htmlFor={field.name}>Network Label</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="MyFancyNetwork" />
               </FormControl>
@@ -145,6 +145,9 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem className="flex items-center justify-center rounded-lg py-4">
+              <FormLabel htmlFor={field.name} className="text-base">
+                Network Type
+              </FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
@@ -153,8 +156,10 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
                 >
                   {networkOpts.map((option) => (
                     <div key={option.value} className="items-center space-x-1">
-                      <FormLabel>{option.label}</FormLabel>
-                      <RadioGroupItem value={option.value} />
+                      <FormLabel htmlFor={option.label}>
+                        {option.label}
+                      </FormLabel>
+                      <RadioGroupItem id={option.label} value={option.value} />
                     </div>
                   ))}
                 </RadioGroup>
@@ -167,7 +172,9 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg py-2">
-              <FormLabel className="text-base">Drop Classifier</FormLabel>
+              <FormLabel htmlFor={field.name} className="text-base">
+                Drop Classifier
+              </FormLabel>
               <FormControl>
                 <Switch
                   checked={field.value}
@@ -182,7 +189,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Iterations</FormLabel>
+              <FormLabel htmlFor={field.name}>Iterations</FormLabel>
               <FormControl>
                 <Input {...field} type="number" />
               </FormControl>
@@ -194,7 +201,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Epochs</FormLabel>
+              <FormLabel htmlFor={field.name}>Epochs</FormLabel>
               <FormControl>
                 <Input {...field} type="number" />
               </FormControl>
@@ -207,7 +214,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Learning Rate</FormLabel>
+              <FormLabel htmlFor={field.name}>Learning Rate</FormLabel>
               <FormControl>
                 <Input {...field} type="number" step={learningRateStep()} />
               </FormControl>
@@ -220,7 +227,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg py-2">
-              <FormLabel>Optimizer</FormLabel>
+              <FormLabel htmlFor={field.name}>Optimizer</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
@@ -232,8 +239,13 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
                       key={option.value}
                       className="flex items-center space-x-1"
                     >
-                      <FormLabel>{option.label}</FormLabel>
-                      <RadioGroupItem value={option.value} />
+                      <FormLabel htmlFor={'radio-' + option.label}>
+                        {option.label}
+                      </FormLabel>
+                      <RadioGroupItem
+                        value={option.value}
+                        id={'radio-' + option.label}
+                      />
                     </div>
                   ))}
                 </RadioGroup>
@@ -246,7 +258,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Loss Function</FormLabel>
+              <FormLabel htmlFor={field.name}>Loss Function</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -269,7 +281,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           name="patchSize"
           render={({ field }) => (
             <FormItem className="py-2">
-              <FormLabel>Patch Size</FormLabel>
+              <FormLabel htmlFor={field.name}>Patch Size</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>

@@ -108,6 +108,19 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
     onSubmitHandler(form.getValues());
   };
 
+  // function to round learningRate step value (to be used in the input form) to the nearest power of 10 if < 1 and to 1 if > 1
+  const learningRateStep = () => {
+    const lr = form.watch('learningRate');
+    if (lr > 1) {
+      return '1';
+    } else {
+      return lr
+        .toString()
+        .replace(/\d(?=.*[1-9]$)/g, '0')
+        .replace(/[1-9]/g, '1');
+    }
+  };
+
   return (
     <Form {...form}>
       <form
@@ -196,7 +209,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
             <FormItem>
               <FormLabel>Learning Rate</FormLabel>
               <FormControl>
-                <Input {...field} type="number" />
+                <Input {...field} type="number" step={learningRateStep()} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -108,6 +108,19 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
     onSubmitHandler(form.getValues());
   };
 
+  // function to round learningRate step value (to be used in the input form) to the nearest power of 10 if < 1 and to 1 if > 1
+  const learningRateStep = () => {
+    const lr = form.watch('learningRate');
+    if (lr > 1) {
+      return '1';
+    } else {
+      return lr
+        .toString()
+        .replace(/\d(?=.*[1-9]$)/g, '0')
+        .replace(/[1-9]/g, '1');
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
@@ -116,7 +129,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Network Label</FormLabel>
+              <FormLabel htmlFor={field.name}>Network Label</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="MyFancyNetwork" />
               </FormControl>
@@ -129,6 +142,9 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem className="flex items-center justify-center rounded-lg py-4">
+              <FormLabel htmlFor={field.name} className="text-base">
+                Network Type
+              </FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
@@ -137,8 +153,10 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
                 >
                   {networkOpts.map((option) => (
                     <div key={option.value} className="items-center space-x-1">
-                      <FormLabel>{option.label}</FormLabel>
-                      <RadioGroupItem value={option.value} />
+                      <FormLabel htmlFor={option.label}>
+                        {option.label}
+                      </FormLabel>
+                      <RadioGroupItem id={option.label} value={option.value} />
                     </div>
                   ))}
                 </RadioGroup>

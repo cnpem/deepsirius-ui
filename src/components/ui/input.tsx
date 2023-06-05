@@ -3,6 +3,8 @@ import { cn } from '~/lib/utils';
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
+// BUG: [SWC-4362] type="number" is not working properly on Google Chrome.
+//      After clicking the up/down arrows, the input value keeps increasing/decreasing forever.
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
     return (

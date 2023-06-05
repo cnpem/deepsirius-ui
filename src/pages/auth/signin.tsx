@@ -48,6 +48,8 @@ function Form() {
   return (
     <form
       className="w-full space-y-12 sm:w-[400px]"
+      // Note: This is a workaround for a bug in react-hook-form
+      // See: https://github.com/orgs/react-hook-form/discussions/8020#discussioncomment-3362300
       onSubmit={(...args) => void handleSubmit(onSubmit)(...args)}
     >
       <div className="grid items-center justify-center">

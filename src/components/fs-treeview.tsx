@@ -1,22 +1,23 @@
-import { Button } from "~/components/ui/button";
+import { File, Folder, FolderOpen } from 'lucide-react';
+import { useState } from 'react';
+import { type NodeApi, type NodeRendererProps, Tree } from 'react-arborist';
+import { Button } from '~/components/ui/button';
 import {
   Dialog,
+  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogContent,
-} from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
-import { type NodeRendererProps, Tree, type NodeApi } from "react-arborist";
-import { File, Folder, FolderOpen } from "lucide-react";
-import { useState } from "react";
-import { type nodeItem } from "~/types/nodeItem";
-import { useTree, treeFetcher } from "~/hooks/tree";
-import { env } from "~/env.mjs";
-import { Skeleton } from "./ui/skeleton";
+} from '~/components/ui/dialog';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import { env } from '~/env.mjs';
+import { treeFetcher, useTree } from '~/hooks/use-tree';
+import { type nodeItem } from '~/types/nodeItem';
+
+import { Skeleton } from './ui/skeleton';
 
 type FsTreeProps = {
   path: string;
@@ -26,7 +27,7 @@ type FsTreeProps = {
 
 function Node({ node, style, dragHandle }: NodeRendererProps<nodeItem>) {
   const Icon =
-    node.data.type === "file" ? File : node.isOpen ? FolderOpen : Folder;
+    node.data.type === 'file' ? File : node.isOpen ? FolderOpen : Folder;
 
   return (
     <div style={style} ref={dragHandle} onClick={() => node.toggle()}>
@@ -65,7 +66,7 @@ export function FsTreeDialog() {
           <DialogTitle>Select workspace path</DialogTitle>
           <DialogDescription>
             {
-              "Select the path to the existing workspace or a path to create one."
+              'Select the path to the existing workspace or a path to create one.'
             }
           </DialogDescription>
         </DialogHeader>
@@ -92,7 +93,7 @@ export function FsTree({ path, handlePathChange, width }: FsTreeProps) {
   function replaceNode(
     node: nodeItem,
     nodePath: string,
-    newNode: nodeItem
+    newNode: nodeItem,
   ): nodeItem {
     if (node.path === nodePath) {
       // Replace the node with a new node
@@ -102,7 +103,7 @@ export function FsTree({ path, handlePathChange, width }: FsTreeProps) {
     if (node.children) {
       // Recursively replace the children of the node
       const updatedChildren = node.children.map((child) =>
-        replaceNode(child, nodePath, newNode)
+        replaceNode(child, nodePath, newNode),
       );
       return { ...node, children: updatedChildren };
     }
@@ -111,8 +112,8 @@ export function FsTree({ path, handlePathChange, width }: FsTreeProps) {
   }
   const handleActivate = (node: NodeApi<nodeItem>) => {
     handlePathChange(node.data.path);
-    if (node.isOpen && node.data.type === "directory") {
-      treeFetcher({ url: "/api/filesystem", path: node.data.path })
+    if (node.isOpen && node.data.type === 'directory') {
+      treeFetcher({ url: '/api/filesystem', path: node.data.path })
         .then((updatedNode) => {
           if (updatedNode && updatedNode[0]) {
             handleReplaceNode(node.data.path, updatedNode[0]);

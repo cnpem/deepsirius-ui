@@ -80,6 +80,8 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
     },
   });
 
+  const learningRateStep = 0.00001;
+
   type FieldItem = {
     label: string;
     value: string;
@@ -106,28 +108,6 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
 
   const onSubmit = () => {
     onSubmitHandler(form.getValues());
-  };
-
-  // function to calculate the learning rate step size based on the current learning rate value
-  const learningRateStep = () => {
-    let foundNonzero = false;
-    return Number(
-      form
-        .watch('learningRate')
-        .toString()
-        .split('')
-        .reverse()
-        .map((i) => {
-          if (i === '.') return i;
-          if (foundNonzero) return '0';
-          if (i !== '0') {
-            foundNonzero = true;
-          }
-          return '1';
-        })
-        .reverse()
-        .join(''),
-    );
   };
 
   return (
@@ -227,7 +207,7 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
               <FormItem>
                 <FormLabel>Learning Rate</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" step={learningRateStep()} />
+                  <Input {...field} type="number" step={learningRateStep} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

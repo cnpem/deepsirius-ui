@@ -63,12 +63,19 @@ export type networkFormCallback = (data: NetworkFormType) => void;
 type NetworkFormProps = {
   onSubmitHandler: networkFormCallback;
 };
-export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
+
+export function useNetworkForm({
+  networkUserLabel = '',
+  networkTypeName = 'unet2d',
+}: {
+  networkUserLabel?: string;
+  networkTypeName?: z.infer<typeof networkFormSchema>['networkTypeName'];
+}) {
   const form = useForm<NetworkFormType>({
     resolver: zodResolver(networkFormSchema),
     defaultValues: {
-      networkUserLabel: '',
-      networkTypeName: 'unet2d',
+      networkUserLabel: networkUserLabel,
+      networkTypeName: networkTypeName,
       dropClassifier: false,
       jobGPUs: '1',
       iterations: 1,
@@ -80,29 +87,35 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
     },
   });
 
-  type FieldItem = {
-    label: string;
-    value: string;
-  };
+  return form;
+}
 
-  type FormFieldItems = FieldItem[];
+type FieldItem = {
+  label: string;
+  value: string;
+};
 
-  const networkOpts: FormFieldItems = [
-    { label: 'unet 2D', value: 'unet2d' },
-    { label: 'unet 3D', value: 'unet3d' },
-    { label: 'vnet', value: 'vnet' },
-  ];
+type FormFieldItems = FieldItem[];
 
-  const optmizerOpts: FormFieldItems = [
-    { label: 'Adam', value: 'adam' },
-    { label: 'SGD', value: 'SGD' },
-  ];
+const networkOpts: FormFieldItems = [
+  { label: 'unet 2D', value: 'unet2d' },
+  { label: 'unet 3D', value: 'unet3d' },
+  { label: 'vnet', value: 'vnet' },
+];
 
-  const lossOpts: FormFieldItems = [
-    { label: 'Cross Entropy', value: 'CrossEntropy' },
-    { label: 'Dice', value: 'dice' },
-    { label: 'Cross Entropy + Dice', value: 'xent_dice' },
-  ];
+const optimizerOpts: FormFieldItems = [
+  { label: 'Adam', value: 'adam' },
+  { label: 'SGD', value: 'SGD' },
+];
+
+const lossOpts: FormFieldItems = [
+  { label: 'Cross Entropy', value: 'CrossEntropy' },
+  { label: 'Dice', value: 'dice' },
+  { label: 'Cross Entropy + Dice', value: 'xent_dice' },
+];
+
+export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
+  const form = useNetworkForm({});
 
   const onSubmit = () => {
     onSubmitHandler(form.getValues());
@@ -142,9 +155,6 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
           control={form.control}
           render={({ field }) => (
             <FormItem className="flex items-center justify-center rounded-lg py-4">
-              <FormLabel htmlFor={field.name} className="text-base">
-                Network Type
-              </FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
@@ -242,7 +252,186 @@ export function NetworkForm({ onSubmitHandler }: NetworkFormProps) {
                     defaultValue={field.value}
                     className="flex justify-end"
                   >
-                    {optmizerOpts.map((option) => (
+                    {optimizerOpts.map((option) => (
+                      <div
+                        key={option.value}
+                        className="flex items-center space-x-1"
+                      >
+                        <FormLabel id="optimizer">{option.label}</FormLabel>
+                        <RadioGroupItem value={option.value} />
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            name="lossFunction"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Loss Function</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a verified email to display" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {lossOpts.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="patchSize"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Patch Size</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a verified email to display" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {patchSizes.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <footer className="flex py-4">
+          <Button className="w-full" type="submit">
+            Submit
+          </Button>
+        </footer>
+      </form>
+    </Form>
+  );
+}
+
+export function PrefilledForm({
+  networkUserLabel,
+  networkTypeName,
+  onSubmitHandler,
+}: {
+  networkUserLabel: string;
+  networkTypeName: z.infer<typeof networkFormSchema>['networkTypeName'];
+  onSubmitHandler: networkFormCallback;
+}) {
+  const form = useNetworkForm({
+    networkUserLabel,
+    networkTypeName,
+  });
+
+  const onSubmit = () => {
+    onSubmitHandler(form.getValues());
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
+        <FormField
+          name="dropClassifier"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="">
+              <FormControl>
+                <div className=" flex items-center space-x-4 py-4">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      Drop Classifier
+                    </p>
+                  </div>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </div>
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <div className="grid grid-cols-3 gap-4">
+          <FormField
+            name="iterations"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Iterations</FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="epochs"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Epochs</FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="learningRate"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Learning Rate</FormLabel>
+                <FormControl>
+                  <Input {...field} type="number" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <FormField
+          name="optimizer"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="">
+              <FormControl>
+                <div className=" flex items-center space-x-4 rounded-md py-4">
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      Optimizer
+                    </p>
+                  </div>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex justify-end"
+                  >
+                    {optimizerOpts.map((option) => (
                       <div
                         key={option.value}
                         className="flex items-center space-x-1"

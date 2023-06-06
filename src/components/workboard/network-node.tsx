@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
+import { toast } from '~/components/ui/use-toast';
 import { api } from '~/utils/api';
 
 import {
@@ -20,8 +21,9 @@ import {
 } from '../ui/card';
 import { type NodeData } from './common-node-utils';
 import {
-  NetworkForm,
+  DefaultForm as NetworkForm,
   type NetworkFormType,
+  PrefilledForm,
 } from './node-component-forms/network-form';
 
 interface JobEvent {
@@ -37,6 +39,7 @@ const networkState = createMachine({
       jobId: string;
       jobStatus: string;
       networkLabel: string;
+      networkType: 'unet2d' | 'unet3d' | 'vnet';
     },
     events: {} as
       | { type: 'activate' }
@@ -50,6 +53,7 @@ const networkState = createMachine({
     jobId: '',
     jobStatus: '',
     networkLabel: 'network',
+    networkType: 'unet2d',
   },
   states: {
     inactive: {
@@ -76,6 +80,8 @@ const networkState = createMachine({
                 jobId: (context, event: JobEvent) => event.data.jobId ?? '',
                 networkLabel: (context, event: JobEvent) =>
                   event.data.formData?.networkUserLabel ?? 'network',
+                networkType: (context, event: JobEvent) =>
+                  event.data.formData?.networkTypeName ?? 'unet2d',
               }),
             },
             onError: {
@@ -218,13 +224,23 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
         <CardContent>
           <Accordion type="single" collapsible>
             <AccordionItem value="item-1">
-              <AccordionTrigger>Lets props!</AccordionTrigger>
+              <AccordionTrigger>Train me!</AccordionTrigger>
               <AccordionContent>
                 <NetworkForm
                   onSubmitHandler={(data) => {
                     send({
                       type: 'start training',
                       data: { formData: data },
+                    });
+                    toast({
+                      title: 'You submitted the following values:',
+                      description: (
+                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                          <code className="text-white">
+                            {JSON.stringify(data, null, 2)}
+                          </code>
+                        </pre>
+                      ),
                     });
                   }}
                 />
@@ -237,38 +253,59 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
         <>
           <CardContent>
             <div className="flex flex-col">
-              <dt className="mb-2 text-3xl font-extrabold text-center">
+              <p className="mb-2 text-3xl font-extrabold text-center">
                 {state.context.jobId}
-              </dt>
-              <dd className="text-gray-500 dark:text-gray-400 text-center">
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 text-center">
                 {state.context.jobStatus}
-              </dd>
+              </p>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button onClick={() => send('cancel')}>cancel</Button>
+            <Button
+              onClick={() => {
+                send('cancel');
+                toast({
+                  title: 'Canceling job...',
+                });
+              }}
+            >
+              cancel
+            </Button>
           </CardFooter>
         </>
       )}
       {state.matches('error') && (
         <CardContent>
           <div className="flex flex-col">
-            <dt className="mb-2 text-3xl font-extrabold text-center">
+            <p className="mb-2 text-3xl font-extrabold text-center">
               {state.context.jobId}
-            </dt>
-            <dd className="text-gray-500 dark:text-gray-400 text-center">
+            </p>
+            <p className="text-gray-500 dark:text-gray-400 text-center">
               {state.context.jobStatus}
-            </dd>
+            </p>
           </div>
           <Accordion type="single" collapsible>
             <AccordionItem value="item-1">
               <AccordionTrigger>Retry?</AccordionTrigger>
               <AccordionContent>
-                <NetworkForm
+                <PrefilledForm
+                  networkTypeName={state.context.networkType}
+                  networkUserLabel={state.context.networkLabel}
                   onSubmitHandler={(data) => {
                     send({
                       type: 'retry',
                       data: { formData: data },
+                    });
+                    toast({
+                      title: 'You submitted the following values:',
+                      description: (
+                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                          <code className="text-white">
+                            {JSON.stringify(data, null, 2)}
+                          </code>
+                        </pre>
+                      ),
                     });
                   }}
                 />
@@ -280,22 +317,34 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
       {state.matches('success') && (
         <CardContent>
           <div className="flex flex-col">
-            <dt className="mb-2 text-3xl font-extrabold text-center">
+            <p className="mb-2 text-3xl font-extrabold text-center">
               {state.context.jobId}
-            </dt>
-            <dd className="text-gray-500 dark:text-gray-400 text-center">
+            </p>
+            <p className="text-gray-500 dark:text-gray-400 text-center">
               {state.context.jobStatus}
-            </dd>
+            </p>
           </div>
           <Accordion type="single" collapsible>
             <AccordionItem value="item-1">
               <AccordionTrigger>Finetune?</AccordionTrigger>
               <AccordionContent>
-                <NetworkForm
+                <PrefilledForm
+                  networkTypeName={state.context.networkType}
+                  networkUserLabel={state.context.networkLabel}
                   onSubmitHandler={(data) => {
                     send({
                       type: 'finetune',
                       data: { formData: data },
+                    });
+                    toast({
+                      title: 'You submitted the following values:',
+                      description: (
+                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                          <code className="text-white">
+                            {JSON.stringify(data, null, 2)}
+                          </code>
+                        </pre>
+                      ),
                     });
                   }}
                 />

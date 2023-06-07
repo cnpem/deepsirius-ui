@@ -131,7 +131,7 @@ export function FsTree({ path, handlePathChange, width }: FsTreeProps) {
     <div className="sm:max-w-[825px]">
       <div className="grid gap-4 py-4">
         <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="email">Selected Path</Label>
+          <Label htmlFor="treepath">Selected Path</Label>
           <Input
             id="path"
             placeholder="path/to/somewhere"

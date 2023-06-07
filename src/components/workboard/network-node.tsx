@@ -174,7 +174,7 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
               : '';
           console.log('data submit: ', formData);
           const jobInput = {
-            jobName: 'deepsirius-ui',
+            jobName: 'deepsirius-network',
             output: 'output-do-pai-custom.txt',
             error: 'error-dos-outros-custom.txt',
             ntasks: 1,
@@ -205,6 +205,7 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
       },
     },
   });
+
   const status = typeof state.value === 'object' ? 'busy' : state.value;
   return (
     <Card

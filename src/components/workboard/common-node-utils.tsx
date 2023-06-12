@@ -1,11 +1,6 @@
 import React from 'react';
 import { type StateValue } from 'xstate';
 
-export type NodeData = {
-  label?: string;
-  status: string;
-};
-
 function SwitchBackground({
   state,
   children,

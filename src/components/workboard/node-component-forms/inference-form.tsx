@@ -39,16 +39,19 @@ import { cn } from '~/lib/utils';
 
 const powerSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
 const inferenceSchema = z.object({
-  inputImages: z.array(
-    z.object({
-      name: z
-        .string()
-        .regex(/^.*\.(tif|tiff|TIFF|hdf5|h5|raw|b)$/, {
-          message: 'Must be a valid image extension!',
-        }),
-      path: z.string(),
-    }),
-  ),
+  inputImages: z
+    .array(
+      z.object({
+        name: z
+          .string()
+          .min(2, { message: 'Must be a valid image name!' })
+          .regex(/^.*\.(tif|tiff|TIFF|hdf5|h5|raw|b)$/, {
+            message: 'Must be a valid image extension!',
+          }),
+        path: z.string(),
+      }),
+    )
+    .nonempty({ message: 'Must have at least one image!' }),
   saveProbMap: z.boolean(),
   normalize: z.boolean(),
   paddingSize: z.enum(powerSizes),
@@ -60,13 +63,16 @@ export type InferenceFormCallback = (data: FormType) => void;
 
 type InferenceFormProps = {
   onSubmitHandler: InferenceFormCallback;
+  inputImages?: Array<{ name: string; path: string }>;
 };
 
-export function useInferenceForm() {
+export function useInferenceForm(
+  inputImages: Array<{ name: string; path: string }> = [],
+) {
   const form = useForm<FormType>({
     resolver: zodResolver(inferenceSchema),
     defaultValues: {
-      inputImages: [],
+      inputImages: inputImages,
       saveProbMap: false,
       normalize: false,
       paddingSize: '32',
@@ -77,8 +83,11 @@ export function useInferenceForm() {
   return form;
 }
 
-export function InferenceForm({ onSubmitHandler }: InferenceFormProps) {
-  const form = useInferenceForm();
+export function InferenceForm({
+  onSubmitHandler,
+  inputImages,
+}: InferenceFormProps) {
+  const form = useInferenceForm(inputImages);
   const { fields, append, remove } = useFieldArray({
     name: 'inputImages',
     control: form.control,

@@ -1,4 +1,5 @@
 import { useMachine } from '@xstate/react';
+import { ChevronsUpDown, Minus, Plus } from 'lucide-react';
 import { Handle, type Node, type NodeProps, Position } from 'reactflow';
 import { assign, createMachine } from 'xstate';
 import {
@@ -19,6 +20,11 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '../ui/collapsible';
 import { type NodeData } from './common-node-utils';
 import {
   type FormType,
@@ -31,12 +37,13 @@ interface JobEvent {
 }
 
 const inferenceState = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QDswBcDuB7ATgawDoBLZAQwGM0iA3MAYgqutLTAG0AGAXUVAAcssIlSzJeIAB6IAjADYALAQ7Ll0gBwBWAJwbZ06QHYANCACeiNdILytt2wCY1N+-M0BfNydSZchRjXpYNFIcNAACNBxSEhIoTh4kEAEhETFEqQR5DgNre3UDDntZDjkAZnkTcwRLazsHJy0Xd08Qb2x8AgAjAFdYUwI+MGQIWLoIUTBiZGosPEnYbs6AW2EAKSxO+PFk4SJRcQzSgusOWRdZDTU1A2kOLUqLI6UDey1CrQNZLSc1Dy90dqEHp9AZDEbIKB0MA4HC4AYAGxYADNcEsCAtlmsNltEjtUgcLBorEUNNoDFpXAYNBUzIgNE97CTqWp7KVZKVSX9WgDfF1ev0cN1kMhRuNUFMZnMCG1ecCBUKRRCECQZuQWHtkPEcfxBLt9ulCcSLmSKddqQ8EKaCBpspZ7NkdPJZAYuTKOnKCILhaKJhLZpM3UD+Z6FbFldMsGrUlrpAkdSkNQTqnoCEyPqaqTSqppStbsuTyQoOKVWa6ee7g17FZCxZMVf7peWgyCq2H61GNVr7HGkrr8Qbk0bSenKebaZaSkpbRwbXkDGoKWWfBWW6GIWNffWpYG+avvUr2+rRFrSj28YmB-StNZ6bd7RoDFkORaqfZclpZGoORSjhyl4Dd3lfdITVZByDAeFtV7BN9VADI9A4AhyiOe1SmLF42QtC5ZGsT5SS-DR7CJeR7H-XloVhHA6BwdAcFMKDz1gyREDOC1kKnFQzlOEpCLIjoFnIcDYFgOgkRIdAhXYbhtj7C84LpewLVuJ0CGkEsDCpbRWVsDwWmQLAIDgcRAxkmC0nkhAAFpZAtay+MIEh-FoUy9XM5jMkU8cajqepnFcDR7IIJywBc-sLMcDRcnUT8sm4xkNAtbyfMcPyrkCuVQrk9ybAtXQ1AID5sKuIoKRsdLg0GYZYkypiMg+RK8iUGx5BtLRpFealSnKvdqxqtyMkuN81GdORdA+PJvkSm0kJZNQOAXF4Fw+QKKNwPqk30L8CGKLRynJB9Fty+RcwfC5PiyJ8LkCgShPgXFZNqmRpHkHJWWO0ov2kUlXjUC0dFzO59FeFLPnKXS3CAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QEsB2AzMAnMqDGYAdGgIZ4AuyAbmAMRmVUnlgDaADALqKgAOA9rGSV+qHiAAeiAIwA2AMyEAnCqUB2JQCYAHEoCs2te1kAaEAE9E82ZsJrNsvWoAsavUtnsdzgL4+zaJg4+EQM1HSw5CRY5BzcSCACQiJiCVIIzuxqhM6a0tp67tq60vLWZpYI1rb2jnoKes7S7OzafgEY2LgEhABGAK6w5oS8uBBoULQQokRoVPwA1kSw-b0AtsIAUvy9ceJJwsii4unarTnazvJn7HqamhraFYhOeoROmlrSV9Vl7SCBLohPqDYajVDjVCTbBYfhYEYAG2Y6Dha0IK3WWx2ewSBxSJxkOiUhHkVzU8nJmnkSmkBmeCAeb1qTjUcmk9n0-0BwR6AyGhCw-VQqAmUxmxFQ8yWEqC3SIfOGguFEwQc34eGYR1QcRxfEEh2OaUJuhJZIp8ipNLpFkQskMhBaam09yUZPuei5nR58tBAqFIqhYtQs0lixDsuBCr9yqhqtDGpSOuk8T1yS1BIQ0k+xNJ5sp1NpTxtCHctkdzoM0izzl8-gBXrlIP5SoDk2mwYlUvDQN5vpbKrVCa1Os0KcS+vxRsz2dNeYtBetlQUxL0WWdZJc2gtnojveb-tF7ZDXZlPZ9+5jUDj8yHoh18jHePTU-U2T08izdyyt2a8npziUdhlE+IwyircktB3M8m0VA9Aw1EIEV1cc00NUB0maZxtByPJLjtJRikA0xi2pZxlDURwKJrLCAOkKDvUIGE4VoHByCwcxkKfNDJBeFoHSdLMXGuRp1HpbRpHeFoWmkQCrgcLD6MbFY8AIWBYFodA0DAcghTYLh9gnZ90N4oC10Eq4CgAtR6QoiSiM0XImnfJ0lD8OtUH4CA4HEbk5QM1DUmMhAAFpiMqULFOBUgKHCfyDUCniMk0elrEUe5KNcdxPG8SKejCGg4snIKdDeXJ8go2QVAtBQUoUQh0qcTKPC8S5cvPSpU3ijMsOyMyHgskTrJIrIcgogwKTk8lZFrDpd3akYxgmQqjMS983j6oTLNE4tChXACAIc75qXkNqYOjVtlu4jCvCA1133Yax8iaYp6QMbDih0TRnLJGxTqYrBLoSjCbAku0XCUakFBrelPv4xxdGdZpvtO5TVPgXFDKumQDDeD8HK3ORDDOP9i0qiT3CrMrZCh0k3J8IA */
   id: 'inference',
   schema: {
     context: {} as {
       jobId: string;
       jobStatus: string;
+      inputImages: Array<{ name: string; path: string }>;
     },
     events: {} as
       | { type: 'activate' }
@@ -49,6 +56,7 @@ const inferenceState = createMachine({
   context: {
     jobId: '',
     jobStatus: '',
+    inputImages: [],
   },
   states: {
     inactive: {
@@ -73,6 +81,9 @@ const inferenceState = createMachine({
               target: 'running',
               actions: assign({
                 jobId: (context, event: JobEvent) => event.data.jobId ?? '',
+                inputImages: (context, event: JobEvent) => {
+                  return event.data.formData?.inputImages ?? [];
+                },
               }),
             },
             onError: {
@@ -282,6 +293,7 @@ export function InferenceNode({ data }: NodeProps<NodeData>) {
               <AccordionTrigger>Retry?</AccordionTrigger>
               <AccordionContent>
                 <InferenceForm
+                  inputImages={state.context.inputImages}
                   onSubmitHandler={(data) => {
                     send({
                       type: 'retry',
@@ -313,32 +325,24 @@ export function InferenceNode({ data }: NodeProps<NodeData>) {
             <p className="text-gray-500 dark:text-gray-400 text-center">
               {state.context.jobStatus}
             </p>
+            <div>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="item-1">
+                  <AccordionTrigger>Inferred images</AccordionTrigger>
+                  <AccordionContent>
+                    {state.context.inputImages.map((image, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded-md border border-sky-800 hover:bg-blue-200 dark:hover:bg-cyan-800 px-4 py-3 font-mono text-sm"
+                      >
+                        {image.name}
+                      </div>
+                    ))}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
           </div>
-          <Accordion type="single" collapsible>
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Finetune?</AccordionTrigger>
-              <AccordionContent>
-                <InferenceForm
-                  onSubmitHandler={(data) => {
-                    send({
-                      type: 'finetune',
-                      data: { formData: data },
-                    });
-                    toast({
-                      title: 'You submitted the following values:',
-                      description: (
-                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                          <code className="text-white">
-                            {JSON.stringify(data, null, 2)}
-                          </code>
-                        </pre>
-                      ),
-                    });
-                  }}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
         </CardContent>
       )}
       {state.matches('inactive') && (

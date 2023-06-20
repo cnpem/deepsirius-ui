@@ -1,5 +1,4 @@
 import { useMachine } from '@xstate/react';
-import { ChevronsUpDown, Minus, Plus } from 'lucide-react';
 import { Handle, type Node, type NodeProps, Position } from 'reactflow';
 import { assign, createMachine } from 'xstate';
 import {
@@ -20,12 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '../ui/collapsible';
-import { type NodeData } from './common-node-utils';
 import {
   type FormType,
   InferenceForm,
@@ -144,8 +137,7 @@ const inferenceState = createMachine({
   predictableActionArguments: true,
 });
 
-type InferenceNode = Node<NodeData>;
-export function InferenceNode({ data }: NodeProps<NodeData>) {
+export function InferenceNode() {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();

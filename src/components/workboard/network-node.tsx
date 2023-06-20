@@ -1,5 +1,6 @@
 import { useMachine } from '@xstate/react';
-import { Handle, type Node, type NodeProps, Position } from 'reactflow';
+import { useEffect } from 'react';
+import { Handle, Position, useNodeId } from 'reactflow';
 import { assign, createMachine } from 'xstate';
 import {
   Accordion,
@@ -19,12 +20,12 @@ import {
   CardHeader,
   CardTitle,
 } from '../ui/card';
-import { type NodeData } from './common-node-utils';
 import {
   DefaultForm as NetworkForm,
   type NetworkFormType,
   PrefilledForm,
 } from './node-component-forms/network-form';
+import useStore from './store';
 
 interface JobEvent {
   type: 'done.invoke';
@@ -203,11 +204,14 @@ const networkState = createMachine({
   predictableActionArguments: true,
 });
 
-type NetworkNode = Node<NodeData>;
-export function NetworkNode({ data }: NodeProps<NodeData>) {
+export function NetworkNode() {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
+  const updateNodeMachineState = useStore(
+    (state) => state.updateNodeMachineState,
+  );
+  const nodeId = useNodeId();
 
   const [state, send] = useMachine(networkState, {
     guards: {
@@ -282,6 +286,15 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
   const isError = [{ training: 'error' }, { tuning: 'error' }].some((s) =>
     state.matches(s),
   );
+  const status = typeof state.value === 'object' ? 'busy' : state.value;
+
+  useEffect(() => {
+    console.log('useEffect on state: ', status);
+    // defining node id as string to avoid error on updateNodeMachineState
+    const nodeIdDefined = typeof nodeId === 'string' ? nodeId : 'undefined';
+    return updateNodeMachineState(nodeIdDefined, status);
+  }, [nodeId, updateNodeMachineState, status]);
+
   return (
     <>
       {state.matches('inactive') && (

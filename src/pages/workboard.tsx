@@ -1,7 +1,7 @@
 import { type NextPage } from 'next';
 import Head from 'next/head';
 import { Layout } from '~/components/layout';
-import Geppetto from '~/components/workboard/geppetto';
+import Flow from '~/components/workboard/flow';
 
 const Workboard: NextPage = () => {
   return (
@@ -12,7 +12,7 @@ const Workboard: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center ">
-        <Geppetto />
+        <Flow />
       </main>
     </Layout>
   );

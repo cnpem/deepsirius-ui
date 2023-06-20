@@ -62,6 +62,8 @@ export type networkFormCallback = (data: NetworkFormType) => void;
 
 type NetworkFormProps = {
   onSubmitHandler: networkFormCallback;
+  networkUserLabel?: string;
+  networkTypeName?: z.infer<typeof networkFormSchema>['networkTypeName'];
 };
 
 export function useNetworkForm({
@@ -325,11 +327,7 @@ export function PrefilledForm({
   networkUserLabel,
   networkTypeName,
   onSubmitHandler,
-}: {
-  networkUserLabel: string;
-  networkTypeName: z.infer<typeof networkFormSchema>['networkTypeName'];
-  onSubmitHandler: networkFormCallback;
-}) {
+}: NetworkFormProps) {
   const form = useNetworkForm({
     networkUserLabel,
     networkTypeName,

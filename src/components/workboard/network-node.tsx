@@ -32,7 +32,7 @@ interface JobEvent {
 }
 
 const networkState = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QDswBcDuB7ATgawDoBLZAQwGM0iA3MAYgqutLTAG0AGAXUVAAcssIlSzJeIAB6IAjADYALAQ7Ll0gBwBWAJwbZ06QHYANCACeiNdILytt2wCY1N+-M0BfNydSZchRjXpYNFIcNAACNBxSEhIoTh4kEAEhETFEqQR5DgNre3UDDntZDjkAZnkTcwRLazsHJy0Xd08Qb2x8AgAjAFdYUwI+MGQIWLoIUTBiZGosPEnYbs6AW2EAKSxO+PFk4SJRcQzSgusOWRdZDTU1A2kOLUqLI6UDey1CrQNZLSc1Dy90dqEHp9AZDEbIKB0MA4HC4AYAGxYADNcEsCAtlmsNltEjtUgcLBorEUNNoDFpXAYNBUzIgNE97CTqWp7KVZKVSX9WgDfF1ev0cN1kMhRuNUFMZnMCG1ecCBUKRRCECQZuQWHtkPEcfxBLt9ulCcSLmSKddqQ8EKaCBpspZ7NkdPJZAYuTKOnKCILhaKJhLZpM3UD+Z6FbFldMsGrUlrpAkdSkNQTqnoCEyPqaqTSqppStbsuTyQoOKVWa6ee7g17FZCxZMVf7peWgyCq2H61GNVr7HGkrr8Qbk0bSenKebaZaSkpbRwbXkDGoKWWfBWW6GIWNffWpYG+avvUr2+rRFrSj28YmB-StNZ6bd7RoDFkORaqfZclpZGoORSjhyl4Dd3lfdITVZByDAeFtV7BN9VADI9A4AhyiOe1SmLF42QtC5ZGsT5SS-DR7CJeR7H-XloVhHA6BwdAcFMKDz1gyREDOC1kKnFQzlOEpCLIjoFnIcDYFgOgkRIdAhXYbhtj7C84LpewLVuJ0CGkEsDCpbRWVsDwWmQLAIDgcRAxkmC0nkhAAFpZAtay+MIEh-FoUy9XM5jMkU8cajqepnFcDR7IIJywBc-sLMcDRcnUT8sm4xkNAtbyfMcPyrkCuVQrk9ybAtXQ1AID5sKuIoKRsdLg0GYZYkypiMg+RK8iUGx5BtLRpFealSnKvdqxqtyMkuN81GdORdA+PJvkSm0kJZNQOAXF4Fw+QKKNwPqk30L8CGKLRynJB9Fty+RcwfC5PiyJ8LkCgShPgXFZNqmRpHkHJWWO0ov2kUlXjUC0dFzO59FeFLPnKXS3CAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QDswBcDuB7ATgawDoBLZAQwGM0iA3MAYgqutLTAG0AGAXUVAAcssIlSzJeIAB6IAjADYAzAQCcKlbOkAOeUoBMOgOwAaEAE9EG6QQCsHWxyVX1sjUo76Avu+OpMuQoxp6WDRSHDQAAjQcUhISKE4eJBABIRExJKkEABY3AiydTXzpLKz9RyzjMwQLazt7RzkXN09vdGx8AiiY5DiCPjBkCDi6CFEwYmRqLDxx2ABXACMAW2EAKSwFhPEU4SJRcUydJX0CA1klLPkreQ1bOVlKmX1NAmkrOWk9DWf7WRaQHztQhdWLIKB9AZDMF0MA4HC4PoAGxYADNcEsCPNlmsNlskjs0gdEEcTmcLlcbndZA9TDIsi95BwrHomUpbhx5Dp-oC-J1oqDwTg5sgetDRqgJlMZgQeR0QaLBcKFQgSFNyCw9sgEnj+IJdvsMjJORwCLJ7PlZDpmTobvJHghpPpZCcrPoOcbiqVndy2rz5b0hSLhuLxqrpuNZcD+QqCIHlWH1WltdJErrUpqiQgyoppPIFHn3ozZFkrPaPiarBpi9cOLdqZafb45dGA0rg2NJeGZb7m91W0GwSrJlhE5rtTpU8k9YTDVnrq88-IC7mONWy7JKwRa8WNDp1LdGo2gXy+2DY22xR2w9LIyeBeeB1Ah2qNaJtfJJwSM7OstSCJybhtGw3RtGkqjkJdai0fQyiUaR7E5I8-RbM842GdVkHIMBER1Kd0wNUBMmuUlPXeeCNEufQlDLYjrCsZkKXrfQNCsJDe3vWF4RwOgcHQHATFwr8CMkRAlAUAgNCrK49z0K5mTLK0TTNHQEOKPQFA0NjCHmcgsNgWA6BREh0GFdhuG2adv0IxBLXteRLi3Owl0ZJQKV-LTOmFXp+kGdsJWvWZFhWNB1k2cz8Us4TMnOCs2Vcy5jl-Xd7WYjQF1uVwNwo7R5A8tAvLPHyoSgGE4QRPhkTQNEcAxLFgtCwTIvSayEBi6w4vs7R9CSnR7SySTTjg84XHOJcdCrPKCsVR8RivYcbx7YEpofeNh1HN9uEa-DmpEh0lyU80ZOtW0y1rSwfguX84OkFRJpjNDL38+aI0Wzz7ovJ8E1fLVNpTCztszaRilkPJK05fR5H0K15CB+1nArKHXOKd4VErO7+wVWanqlF6myW97H2fEdvvHT8msB4HQa0AxIeh2HaSzcat0Rs0Ot-P4vABV78oJzGQ07Ba8bejG4iJ9afq4NgP3+-UdsyFilFNEsLEuakslcaQUo5PILhYqwxJ0fIjnR1CProDCsJw8K01lzNXIrPMShu51XBKOHciselnkhylay5Tnbx53pONwHi+IE628Nt2dc1dU5a06-rNAKCoGeNaxJNdN5Y9c1juSwCA4HESMZZnFqAFpvleI5ORJGCrWce1y6sZRVF1z42XsDhpA8kgAloUurN2-J7V3Ry7AcJwmg8APXv7sBB6i4kWLyAo9becbXLA8wdHH2xJ8aVwZ9aIX-TBRe5cQcvtGr1y9GOevHA0MsINeDgU9-GwOByLI8pQ8EipxAvpmNK3xVwwXfnobqtd1yuQINmG6iVtDfD-qeaaCpgGzhsIrCGzELiuFcDJMsENLC-g3o4JkN1LioI4mVHAmCWrkRbv1feeCWJ2gZnIXIoESx5lsN1caHkdJ6XgBFAGMdLQg1dBYFw7xKLUlOloU48ELhlCrN-f2J9jxB3PmI6OLUrhZFeLoakqVHQ5GfgzG0ihawsX6mRJ2S4TYAMhEAvRZdh7v2MXuZ0klzG1hSuJCGYlmJA2uHIPOWi-TLQelABhu1XA2P1pnJ0FFdBGAZgePILCOTHA3IbZxBAQ70PcUPTIxRmISXfrYsoVExKpyqM6Uk98YbHBUlDPOnggA */
   id: 'network',
   schema: {
     context: {} as {
@@ -64,10 +64,10 @@ const networkState = createMachine({
 
     active: {
       on: {
-        'start training': 'busy',
+        'start training': 'training',
       },
     },
-    busy: {
+    training: {
       initial: 'pending',
       states: {
         pending: {
@@ -77,15 +77,15 @@ const networkState = createMachine({
             onDone: {
               target: 'running',
               actions: assign({
-                jobId: (context, event: JobEvent) => event.data.jobId ?? '',
-                networkLabel: (context, event: JobEvent) =>
+                jobId: (_, event: JobEvent) => event.data.jobId ?? '',
+                networkLabel: (_, event: JobEvent) =>
                   event.data.formData?.networkUserLabel ?? 'network',
-                networkType: (context, event: JobEvent) =>
+                networkType: (_, event: JobEvent) =>
                   event.data.formData?.networkTypeName ?? 'unet2d',
               }),
             },
             onError: {
-              target: '#network.error',
+              target: 'error',
             },
           },
         },
@@ -98,18 +98,17 @@ const networkState = createMachine({
                 cond: 'isCompleted',
               },
               {
-                target: '#network.error',
+                target: 'error',
                 cond: 'isFailed',
               },
               {
-                target: '#network.error',
+                target: 'error',
                 cond: 'isCancelled',
               },
               {
                 target: 'running',
                 actions: assign({
-                  jobStatus: (context, event: JobEvent) =>
-                    event.data.jobStatus ?? '',
+                  jobStatus: (_, event: JobEvent) => event.data.jobStatus ?? '',
                 }),
               },
             ],
@@ -120,21 +119,83 @@ const networkState = createMachine({
             },
           },
         },
-      },
-    },
-    error: {
-      on: {
-        retry: {
-          target: 'busy',
-          actions: assign({ jobStatus: '' }),
+        error: {
+          on: {
+            retry: {
+              target: 'pending',
+              actions: assign({ jobStatus: '', jobId: '' }),
+            },
+          },
         },
       },
     },
     success: {
       on: {
         finetune: {
-          target: 'busy',
-          actions: assign({ jobStatus: '' }),
+          target: 'tuning',
+          actions: assign({ jobStatus: '', jobId: '' }),
+        },
+      },
+    },
+    tuning: {
+      initial: 'pending',
+      states: {
+        pending: {
+          invoke: {
+            id: 'submitJob',
+            src: 'submitJob',
+            onDone: {
+              target: 'running',
+              actions: assign({
+                jobId: (_, event: JobEvent) => event.data.jobId ?? '',
+                networkLabel: (_, event: JobEvent) =>
+                  event.data.formData?.networkUserLabel ?? 'network',
+                networkType: (_, event: JobEvent) =>
+                  event.data.formData?.networkTypeName ?? 'unet2d',
+              }),
+            },
+            onError: {
+              target: 'error',
+            },
+          },
+        },
+        running: {
+          invoke: {
+            src: 'jobStatus',
+            onDone: [
+              {
+                target: '#network.success',
+                cond: 'isCompleted',
+              },
+              {
+                target: 'error',
+                cond: 'isFailed',
+              },
+              {
+                target: 'error',
+                cond: 'isCancelled',
+              },
+              {
+                target: 'running',
+                actions: assign({
+                  jobStatus: (_, event: JobEvent) => event.data.jobStatus ?? '',
+                }),
+              },
+            ],
+          },
+          on: {
+            cancel: {
+              actions: 'cancelJob',
+            },
+          },
+        },
+        error: {
+          on: {
+            retry: {
+              target: 'pending',
+              actions: assign({ jobStatus: '', jobId: '' }),
+            },
+          },
         },
       },
     },
@@ -172,7 +233,6 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
             event.type !== 'cancel' && event.type !== 'activate'
               ? event.data.formData
               : '';
-          console.log('data submit: ', formData);
           const jobInput = {
             jobName: 'deepsirius-network',
             output: 'output-do-pai-custom.txt',
@@ -184,6 +244,13 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
               JSON.stringify(formData) +
               '" \n sleep 5 \n echo "job completed."',
           };
+          if (state.matches('tuning') || event.type === 'finetune') {
+            console.log('tuning');
+          }
+          if (state.matches('training') || event.type === 'start training') {
+            console.log('training');
+          }
+
           createJob
             .mutateAsync(jobInput)
             .then((data) => {
@@ -206,52 +273,78 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
     },
   });
 
-  const status = typeof state.value === 'object' ? 'busy' : state.value;
+  const isBusy = [
+    { training: 'pending' },
+    { training: 'running' },
+    { tuning: 'pending' },
+    { tuning: 'running' },
+  ].some((s) => state.matches(s));
+  const isError = [{ training: 'error' }, { tuning: 'error' }].some((s) =>
+    state.matches(s),
+  );
   return (
-    <Card
-      data-state={status}
-      className="w-[380px] data-[state=active]:bg-green-100 data-[state=busy]:bg-yellow-100
-    data-[state=error]:bg-red-100 data-[state=inactive]:bg-gray-100
-    data-[state=success]:bg-blue-100 data-[state=active]:dark:bg-teal-800
-    data-[state=busy]:dark:bg-amber-700 data-[state=error]:dark:bg-rose-700
-    data-[state=inactive]:dark:bg-muted data-[state=success]:dark:bg-cyan-700"
-    >
-      <Handle type="target" position={Position.Left} />
-      <CardHeader>
-        <CardTitle>{state.context.networkLabel}</CardTitle>
-        <CardDescription>{status}</CardDescription>
-      </CardHeader>
-      {state.matches('active') && (
-        <CardContent>
-          <Accordion type="single" collapsible>
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Train me!</AccordionTrigger>
-              <AccordionContent>
-                <NetworkForm
-                  onSubmitHandler={(data) => {
-                    send({
-                      type: 'start training',
-                      data: { formData: data },
-                    });
-                    toast({
-                      title: 'You submitted the following values:',
-                      description: (
-                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                          <code className="text-white">
-                            {JSON.stringify(data, null, 2)}
-                          </code>
-                        </pre>
-                      ),
-                    });
-                  }}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </CardContent>
+    <>
+      {state.matches('inactive') && (
+        <Card className="w-[380px] bg-gray-100 dark:bg-muted">
+          <Handle type="target" position={Position.Left} />
+          <CardHeader>
+            <CardTitle>{state.context.networkLabel}</CardTitle>
+            <CardDescription>{state.value}</CardDescription>
+          </CardHeader>
+          <CardFooter className="flex justify-start">
+            <Button onClick={() => send('activate')}>activate</Button>
+          </CardFooter>
+          <Handle type="source" position={Position.Right} />
+        </Card>
       )}
-      {state.matches('busy') && (
-        <>
+      {state.matches('active') && (
+        <Card className="w-[380px] bg-green-100 dark:bg-teal-800">
+          <Handle type="target" position={Position.Left} />
+          <CardHeader>
+            <CardTitle>{state.context.networkLabel}</CardTitle>
+            <CardDescription>{state.value}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible>
+              <AccordionItem value="item-1">
+                <AccordionTrigger>Train me!</AccordionTrigger>
+                <AccordionContent>
+                  <NetworkForm
+                    onSubmitHandler={(data) => {
+                      send({
+                        type: 'start training',
+                        data: { formData: data },
+                      });
+                      toast({
+                        title: 'You submitted the following values:',
+                        description: (
+                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                            <code className="text-white">
+                              {JSON.stringify(data, null, 2)}
+                            </code>
+                          </pre>
+                        ),
+                      });
+                    }}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+          <Handle type="source" position={Position.Right} />
+        </Card>
+      )}
+      {isBusy && (
+        <Card className="w-[380px] bg-yellow-100 dark:bg-amber-700">
+          <Handle type="target" position={Position.Left} />
+          <CardHeader>
+            <CardTitle>{state.context.networkLabel}</CardTitle>
+            <CardDescription>
+              {Object.entries(state.value)
+                .map(([key, value]) => `${key}: ${value as string}`)
+                .join('<br/>')}
+            </CardDescription>
+          </CardHeader>
           <CardContent>
             <div className="flex flex-col">
               <p className="mb-2 text-3xl font-extrabold text-center">
@@ -274,92 +367,129 @@ export function NetworkNode({ data }: NodeProps<NodeData>) {
               cancel
             </Button>
           </CardFooter>
-        </>
+          <Handle type="source" position={Position.Right} />
+        </Card>
       )}
-      {state.matches('error') && (
-        <CardContent>
-          <div className="flex flex-col">
-            <p className="mb-2 text-3xl font-extrabold text-center">
-              {state.context.jobId}
-            </p>
-            <p className="text-gray-500 dark:text-gray-400 text-center">
-              {state.context.jobStatus}
-            </p>
-          </div>
-          <Accordion type="single" collapsible>
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Retry?</AccordionTrigger>
-              <AccordionContent>
-                <PrefilledForm
-                  networkTypeName={state.context.networkType}
-                  networkUserLabel={state.context.networkLabel}
-                  onSubmitHandler={(data) => {
-                    send({
-                      type: 'retry',
-                      data: { formData: data },
-                    });
-                    toast({
-                      title: 'You submitted the following values:',
-                      description: (
-                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                          <code className="text-white">
-                            {JSON.stringify(data, null, 2)}
-                          </code>
-                        </pre>
-                      ),
-                    });
-                  }}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </CardContent>
+      {isError && (
+        <Card className="w-[380px] bg-red-100 dark:bg-rose-700">
+          <Handle type="target" position={Position.Left} />
+          <CardHeader>
+            <CardTitle>{state.context.networkLabel}</CardTitle>
+            <CardDescription>
+              {Object.entries(state.value)
+                .map(([key, value]) => `${key}: ${value as string}`)
+                .join('<br/>')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col">
+              <p className="mb-2 text-3xl font-extrabold text-center">
+                {state.context.jobId}
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 text-center">
+                {state.context.jobStatus}
+              </p>
+            </div>
+            <Accordion type="single" collapsible>
+              <AccordionItem value="item-1">
+                <AccordionTrigger>Retry?</AccordionTrigger>
+                <AccordionContent>
+                  {state.matches('training.error') && (
+                    <NetworkForm
+                      onSubmitHandler={(data) => {
+                        send({
+                          type: 'retry',
+                          data: { formData: data },
+                        });
+                        toast({
+                          title: 'You submitted the following values:',
+                          description: (
+                            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                              <code className="text-white">
+                                {JSON.stringify(data, null, 2)}
+                              </code>
+                            </pre>
+                          ),
+                        });
+                      }}
+                    />
+                  )}
+                  {state.matches('tuning.error') && (
+                    <PrefilledForm
+                      networkTypeName={state.context.networkType}
+                      networkUserLabel={state.context.networkLabel}
+                      onSubmitHandler={(data) => {
+                        send({
+                          type: 'retry',
+                          data: { formData: data },
+                        });
+                        toast({
+                          title: 'You submitted the following values:',
+                          description: (
+                            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                              <code className="text-white">
+                                {JSON.stringify(data, null, 2)}
+                              </code>
+                            </pre>
+                          ),
+                        });
+                      }}
+                    />
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+          <Handle type="source" position={Position.Right} />
+        </Card>
       )}
       {state.matches('success') && (
-        <CardContent>
-          <div className="flex flex-col">
-            <p className="mb-2 text-3xl font-extrabold text-center">
-              {state.context.jobId}
-            </p>
-            <p className="text-gray-500 dark:text-gray-400 text-center">
-              {state.context.jobStatus}
-            </p>
-          </div>
-          <Accordion type="single" collapsible>
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Finetune?</AccordionTrigger>
-              <AccordionContent>
-                <PrefilledForm
-                  networkTypeName={state.context.networkType}
-                  networkUserLabel={state.context.networkLabel}
-                  onSubmitHandler={(data) => {
-                    send({
-                      type: 'finetune',
-                      data: { formData: data },
-                    });
-                    toast({
-                      title: 'You submitted the following values:',
-                      description: (
-                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                          <code className="text-white">
-                            {JSON.stringify(data, null, 2)}
-                          </code>
-                        </pre>
-                      ),
-                    });
-                  }}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </CardContent>
+        <Card className="w-[380px] bg-blue-100 dark:bg-cyan-700">
+          <Handle type="target" position={Position.Left} />
+          <CardHeader>
+            <CardTitle>{state.context.networkLabel}</CardTitle>
+            <CardDescription>{JSON.stringify(state.value)}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col">
+              <p className="mb-2 text-3xl font-extrabold text-center">
+                {state.context.jobId}
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 text-center">
+                {state.context.jobStatus}
+              </p>
+            </div>
+            <Accordion type="single" collapsible>
+              <AccordionItem value="item-1">
+                <AccordionTrigger>Finetune?</AccordionTrigger>
+                <AccordionContent>
+                  <PrefilledForm
+                    networkTypeName={state.context.networkType}
+                    networkUserLabel={state.context.networkLabel}
+                    onSubmitHandler={(data) => {
+                      send({
+                        type: 'finetune',
+                        data: { formData: data },
+                      });
+                      toast({
+                        title: 'You submitted the following values:',
+                        description: (
+                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                            <code className="text-white">
+                              {JSON.stringify(data, null, 2)}
+                            </code>
+                          </pre>
+                        ),
+                      });
+                    }}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+          <Handle type="source" position={Position.Right} />
+        </Card>
       )}
-      {state.matches('inactive') && (
-        <CardFooter className="flex justify-start">
-          <Button onClick={() => send('activate')}>activate</Button>
-        </CardFooter>
-      )}
-      <Handle type="source" position={Position.Right} />
-    </Card>
+    </>
   );
 }

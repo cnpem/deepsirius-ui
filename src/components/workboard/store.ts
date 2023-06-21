@@ -17,6 +17,7 @@ import initialEdges from './edges';
 import initialNodes from './nodes';
 
 export type NodeStateData = {
+  nodeLabel: string;
   machineState: string;
 };
 
@@ -26,24 +27,21 @@ export type RFState = {
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
-  updateNodeMachineState: (nodeId: string, machineState: string) => void;
+  isValidConnection: (connection: Connection) => boolean;
+  setNodeData: (nodeId: string, newData: NodeStateData) => void;
+  getSourceNodeData: (nodeId: string) => NodeStateData;
 };
+
+const validConnectionPairs = [
+  ['dataset', 'network'],
+  ['network', 'inference'],
+];
 
 // this is our useStore hook that we can use in our components to get parts of the store and call actions
 const useStore = create<RFState>((set, get) => ({
   nodes: initialNodes,
   edges: initialEdges,
   onNodesChange: (changes: NodeChange[]) => {
-    // logging machineState for the node that was changed
-    get().nodes.forEach((node) => {
-      if (node.id === changes.values().next().value.id) {
-        console.log(
-          'onNodesChange: node machineState is:',
-          node.data.machineState,
-        );
-      }
-    });
-    // applying the changes
     set({
       nodes: applyNodeChanges(changes, get().nodes),
     });
@@ -60,17 +58,61 @@ const useStore = create<RFState>((set, get) => ({
       edges: addEdge(connection, get().edges),
     });
   },
-  updateNodeMachineState: (nodeId: string, machineState: string) => {
-    console.log('updateNodeMachineState', nodeId, machineState);
+  // checks if the connection is valid
+  // by only allowing connections from dataset to network and from network to inference
+  // if the node machineState is 'success'
+  // this event is triggered when the user tries to connect two nodes by dragging a connection from one node and hovering over another node
+  isValidConnection: (connection: Connection) => {
+    const sourceNode = get().nodes.find(
+      (node) => node.id === connection.source,
+    );
+    const targetNode = get().nodes.find(
+      (node) => node.id === connection.target,
+    );
+    if (
+      sourceNode &&
+      targetNode &&
+      sourceNode.data.machineState === 'success'
+    ) {
+      if (
+        validConnectionPairs.some(
+          ([sourceType, targetType]) =>
+            sourceNode.type === sourceType && targetNode.type === targetType,
+        )
+      ) {
+        console.log('connection is valid');
+        return true;
+      }
+    }
+    console.log('connection is invalid');
+    return false;
+  },
+  setNodeData: (nodeId: string, newData: NodeStateData) => {
+    console.log('updateNodeMachineState', nodeId, newData);
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
           // it's important to create a new object here, to inform React Flow about the cahnges
-          node.data = { ...node.data, machineState };
+          node.data = { ...node.data, ...newData };
         }
         return node;
       }),
     });
+  },
+  // checks if there is a connection with nodeId as target and returns the source node data if it exists
+  getSourceNodeData(nodeId) {
+    const unknownNodeData: NodeStateData = {
+      nodeLabel: 'unknown',
+      machineState: 'unknown',
+    };
+    // checks if the node identified by nodeId is connected to another node as a target
+    const edge = get().edges.find((edge) => edge.target === nodeId);
+    if (edge) {
+      // if it is, get the node data of the source node
+      const sourceNode = get().nodes.find((node) => node.id === edge.source);
+      return sourceNode ? sourceNode.data : unknownNodeData;
+    }
+    return unknownNodeData;
   },
 }));
 

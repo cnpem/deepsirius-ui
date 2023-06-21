@@ -25,7 +25,7 @@ import {
   type NetworkFormType,
   PrefilledForm,
 } from './node-component-forms/network-form';
-import useStore from './store';
+import useStore, { NodeStateData } from './store';
 
 interface JobEvent {
   type: 'done.invoke';
@@ -208,10 +208,10 @@ export function NetworkNode() {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const updateNodeMachineState = useStore(
-    (state) => state.updateNodeMachineState,
-  );
+  const setNodeData = useStore((state) => state.setNodeData);
   const nodeId = useNodeId();
+  // defining node id as string to avoid error on updateNodeMachineState
+  const nodeIdDefined = typeof nodeId === 'string' ? nodeId : 'undefined';
 
   const [state, send] = useMachine(networkState, {
     guards: {
@@ -286,14 +286,24 @@ export function NetworkNode() {
   const isError = [{ training: 'error' }, { tuning: 'error' }].some((s) =>
     state.matches(s),
   );
+
+  // defining status as a high level machineState
   const status = typeof state.value === 'object' ? 'busy' : state.value;
 
   useEffect(() => {
     console.log('useEffect on state: ', status);
-    // defining node id as string to avoid error on updateNodeMachineState
-    const nodeIdDefined = typeof nodeId === 'string' ? nodeId : 'undefined';
-    return updateNodeMachineState(nodeIdDefined, status);
-  }, [nodeId, updateNodeMachineState, status]);
+    // defining a networkLabel to avoid error on updateNodeMachineState
+    const networkLabelDefined =
+      typeof state.context.networkLabel === 'string'
+        ? state.context.networkLabel
+        : 'undefined';
+    // data do be updated on node
+    const updateData: NodeStateData = {
+      nodeLabel: networkLabelDefined,
+      machineState: status,
+    };
+    return setNodeData(nodeIdDefined, updateData);
+  }, [setNodeData, nodeIdDefined, status, state.context.networkLabel]);
 
   return (
     <>

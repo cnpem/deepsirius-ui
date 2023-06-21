@@ -19,4 +19,16 @@ export default [
     data: { more: 'Im number 3' },
     type: 'inference',
   },
+  {
+    id: '4',
+    position: { x: 400, y: 200 },
+    data: { more: 'Im number 2' },
+    type: 'network',
+  },
+  {
+    id: '5',
+    position: { x: 800, y: 200 },
+    data: { more: 'Im number 3' },
+    type: 'inference',
+  },
 ] as Node[];

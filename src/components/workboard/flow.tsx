@@ -12,14 +12,15 @@ import { DatasetNode } from '~/components/workboard/dataset-node';
 import { InferenceNode } from '~/components/workboard/inference-node';
 import { NetworkNode } from '~/components/workboard/network-node';
 
-import useStore from './store';
+import useStore, { type RFState } from './store';
 
-const selector = (state) => ({
+const selector = (state: RFState) => ({
   nodes: state.nodes,
   edges: state.edges,
   onNodesChange: state.onNodesChange,
   onEdgesChange: state.onEdgesChange,
   onConnect: state.onConnect,
+  isValidConnection: state.isValidConnection,
 });
 
 const nodeTypes: NodeTypes = {
@@ -33,10 +34,14 @@ const nodeTypes: NodeTypes = {
 // i.e. if a node is in a certain state, it should not be able to connect to another node
 // it should set how the data is exchanged between nodes when a connection is made
 function Flow() {
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useStore(
-    selector,
-    shallow,
-  );
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    isValidConnection,
+  } = useStore(selector, shallow);
   const variant = BackgroundVariant.Dots;
 
   return (
@@ -48,6 +53,7 @@ function Flow() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          isValidConnection={isValidConnection}
           attributionPosition="top-right"
           nodeTypes={nodeTypes}
           fitView

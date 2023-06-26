@@ -8,9 +8,6 @@ import {
   AccordionTrigger,
 } from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
-import { toast } from '~/components/ui/use-toast';
-import { api } from '~/utils/api';
-
 import {
   Card,
   CardContent,
@@ -18,12 +15,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '../ui/card';
+} from '~/components/ui/card';
+import { toast } from '~/components/ui/use-toast';
 import {
   type FormType,
   InferenceForm,
-} from './node-component-forms/inference-form';
-import useStore from './store';
+} from '~/components/workboard/node-component-forms/inference-form';
+import useStore from '~/hooks/use-store';
+import { api } from '~/utils/api';
 
 interface JobEvent {
   type: 'done.invoke';

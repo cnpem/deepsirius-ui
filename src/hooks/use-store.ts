@@ -12,9 +12,8 @@ import {
   applyNodeChanges,
 } from 'reactflow';
 import { create } from 'zustand';
-
-import initialEdges from './edges';
-import initialNodes from './nodes';
+import initialEdges from '~/components/workboard/edges';
+import initialNodes from '~/components/workboard/nodes';
 
 export type NodeStateData = {
   nodeLabel: string;
@@ -30,6 +29,7 @@ export type RFState = {
   isValidConnection: (connection: Connection) => boolean;
   setNodeData: (nodeId: string, newData: NodeStateData) => void;
   getSourceNodeData: (nodeId: string) => NodeStateData;
+  createNewNode: (nodeType: string) => void;
 };
 
 const validConnectionPairs = [
@@ -113,6 +113,23 @@ const useStore = create<RFState>((set, get) => ({
       return sourceNode ? sourceNode.data : unknownNodeData;
     }
     return unknownNodeData;
+  },
+  // creates a new node with the given nodeType
+  createNewNode: (nodeType: string) => {
+    console.log('createNewNode', nodeType);
+    const newNode: Node<NodeStateData> = {
+      id: get().nodes.length.toString(),
+      type: nodeType,
+      // TODO: set position to the to-be-defined fixed columns positions for each node type
+      position: { x: 400, y: 400 },
+      data: {
+        nodeLabel: nodeType,
+        machineState: 'unknown',
+      },
+    };
+    set({
+      nodes: [...get().nodes, newNode],
+    });
   },
 }));
 

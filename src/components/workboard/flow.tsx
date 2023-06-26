@@ -11,8 +11,8 @@ import { shallow } from 'zustand/shallow';
 import { DatasetNode } from '~/components/workboard/dataset-node';
 import { InferenceNode } from '~/components/workboard/inference-node';
 import { NetworkNode } from '~/components/workboard/network-node';
-
-import useStore, { type RFState } from './store';
+import { NewNode } from '~/components/workboard/new-node';
+import useStore, { type RFState } from '~/hooks/use-store';
 
 const selector = (state: RFState) => ({
   nodes: state.nodes,
@@ -27,7 +27,10 @@ const nodeTypes: NodeTypes = {
   dataset: DatasetNode,
   network: NetworkNode,
   inference: InferenceNode,
+  new: NewNode,
 };
+
+export const NodeTypesList = Object.keys(nodeTypes);
 
 // flow controller component
 // can see all nodes and edges and should validade conditional states

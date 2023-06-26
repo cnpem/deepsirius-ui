@@ -42,8 +42,6 @@ const networkFormSchema = z.object({
   jobGPUs: z.enum(['1', '2', '4']),
   // field of type z.number() with a minimum value of 1
   iterations: z.coerce.number().gte(1, { message: 'Must be >= 1' }),
-  // field of type z.number() with a minimum value of 1
-  epochs: z.coerce.number().gte(1, { message: 'Must be >= 1' }),
   // field of type z.number() with a minimum value of 0
   learningRate: z.coerce.number().gt(0, { message: 'Must be greater than 0' }),
   // field of type z.enum() with options of 'Adam', 'SGD'
@@ -81,7 +79,6 @@ export function useNetworkForm({
       dropClassifier: false,
       jobGPUs: '1',
       iterations: 1,
-      epochs: 1,
       learningRate: 0.00001,
       optimizer: 'adam',
       patchSize: '32',
@@ -186,7 +183,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             name="iterations"
             control={form.control}
@@ -196,19 +193,6 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
                 <FormControl>
                   <Input {...field} type="number" />
                 </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="epochs"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Epochs</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" />
-                </FormControl>
-                <FormMessage />
               </FormItem>
             )}
           />
@@ -361,7 +345,7 @@ export function PrefilledForm({
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             name="iterations"
             control={form.control}
@@ -371,19 +355,6 @@ export function PrefilledForm({
                 <FormControl>
                   <Input {...field} type="number" />
                 </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="epochs"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Epochs</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" />
-                </FormControl>
-                <FormMessage />
               </FormItem>
             )}
           />

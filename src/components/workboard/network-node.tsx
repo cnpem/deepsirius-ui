@@ -461,7 +461,7 @@ export function NetworkNode() {
           <Handle type="target" position={Position.Left} />
           <CardHeader>
             <CardTitle>{state.context.networkLabel}</CardTitle>
-            <CardDescription>{JSON.stringify(state.value)}</CardDescription>
+            <CardDescription>{state.value}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col">

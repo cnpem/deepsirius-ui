@@ -21,7 +21,7 @@ export function NewNode() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>
         <Button className="btn btn-primary btn-sm rounded-lg">+</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>

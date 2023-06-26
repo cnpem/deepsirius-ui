@@ -5,7 +5,7 @@ export default [
     id: '1',
     position: { x: 200, y: 400 },
     data: { more: 'Im number 1' },
-    type: 'dataset',
+    type: 'new',
   },
   {
     id: '2',

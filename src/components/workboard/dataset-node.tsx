@@ -1,5 +1,5 @@
 import { useMachine } from '@xstate/react';
-import { Handle, type Node, type NodeProps, Position } from 'reactflow';
+import { Handle, Position } from 'reactflow';
 import { assign, createMachine } from 'xstate';
 import {
   Accordion,

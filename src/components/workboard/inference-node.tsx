@@ -1,5 +1,5 @@
 import { useMachine } from '@xstate/react';
-import { Handle, type Node, type NodeProps, Position } from 'reactflow';
+import { Handle, Position, useNodeId } from 'reactflow';
 import { assign, createMachine } from 'xstate';
 import {
   Accordion,
@@ -8,9 +8,6 @@ import {
   AccordionTrigger,
 } from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
-import { toast } from '~/components/ui/use-toast';
-import { api } from '~/utils/api';
-
 import {
   Card,
   CardContent,
@@ -18,11 +15,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '../ui/card';
+} from '~/components/ui/card';
+import { toast } from '~/components/ui/use-toast';
 import {
   type FormType,
   InferenceForm,
-} from './node-component-forms/inference-form';
+} from '~/components/workboard/node-component-forms/inference-form';
+import useStore from '~/hooks/use-store';
+import { api } from '~/utils/api';
 
 interface JobEvent {
   type: 'done.invoke';
@@ -141,6 +141,13 @@ export function InferenceNode() {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
+  const nodeId = useNodeId();
+  // defining node id as string to avoid error on updateNodeMachineState
+  const nodeIdDefined = typeof nodeId === 'string' ? nodeId : 'undefined';
+  const getSourceNodeData = useStore((state) => state.getSourceNodeData);
+
+  // get connected data from the store when node is mounted
+  const connectedData = getSourceNodeData(nodeIdDefined);
 
   const [state, send] = useMachine(inferenceState, {
     guards: {
@@ -201,6 +208,7 @@ export function InferenceNode() {
   });
 
   const status = typeof state.value === 'object' ? 'busy' : state.value;
+
   return (
     <Card
       data-state={status}
@@ -342,6 +350,13 @@ export function InferenceNode() {
           <Button onClick={() => send('activate')}>activate</Button>
         </CardFooter>
       )}
+      <CardContent>
+        {' '}
+        <p>
+          connected: {connectedData.nodeLabel}, state:
+          {connectedData.machineState}
+        </p>
+      </CardContent>
       <Handle type="source" position={Position.Right} />
     </Card>
   );

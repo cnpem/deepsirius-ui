@@ -9,9 +9,6 @@ import {
   AccordionTrigger,
 } from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
-import { toast } from '~/components/ui/use-toast';
-import { api } from '~/utils/api';
-
 import {
   Card,
   CardContent,
@@ -19,13 +16,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '../ui/card';
+} from '~/components/ui/card';
+import { toast } from '~/components/ui/use-toast';
 import {
   DefaultForm as NetworkForm,
   type NetworkFormType,
   PrefilledForm,
-} from './node-component-forms/network-form';
-import useStore from './store';
+} from '~/components/workboard/node-component-forms/network-form';
+import useStore, { type NodeStateData } from '~/hooks/use-store';
+import { api } from '~/utils/api';
 
 interface JobEvent {
   type: 'done.invoke';
@@ -208,10 +207,10 @@ export function NetworkNode() {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const updateNodeMachineState = useStore(
-    (state) => state.updateNodeMachineState,
-  );
+  const setNodeData = useStore((state) => state.setNodeData);
   const nodeId = useNodeId();
+  // defining node id as string to avoid error on updateNodeMachineState
+  const nodeIdDefined = typeof nodeId === 'string' ? nodeId : 'undefined';
 
   const [state, send] = useMachine(networkState, {
     guards: {
@@ -286,14 +285,24 @@ export function NetworkNode() {
   const isError = [{ training: 'error' }, { tuning: 'error' }].some((s) =>
     state.matches(s),
   );
+
+  // defining status as a high level machineState
   const status = typeof state.value === 'object' ? 'busy' : state.value;
 
   useEffect(() => {
     console.log('useEffect on state: ', status);
-    // defining node id as string to avoid error on updateNodeMachineState
-    const nodeIdDefined = typeof nodeId === 'string' ? nodeId : 'undefined';
-    return updateNodeMachineState(nodeIdDefined, status);
-  }, [nodeId, updateNodeMachineState, status]);
+    // defining a networkLabel to avoid error on updateNodeMachineState
+    const networkLabelDefined =
+      typeof state.context.networkLabel === 'string'
+        ? state.context.networkLabel
+        : 'undefined';
+    // data do be updated on node
+    const updateData: NodeStateData = {
+      nodeLabel: networkLabelDefined,
+      machineState: status,
+    };
+    return setNodeData(nodeIdDefined, updateData);
+  }, [setNodeData, nodeIdDefined, status, state.context.networkLabel]);
 
   return (
     <>

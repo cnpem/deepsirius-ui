@@ -2,20 +2,10 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
-import { useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { FsTree, FsTreeDialog } from '~/components/fs-treeview';
+import { FsTreeDialog } from '~/components/fs-treeview';
 import { Button } from '~/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '~/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -34,7 +24,6 @@ import {
   SelectValue,
 } from '~/components/ui/select';
 import { Switch } from '~/components/ui/switch';
-import { env } from '~/env.mjs';
 import { cn } from '~/lib/utils';
 
 const powerSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;

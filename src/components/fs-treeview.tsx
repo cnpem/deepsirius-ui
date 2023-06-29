@@ -1,4 +1,4 @@
-import { File, Folder, FolderOpen } from 'lucide-react';
+import { File, Folder, FolderOpen, TreeDeciduous, Type } from 'lucide-react';
 import { useState } from 'react';
 import { type NodeApi, type NodeRendererProps, Tree } from 'react-arborist';
 import { Button } from '~/components/ui/button';
@@ -23,6 +23,7 @@ type FsTreeProps = {
   path: string;
   handlePathChange: (path: string) => void;
   width: number;
+  hidden?: boolean;
 };
 
 function Node({ node, style, dragHandle }: NodeRendererProps<nodeItem>) {
@@ -46,7 +47,15 @@ function Node({ node, style, dragHandle }: NodeRendererProps<nodeItem>) {
   );
 }
 
-export function FsTreeDialog() {
+export function FsTreeDialog({
+  children,
+  handleSelect,
+  message,
+}: {
+  children: React.ReactNode;
+  handleSelect: (path: string) => void;
+  message: { title: string; description: string };
+}) {
   const treePath = env.NEXT_PUBLIC_TREE_PATH;
   const [path, setPath] = useState(treePath);
   const [open, setOpen] = useState(false);
@@ -55,33 +64,34 @@ export function FsTreeDialog() {
     setOpen(open);
     setPath(treePath);
   };
+  const onSelect = (path: string) => {
+    handleSelect(path);
+    setOpen(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline">...</Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[825px]">
         <DialogHeader>
-          <DialogTitle>Select workspace path</DialogTitle>
-          <DialogDescription>
-            {
-              'Select the path to the existing workspace or a path to create one.'
-            }
-          </DialogDescription>
+          <DialogTitle>{message.title}</DialogTitle>
+          <DialogDescription>{message.description}</DialogDescription>
         </DialogHeader>
         <FsTree path={path} handlePathChange={setPath} width={800} />
         <DialogFooter>
-          <Button className="w-full">Select</Button>
+          <Button className="w-full" onClick={() => onSelect(path)}>
+            Select
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-export function FsTree({ path, handlePathChange, width }: FsTreeProps) {
+export function FsTree({ path, handlePathChange, width, hidden }: FsTreeProps) {
   const treePath = env.NEXT_PUBLIC_TREE_PATH;
   const { tree, mutate, isLoading } = useTree(treePath);
+  const [hideTree, setHideTree] = useState(hidden);
 
   const handleReplaceNode = (nodePath: string, newNode: nodeItem) => {
     if (tree && tree[0]) {
@@ -122,6 +132,8 @@ export function FsTree({ path, handlePathChange, width }: FsTreeProps) {
         .catch((err) => console.log(err));
     }
   };
+  const toUnixPath = (path: string) =>
+    path.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '');
 
   if (isLoading) {
     return <TreeSkeleton />;
@@ -130,28 +142,42 @@ export function FsTree({ path, handlePathChange, width }: FsTreeProps) {
   return (
     <div className="sm:max-w-[825px]">
       <div className="grid gap-4 py-4">
-        <div className="grid w-full items-center gap-1.5">
+        <div className="flex flex-col w-full space-y-2">
           <Label htmlFor="treepath">Selected Path</Label>
-          <Input
-            id="path"
-            placeholder="path/to/somewhere"
-            disabled
-            value={path}
-          />
+          <div className="flex space-x-1">
+            <Button
+              variant={hideTree ? 'outline' : 'default'}
+              size="icon"
+              onClick={() => setHideTree((s) => !s)}
+              title={hideTree ? 'Ready to shake some trees?' : 'Type it in!'}
+            >
+              {hideTree ? <Type /> : <TreeDeciduous />}
+            </Button>
+            <Input
+              id="path"
+              className="grow"
+              placeholder="path/to/somewhere"
+              disabled={!hideTree}
+              onChange={(e) => handlePathChange(toUnixPath(e.target.value))}
+              value={path}
+            />
+          </div>
         </div>
         <div className="flex">
-          <Tree
-            idAccessor={(d) => d.path}
-            data={tree}
-            openByDefault={false}
-            disableDrag={true}
-            width={width}
-            className="flex h-full w-full"
-            rowClassName="flex w-full h-full"
-            onActivate={(node) => handleActivate(node)}
-          >
-            {Node}
-          </Tree>
+          {!hideTree && (
+            <Tree
+              idAccessor={(d) => d.path}
+              data={tree}
+              openByDefault={false}
+              disableDrag={true}
+              width={width}
+              className="flex h-full w-full"
+              rowClassName="flex w-full h-full"
+              onActivate={(node) => handleActivate(node)}
+            >
+              {Node}
+            </Tree>
+          )}
         </div>
       </div>
     </div>

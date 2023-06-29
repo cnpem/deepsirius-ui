@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { FsTree } from '~/components/fs-treeview';
+import { FsTree, FsTreeDialog } from '~/components/fs-treeview';
 import { Button } from '~/components/ui/button';
 import {
   Dialog,
@@ -63,7 +63,7 @@ export type InferenceFormCallback = (data: FormType) => void;
 
 type InferenceFormProps = {
   onSubmitHandler: InferenceFormCallback;
-  inputImages?: Array<{ name: string; path: string }>;
+  inputImages?: z.infer<typeof inferenceSchema>['inputImages'][number][];
 };
 
 export function useInferenceForm(
@@ -98,8 +98,7 @@ export function InferenceForm({
   };
 
   const onSelect = (path: string) => {
-    const nameArr = path.split('/');
-    const name = nameArr[nameArr.length - 1] ?? path;
+    const name = path.split('/').slice(-1)[0] ?? path;
     append({ name: name, path: path });
   };
 
@@ -123,8 +122,8 @@ export function InferenceForm({
                   <FormControl>
                     <div className="flex w-full max-w-sm items-center space-x-2">
                       <Input {...field} disabled />
-                      <Button onClick={() => remove(index)} size={'sm'}>
-                        <X />
+                      <Button onClick={() => remove(index)} size={'icon'}>
+                        <X className="w-4 h-4" />
                       </Button>
                     </div>
                   </FormControl>
@@ -133,7 +132,18 @@ export function InferenceForm({
               )}
             />
           ))}
-          <FsTreeDialog handleSelect={onSelect} />
+          <FsTreeDialog
+            handleSelect={onSelect}
+            message={{
+              title: 'Select images',
+              description:
+                'Select the path to a valid image file or paste it down below.',
+            }}
+          >
+            <Button type="button" variant="link" size="sm" className="mt-1">
+              Add img
+            </Button>
+          </FsTreeDialog>
         </div>
         <FormField
           name="normalize"
@@ -240,48 +250,5 @@ export function InferenceForm({
         </footer>
       </form>
     </Form>
-  );
-}
-
-function FsTreeDialog({
-  handleSelect,
-}: {
-  handleSelect: (path: string) => void;
-}) {
-  const treePath = env.NEXT_PUBLIC_TREE_PATH;
-  const [path, setPath] = useState(treePath);
-  const [open, setOpen] = useState(false);
-
-  const handleOpenChange = (open: boolean) => {
-    setOpen(open);
-    setPath(treePath);
-  };
-  const onSelect = (path: string) => {
-    handleSelect(path);
-    setOpen(false);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button type="button" variant="link" size="sm" className="mt-1">
-          Add img
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[825px]">
-        <DialogHeader>
-          <DialogTitle>Select images</DialogTitle>
-          <DialogDescription>
-            {'Select the path to a valid image file to run inference on.'}
-          </DialogDescription>
-        </DialogHeader>
-        <FsTree path={path} handlePathChange={setPath} width={800} />
-        <DialogFooter>
-          <Button className="w-full" onClick={() => onSelect(path)}>
-            Select
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

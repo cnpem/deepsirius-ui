@@ -203,7 +203,7 @@ const networkState = createMachine({
   predictableActionArguments: true,
 });
 
-export function NetworkNode({ id, data }: NodeProps) {
+export function NetworkNode({ id, data }: NodeProps<NodeData>) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
@@ -241,7 +241,7 @@ export function NetworkNode({ id, data }: NodeProps) {
             partition: 'dev-gcd',
             command:
               'echo "' +
-              JSON.stringify(formData) +
+              JSON.stringify({ ...formData, ...data }) +
               '" \n sleep 5 \n echo "job completed."',
           };
           if (state.matches('tuning') || event.type === 'finetune') {
@@ -351,17 +351,21 @@ export function NetworkNode({ id, data }: NodeProps) {
                 <AccordionTrigger>Train me!</AccordionTrigger>
                 <AccordionContent>
                   <NetworkForm
-                    onSubmitHandler={(data) => {
+                    onSubmitHandler={(formSubmitData) => {
                       send({
                         type: 'start training',
-                        data: { formData: data },
+                        data: { formData: formSubmitData },
                       });
                       toast({
                         title: 'You submitted the following values:',
                         description: (
                           <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
                             <code className="text-white">
-                              {JSON.stringify(data, null, 2)}
+                              {JSON.stringify(
+                                { ...formSubmitData, ...data },
+                                null,
+                                2,
+                              )}
                             </code>
                           </pre>
                         ),

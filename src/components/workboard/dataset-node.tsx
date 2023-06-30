@@ -143,7 +143,7 @@ const datasetState = createMachine({
   predictableActionArguments: true,
 });
 
-export function DatasetNode({ id, data }: NodeProps) {
+export function DatasetNode({ id, data }: NodeProps<NodeData>) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
@@ -182,7 +182,7 @@ export function DatasetNode({ id, data }: NodeProps) {
             partition: 'dev-gcd',
             command:
               'echo "' +
-              JSON.stringify(formData) +
+              JSON.stringify({ ...formData, ...data }) +
               '" \n sleep 5 \n echo "job completed."',
           };
           createJob
@@ -273,17 +273,21 @@ export function DatasetNode({ id, data }: NodeProps) {
                       label: '/path/to/my/label',
                     },
                   ]}
-                  onSubmitHandler={(data) => {
+                  onSubmitHandler={(formSubmitData) => {
                     send({
                       type: 'start',
-                      data: { formData: data },
+                      data: { formData: formSubmitData },
                     });
                     toast({
                       title: 'You submitted the following values:',
                       description: (
                         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
                           <code className="text-white">
-                            {JSON.stringify(data, null, 2)}
+                            {JSON.stringify(
+                              { ...formSubmitData, ...data },
+                              null,
+                              2,
+                            )}
                           </code>
                         </pre>
                       ),

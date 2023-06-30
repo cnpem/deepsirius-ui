@@ -39,7 +39,18 @@ function Gepetto({ workspacePath }: { workspacePath: string }) {
 
   const handleInit = useCallback(() => {
     console.log('handleInit');
-  }, []);
+    // writing the workspace path to the node data of all the nodes
+    // so that the nodes can access the workspace path
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          workspacePath,
+        },
+      })),
+    );
+  }, [setNodes, workspacePath]);
 
   const validateConnection = useCallback(
     (params: Edge | Connection) => {

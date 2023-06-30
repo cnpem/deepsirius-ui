@@ -1,4 +1,4 @@
-import { type Node, useReactFlow } from 'reactflow';
+import { type Node, NodeProps, useReactFlow } from 'reactflow';
 import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import { NodeTypesList } from '~/components/workboard/flow';
 import { type NodeData, customGrid } from '~/components/workboard/nodes';
 
 // selects the type of node to be created using a dropdown menu
-export function NewNode() {
+export function NewNode({ data }: NodeProps<NodeData>) {
   const { getNodes, addNodes, fitView } = useReactFlow<NodeData>();
 
   const createNewNode = (nodeType: string) => {
@@ -32,6 +32,7 @@ export function NewNode() {
       data: {
         label: 'undefined',
         xState: 'undefined',
+        workspacePath: data.workspacePath,
       },
     };
     addNodes([newNode]);

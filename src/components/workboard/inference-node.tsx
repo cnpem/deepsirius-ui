@@ -146,7 +146,7 @@ const inferenceState = createMachine({
   predictableActionArguments: true,
 });
 
-export function InferenceNode({ id, data }: NodeProps) {
+export function InferenceNode({ id, data }: NodeProps<NodeData>) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
@@ -185,7 +185,7 @@ export function InferenceNode({ id, data }: NodeProps) {
             partition: 'dev-gcd',
             command:
               'echo "' +
-              JSON.stringify(formData) +
+              JSON.stringify({ ...formData, ...data }) +
               '" \n sleep 5 \n echo "job completed."',
           };
           createJob
@@ -267,17 +267,21 @@ export function InferenceNode({ id, data }: NodeProps) {
               <AccordionTrigger>Want some inference?</AccordionTrigger>
               <AccordionContent>
                 <InferenceForm
-                  onSubmitHandler={(data) => {
+                  onSubmitHandler={(formSubmitData) => {
                     send({
                       type: 'start',
-                      data: { formData: data },
+                      data: { formData: formSubmitData },
                     });
                     toast({
                       title: 'You submitted the following values:',
                       description: (
                         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
                           <code className="text-white">
-                            {JSON.stringify(data, null, 2)}
+                            {JSON.stringify(
+                              { ...formSubmitData, ...data },
+                              null,
+                              2,
+                            )}
                           </code>
                         </pre>
                       ),

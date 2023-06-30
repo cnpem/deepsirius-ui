@@ -9,16 +9,17 @@ export const customGrid = {
   rowSpacing: 200,
 };
 
+// the nodeof type 'new' doesn't have use for this custom data fields
 export type NodeData = {
-  label: string;
-  xState: string;
+  workspacePath?: string;
+  label?: string;
+  xState?: string;
 };
 
 export default [
   {
     id: '0',
     position: { x: customGrid.new, y: customGrid.rowSpacing },
-    data: { label: '', xState: '' },
     type: 'new',
   },
   {

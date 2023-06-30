@@ -402,7 +402,6 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
           <Button onClick={handleActivation}>activate</Button>
         </CardFooter>
       )}
-      <Handle type="source" position={Position.Right} />
     </Card>
   );
 }

@@ -255,7 +255,6 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
     data-[state=busy]:dark:bg-amber-700 data-[state=error]:dark:bg-rose-700
     data-[state=inactive]:dark:bg-muted data-[state=success]:dark:bg-cyan-700"
     >
-      <Handle type="target" position={Position.Left} />
       <CardHeader>
         <CardTitle>{state.context.datasetName}</CardTitle>
         <CardDescription>{status}</CardDescription>

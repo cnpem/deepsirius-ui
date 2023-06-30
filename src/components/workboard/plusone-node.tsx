@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { type Node, type NodeProps, useReactFlow } from 'reactflow';
 import { Button } from '~/components/ui/button';
 import {
@@ -23,8 +24,8 @@ export function PlusOneNode({ data }: NodeProps<NodeData>) {
       type: nodeType,
       position: {
         // TODO: fix this
-        x: customGrid.plusOne.x,
-        y: customGrid.plusOne.y + 50,
+        x: customGrid.plusOne?.x ?? 0,
+        y: customGrid.plusOne?.y ? customGrid.plusOne.y + 50 : 50,
       },
       data: {
         label: 'undefined',
@@ -43,8 +44,10 @@ export function PlusOneNode({ data }: NodeProps<NodeData>) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button className="btn btn-primary btn-sm rounded-lg">+</Button>
+      <DropdownMenuTrigger className="data-[state=open]:rotate-45" asChild>
+        <Button variant={'default'} size={'icon'} className="rounded-full">
+          <Plus />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>Create New Node</DropdownMenuLabel>

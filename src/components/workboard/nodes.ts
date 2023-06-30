@@ -1,7 +1,7 @@
-import { type Node } from 'reactflow';
+import { type Node, type XYPosition } from 'reactflow';
 
 // TODO: make this sizes to be related to the sizes defined on the component styles
-export const customGrid = {
+export const customGrid: { [key: string]: XYPosition } = {
   plusOne: { x: 0, y: 0 },
 };
 
@@ -15,7 +15,7 @@ export type NodeData = {
 export default [
   {
     id: '0',
-    position: { x: customGrid.plusOne.x, y: customGrid.plusOne.y },
+    position: { x: customGrid.plusOne?.x, y: customGrid.plusOne?.y },
     type: 'new',
   },
 ] as Node<NodeData>[];

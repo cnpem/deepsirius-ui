@@ -1,5 +1,6 @@
 import { useMachine } from '@xstate/react';
-import { Handle, Position } from 'reactflow';
+import { useCallback, useEffect } from 'react';
+import { Handle, NodeProps, Position, useReactFlow } from 'reactflow';
 import { assign, createMachine } from 'xstate';
 import {
   Accordion,
@@ -24,6 +25,7 @@ import {
   type FormProps,
   type FormType,
 } from './node-component-forms/dataset-form';
+import { NodeData } from './nodes';
 
 interface JobEvent {
   type: 'done.invoke';
@@ -141,10 +143,11 @@ const datasetState = createMachine({
   predictableActionArguments: true,
 });
 
-export function DatasetNode() {
+export function DatasetNode({ id, data }: NodeProps) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
+  const { getNodes, addNodes } = useReactFlow();
 
   const [state, send] = useMachine(datasetState, {
     guards: {
@@ -204,7 +207,45 @@ export function DatasetNode() {
     },
   });
 
+  // callback for updating the node data
+  const updateNodeData = useCallback(
+    (data: NodeData) => {
+      const nodes = getNodes();
+      const node = nodes.find((node) => node.id === id);
+      if (node) {
+        addNodes([
+          {
+            ...node,
+            data: {
+              ...data,
+            },
+          },
+        ]);
+      }
+    },
+    [addNodes, getNodes, id],
+  );
+
+  // defining status as a high level machineState
   const status = typeof state.value === 'object' ? 'busy' : state.value;
+
+  // updating node data on state change
+  useEffect(() => {
+    console.log('useEffect on state: ', status);
+    // defining a networkLabel to avoid error on updateNodeMachineState
+    const datasetNameDefined =
+      typeof state.context.datasetName === 'string'
+        ? state.context.datasetName
+        : 'undefined';
+    // data do be updated on node
+    const updateData: NodeData = {
+      label: datasetNameDefined,
+      xState: status,
+    };
+    // updating node data
+    updateNodeData(updateData);
+  }, [state.context.datasetName, status, updateNodeData]);
+
   return (
     <Card
       data-state={status}

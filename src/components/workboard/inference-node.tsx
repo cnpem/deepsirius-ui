@@ -1,5 +1,12 @@
 import { useMachine } from '@xstate/react';
-import { Handle, Position, useNodeId } from 'reactflow';
+import { useCallback, useEffect } from 'react';
+import {
+  Handle,
+  NodeProps,
+  Position,
+  useNodeId,
+  useReactFlow,
+} from 'reactflow';
 import { assign, createMachine } from 'xstate';
 import {
   Accordion,
@@ -23,6 +30,8 @@ import {
 } from '~/components/workboard/node-component-forms/inference-form';
 import useStore from '~/hooks/use-store';
 import { api } from '~/utils/api';
+
+import { NodeData } from './nodes';
 
 interface JobEvent {
   type: 'done.invoke';
@@ -137,17 +146,11 @@ const inferenceState = createMachine({
   predictableActionArguments: true,
 });
 
-export function InferenceNode() {
+export function InferenceNode({ id, data }: NodeProps) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const nodeId = useNodeId();
-  // defining node id as string to avoid error on updateNodeMachineState
-  const nodeIdDefined = typeof nodeId === 'string' ? nodeId : 'undefined';
-  const getSourceNodeData = useStore((state) => state.getSourceNodeData);
-
-  // get connected data from the store when node is mounted
-  const connectedData = getSourceNodeData(nodeIdDefined);
+  const { getNodes, addNodes } = useReactFlow();
 
   const [state, send] = useMachine(inferenceState, {
     guards: {
@@ -207,7 +210,41 @@ export function InferenceNode() {
     },
   });
 
+  // callback for updating the node data
+  const updateNodeData = useCallback(
+    (data: NodeData) => {
+      const nodes = getNodes();
+      const node = nodes.find((node) => node.id === id);
+      if (node) {
+        addNodes([
+          {
+            ...node,
+            data: {
+              ...data,
+            },
+          },
+        ]);
+      }
+    },
+    [addNodes, getNodes, id],
+  );
+
+  // defining status as a high level machineState
   const status = typeof state.value === 'object' ? 'busy' : state.value;
+
+  // updating node data on state change
+  useEffect(() => {
+    console.log('useEffect on state: ', status);
+    // defining a networkLabel to avoid error on updateNodeMachineState
+    const networkLabelDefined = 'none';
+    // data do be updated on node
+    const updateData: NodeData = {
+      label: networkLabelDefined,
+      xState: status,
+    };
+    // updating node data
+    updateNodeData(updateData);
+  }, [status, updateNodeData]);
 
   return (
     <Card
@@ -350,13 +387,6 @@ export function InferenceNode() {
           <Button onClick={() => send('activate')}>activate</Button>
         </CardFooter>
       )}
-      <CardContent>
-        {' '}
-        <p>
-          connected: {connectedData.nodeLabel}, state:
-          {connectedData.machineState}
-        </p>
-      </CardContent>
       <Handle type="source" position={Position.Right} />
     </Card>
   );

@@ -209,31 +209,6 @@ export function NetworkNode({ id, data }: NodeProps) {
   const cancelJob = api.remotejob.cancel.useMutation();
   const { getNodes, addNodes } = useReactFlow();
 
-  console.log('network node data', data);
-
-  const updateNodeData = useCallback(
-    (data: NodeData) => {
-      const nodes = getNodes();
-      const node = nodes.find((node) => node.id === id);
-      if (node) {
-        addNodes([
-          {
-            ...node,
-            data: {
-              ...data,
-            },
-          },
-        ]);
-      }
-    },
-    [addNodes, getNodes, id],
-  );
-
-  // const setNodeData = useStore((state) => state.setNodeData);
-  // const nodeId = useNodeId();
-  // // defining node id as string to avoid error on updateNodeMachineState
-  // const nodeIdDefined = typeof nodeId === 'string' ? nodeId : 'undefined';
-
   const [state, send] = useMachine(networkState, {
     guards: {
       isCompleted: (context) => {
@@ -304,13 +279,34 @@ export function NetworkNode({ id, data }: NodeProps) {
     { tuning: 'pending' },
     { tuning: 'running' },
   ].some((s) => state.matches(s));
+
   const isError = [{ training: 'error' }, { tuning: 'error' }].some((s) =>
     state.matches(s),
+  );
+
+  // callback for updating the node data
+  const updateNodeData = useCallback(
+    (data: NodeData) => {
+      const nodes = getNodes();
+      const node = nodes.find((node) => node.id === id);
+      if (node) {
+        addNodes([
+          {
+            ...node,
+            data: {
+              ...data,
+            },
+          },
+        ]);
+      }
+    },
+    [addNodes, getNodes, id],
   );
 
   // defining status as a high level machineState
   const status = typeof state.value === 'object' ? 'busy' : state.value;
 
+  // updating node data on state change
   useEffect(() => {
     console.log('useEffect on state: ', status);
     // defining a networkLabel to avoid error on updateNodeMachineState

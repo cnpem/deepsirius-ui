@@ -207,7 +207,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const { getNodes, addNodes } = useReactFlow();
+  const { getNodes, addNodes, getEdges } = useReactFlow();
 
   const [state, send] = useMachine(networkState, {
     guards: {
@@ -323,6 +323,17 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
     updateNodeData(updateData);
   }, [state.context.networkLabel, status, updateNodeData]);
 
+  // handle node activation if theres a source node connected to it
+  const handleActivation = () => {
+    const sourceNode = getEdges().find((edge) => edge.target === id)?.source;
+    if (sourceNode) {
+      send('activate');
+    } else {
+      // TODO: make this pretty
+      alert('Please connect a source node to this node.');
+    }
+  };
+
   return (
     <>
       {state.matches('inactive') && (
@@ -333,7 +344,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
             <CardDescription>{state.value}</CardDescription>
           </CardHeader>
           <CardFooter className="flex justify-start">
-            <Button onClick={() => send('activate')}>activate</Button>
+            <Button onClick={handleActivation}>activate</Button>
           </CardFooter>
           <Handle type="source" position={Position.Right} />
         </Card>

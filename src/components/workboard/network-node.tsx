@@ -1,6 +1,6 @@
 import { useMachine } from '@xstate/react';
-import { useEffect } from 'react';
-import { Handle, Position, useNodeId } from 'reactflow';
+import { useCallback, useEffect } from 'react';
+import { Handle, type NodeProps, Position, useReactFlow } from 'reactflow';
 import { assign, createMachine } from 'xstate';
 import {
   Accordion,
@@ -23,7 +23,7 @@ import {
   type NetworkFormType,
   PrefilledForm,
 } from '~/components/workboard/node-component-forms/network-form';
-import useStore, { type NodeStateData } from '~/hooks/use-store';
+import { type NodeData } from '~/components/workboard/nodes';
 import { api } from '~/utils/api';
 
 interface JobEvent {
@@ -203,14 +203,36 @@ const networkState = createMachine({
   predictableActionArguments: true,
 });
 
-export function NetworkNode() {
+export function NetworkNode({ id, data }: NodeProps) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const setNodeData = useStore((state) => state.setNodeData);
-  const nodeId = useNodeId();
-  // defining node id as string to avoid error on updateNodeMachineState
-  const nodeIdDefined = typeof nodeId === 'string' ? nodeId : 'undefined';
+  const { getNodes, addNodes } = useReactFlow();
+
+  console.log('network node data', data);
+
+  const updateNodeData = useCallback(
+    (data: NodeData) => {
+      const nodes = getNodes();
+      const node = nodes.find((node) => node.id === id);
+      if (node) {
+        addNodes([
+          {
+            ...node,
+            data: {
+              ...data,
+            },
+          },
+        ]);
+      }
+    },
+    [addNodes, getNodes, id],
+  );
+
+  // const setNodeData = useStore((state) => state.setNodeData);
+  // const nodeId = useNodeId();
+  // // defining node id as string to avoid error on updateNodeMachineState
+  // const nodeIdDefined = typeof nodeId === 'string' ? nodeId : 'undefined';
 
   const [state, send] = useMachine(networkState, {
     guards: {
@@ -297,12 +319,13 @@ export function NetworkNode() {
         ? state.context.networkLabel
         : 'undefined';
     // data do be updated on node
-    const updateData: NodeStateData = {
-      nodeLabel: networkLabelDefined,
-      machineState: status,
+    const updateData: NodeData = {
+      label: networkLabelDefined,
+      xState: status,
     };
-    return setNodeData(nodeIdDefined, updateData);
-  }, [setNodeData, nodeIdDefined, status, state.context.networkLabel]);
+    // updating node data
+    updateNodeData(updateData);
+  }, [state.context.networkLabel, status, updateNodeData]);
 
   return (
     <>
@@ -470,7 +493,7 @@ export function NetworkNode() {
           <Handle type="target" position={Position.Left} />
           <CardHeader>
             <CardTitle>{state.context.networkLabel}</CardTitle>
-            <CardDescription>{state.value}</CardDescription>
+            <CardDescription>{JSON.stringify(state.value)}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col">

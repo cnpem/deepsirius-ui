@@ -1,4 +1,4 @@
-import { type Node, NodeProps, useReactFlow } from 'reactflow';
+import { type Node, type NodeProps, useReactFlow } from 'reactflow';
 import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
@@ -12,22 +12,19 @@ import { NodeTypesList } from '~/components/workboard/flow';
 import { type NodeData, customGrid } from '~/components/workboard/nodes';
 
 // selects the type of node to be created using a dropdown menu
-export function NewNode({ data }: NodeProps<NodeData>) {
+export function PlusOneNode({ data }: NodeProps<NodeData>) {
   const { getNodes, addNodes, fitView } = useReactFlow<NodeData>();
 
   const createNewNode = (nodeType: string) => {
     console.log('create new node', nodeType);
     const nodes = getNodes();
-    const rows = Math.floor(
-      nodes.filter((node) => node.type == nodeType).length,
-    );
     const newNode: Node<NodeData> = {
       id: `${nodes.length + 1}`,
       type: nodeType,
       position: {
         // TODO: fix this
-        x: customGrid[nodeType],
-        y: customGrid.rowSpacing * rows,
+        x: customGrid.plusOne.x,
+        y: customGrid.plusOne.y + 50,
       },
       data: {
         label: 'undefined',
@@ -36,7 +33,7 @@ export function NewNode({ data }: NodeProps<NodeData>) {
       },
     };
     addNodes([newNode]);
-    fitView();
+    fitView({ padding: 0.9, minZoom: 1, includeHiddenNodes: true });
   };
   // the nodes that can be builded are defined in NodeTypesList except for the type "new"
   // which is used to create a new node

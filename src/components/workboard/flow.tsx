@@ -2,29 +2,30 @@ import { useCallback } from 'react';
 import ReactFlow, {
   Background,
   BackgroundVariant,
-  Connection,
+  type Connection,
   Controls,
-  Edge,
+  type Edge,
   MiniMap,
   type NodeTypes,
   ReactFlowProvider,
   addEdge,
   useEdgesState,
   useNodesState,
+  useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { DatasetNode } from '~/components/workboard/dataset-node';
 import initialEdges from '~/components/workboard/edges';
 import { InferenceNode } from '~/components/workboard/inference-node';
 import { NetworkNode } from '~/components/workboard/network-node';
-import { NewNode } from '~/components/workboard/new-node';
-import initialNodes, { type NodeData } from '~/components/workboard/nodes';
+import initialNodes from '~/components/workboard/nodes';
+import { PlusOneNode } from '~/components/workboard/plusone-node';
 
 export const nodeTypes: NodeTypes = {
   dataset: DatasetNode,
   network: NetworkNode,
   inference: InferenceNode,
-  new: NewNode,
+  new: PlusOneNode,
 };
 
 export const NodeTypesList = Object.keys(nodeTypes);
@@ -36,6 +37,7 @@ export const NodeTypesList = Object.keys(nodeTypes);
 function Gepetto({ workspacePath }: { workspacePath: string }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const { fitView } = useReactFlow();
 
   const handleInit = useCallback(() => {
     console.log('handleInit');
@@ -50,7 +52,8 @@ function Gepetto({ workspacePath }: { workspacePath: string }) {
         },
       })),
     );
-  }, [setNodes, workspacePath]);
+    fitView({ padding: 0.2, minZoom: 1 });
+  }, [fitView, setNodes, workspacePath]);
 
   const validateConnection = useCallback(
     (params: Edge | Connection) => {
@@ -117,10 +120,11 @@ function Gepetto({ workspacePath }: { workspacePath: string }) {
         onConnect={onConnect}
         onInit={handleInit}
         nodeTypes={nodeTypes}
+        fitView
       >
         <Controls className="dark:fill-slate-100 [&>button:hover]:dark:bg-slate-500 [&>button]:dark:bg-slate-700" />
         <MiniMap className="dark:bg-slate-700" />
-        <Background variant={variant} gap={12} size={1} />
+        <Background variant={variant} gap={12} />
       </ReactFlow>
     </div>
   );

@@ -44,7 +44,10 @@ export function PlusOneNode({ data }: NodeProps<NodeData>) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="data-[state=open]:rotate-45" asChild>
+      <DropdownMenuTrigger
+        className="transition data-[state=open]:rotate-45 scale-100 data-[state=open]:scale-50"
+        asChild
+      >
         <Button variant={'default'} size={'icon'} className="rounded-full">
           <Plus />
         </Button>

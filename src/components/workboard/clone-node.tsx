@@ -12,7 +12,7 @@ import { NodeTypesList } from '~/components/workboard/flow';
 import { type NodeData } from '~/components/workboard/flow';
 
 // selects the type of node to be created using a dropdown menu
-export function PlusOneNode({ data }: NodeProps<NodeData>) {
+export function CloneNode({ data }: NodeProps<NodeData>) {
   const { getNodes, addNodes, fitView } = useReactFlow<NodeData>();
 
   const createNewNode = (nodeType: string) => {
@@ -40,19 +40,43 @@ export function PlusOneNode({ data }: NodeProps<NodeData>) {
     (nodeType) => nodeType !== 'new',
   );
 
+  const cloneNode = (nodeType: string) => {
+    console.log('clone last existing node of type:', nodeType);
+    const nodes = getNodes();
+    // get the last node of the type to be cloned
+    const sameTypeNodes = nodes.filter((node) => node.type === nodeType);
+    const lastNode = sameTypeNodes[sameTypeNodes.length - 1];
+    if (!lastNode) {
+      console.log('no node of type', nodeType, 'found');
+      return createNewNode(nodeType);
+    }
+    const newNode: Node<NodeData> = {
+      id: `${nodes.length + 1}`,
+      type: nodeType,
+      position: {
+        x: 0,
+        y: 50,
+      },
+      data: {
+        label: lastNode.data.label,
+        xState: lastNode.data.xState,
+        workspacePath: data.workspacePath,
+      },
+    };
+    addNodes([newNode]);
+    fitView({ padding: 0.2, includeHiddenNodes: true });
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className="btn btn-primary btn-sm rounded-lg">+</Button>
+        <Button className="btn btn-primary btn-sm rounded-lg">🧬</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>Create New Node</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {nodeTypesAllowed.map((nodeType) => (
-          <DropdownMenuItem
-            onSelect={() => createNewNode(nodeType)}
-            key={nodeType}
-          >
+          <DropdownMenuItem onSelect={() => cloneNode(nodeType)} key={nodeType}>
             {nodeType}
           </DropdownMenuItem>
         ))}

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import ReactFlow, {
   Background,
   BackgroundVariant,
@@ -6,6 +6,7 @@ import ReactFlow, {
   Controls,
   type Edge,
   MiniMap,
+  type Node,
   type NodeTypes,
   ReactFlowProvider,
   addEdge,
@@ -14,11 +15,11 @@ import ReactFlow, {
   useReactFlow,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { CloneNode } from '~/components/workboard/clone-node';
 import { DatasetNode } from '~/components/workboard/dataset-node';
-import initialEdges from '~/components/workboard/edges';
+// import initialEdges from '~/components/workboard/edges';
 import { InferenceNode } from '~/components/workboard/inference-node';
 import { NetworkNode } from '~/components/workboard/network-node';
-import initialNodes from '~/components/workboard/nodes';
 import { PlusOneNode } from '~/components/workboard/plusone-node';
 
 export const nodeTypes: NodeTypes = {
@@ -26,9 +27,33 @@ export const nodeTypes: NodeTypes = {
   network: NetworkNode,
   inference: InferenceNode,
   new: PlusOneNode,
+  clone: CloneNode,
 };
 
 export const NodeTypesList = Object.keys(nodeTypes);
+
+// the nodeof type 'new' doesn't have use for this custom data fields
+export type NodeData = {
+  workspacePath?: string;
+  label?: string;
+  xStateName?: string; // this is just a state label without spaces for controlling the flow
+  xState?: string; // this is a long json
+};
+
+const initialNodes = [
+  {
+    id: '1',
+    position: { x: 0, y: 0 },
+    type: 'new',
+  },
+  {
+    id: '2',
+    position: { x: 0, y: 100 },
+    type: 'clone',
+  },
+] as Node<NodeData>[];
+
+const initialEdges = [] as Edge[];
 
 // flow controller component
 // can see all nodes and edges and should validade conditional states
@@ -48,7 +73,7 @@ function Gepetto({ workspacePath }: { workspacePath: string }) {
         ...node,
         data: {
           ...node.data,
-          workspacePath,
+          workspacePath: workspacePath,
         },
       })),
     );
@@ -57,7 +82,7 @@ function Gepetto({ workspacePath }: { workspacePath: string }) {
 
   const validateConnection = useCallback(
     (params: Edge | Connection) => {
-      console.log('validateConnection', params);
+      console.log('validateConnection', params, nodes);
       const validConnectionPairs = [
         ['dataset', 'network'],
         ['network', 'inference'],
@@ -107,6 +132,11 @@ function Gepetto({ workspacePath }: { workspacePath: string }) {
     },
     [setEdges, validateConnection],
   );
+
+  // print to log all the nodes when the nodes array changes size
+  useEffect(() => {
+    console.log('nodes', nodes);
+  }, [nodes]);
 
   const variant = BackgroundVariant.Dots;
 

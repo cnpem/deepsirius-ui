@@ -2,12 +2,12 @@ import { useMachine } from '@xstate/react';
 import { useCallback, useEffect } from 'react';
 import {
   Handle,
-  NodeProps,
+  type NodeProps,
   Position,
   useNodeId,
   useReactFlow,
 } from 'reactflow';
-import { assign, createMachine } from 'xstate';
+import { State, assign, createMachine } from 'xstate';
 import {
   Accordion,
   AccordionContent,
@@ -24,21 +24,19 @@ import {
   CardTitle,
 } from '~/components/ui/card';
 import { toast } from '~/components/ui/use-toast';
+import { type NodeData } from '~/components/workboard/flow';
 import {
   type FormType,
   InferenceForm,
 } from '~/components/workboard/node-component-forms/inference-form';
-import useStore from '~/hooks/use-store';
 import { api } from '~/utils/api';
-
-import { NodeData } from './nodes';
 
 interface JobEvent {
   type: 'done.invoke';
   data: { jobId?: string; jobStatus?: string; formData?: FormType };
 }
 
-const inferenceState = createMachine({
+const inferenceMachine = createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QEsB2AzMAnMqDGYAdGgIZ4AuyAbmAMRmVUnlgDaADALqKgAOA9rGSV+qHiAAeiAIwA2AMyEAnCqUB2JQCYAHEoCs2te1kAaEAE9E82ZsJrNsvWoAsavUtnsdzgL4+zaJg4+EQM1HSw5CRY5BzcSCACQiJiCVIIzuxqhM6a0tp67tq60vLWZpYI1rb2jnoKes7S7OzafgEY2LgEhABGAK6w5oS8uBBoULQQokRoVPwA1kSw-b0AtsIAUvy9ceJJwsii4unarTnazvJn7HqamhraFYhOeoROmlrSV9Vl7SCBLohPqDYajVDjVCTbBYfhYEYAG2Y6Dha0IK3WWx2ewSBxSJxkOiUhHkVzU8nJmnkSmkBmeCAeb1qTjUcmk9n0-0BwR6AyGhCw-VQqAmUxmxFQ8yWEqC3SIfOGguFEwQc34eGYR1QcRxfEEh2OaUJuhJZIp8ipNLpFkQskMhBaam09yUZPuei5nR58tBAqFIqhYtQs0lixDsuBCr9yqhqtDGpSOuk8T1yS1BIQ0k+xNJ5sp1NpTxtCHctkdzoM0izzl8-gBXrlIP5SoDk2mwYlUvDQN5vpbKrVCa1Os0KcS+vxRsz2dNeYtBetlQUxL0WWdZJc2gtnojveb-tF7ZDXZlPZ9+5jUDj8yHoh18jHePTU-U2T08izdyyt2a8npziUdhlE+IwyircktB3M8m0VA9Aw1EIEV1cc00NUB0maZxtByPJLjtJRikA0xi2pZxlDURwKJrLCAOkKDvUIGE4VoHByCwcxkKfNDJBeFoHSdLMXGuRp1HpbRpHeFoWmkQCrgcLD6MbFY8AIWBYFodA0DAcghTYLh9gnZ90N4oC10Eq4CgAtR6QoiSiM0XImnfJ0lD8OtUH4CA4HEbk5QM1DUmMhAAFpiMqULFOBUgKHCfyDUCniMk0elrEUe5KNcdxPG8SKejCGg4snIKdDeXJ8go2QVAtBQUoUQh0qcTKPC8S5cvPSpU3ijMsOyMyHgskTrJIrIcgogwKTk8lZFrDpd3akYxgmQqjMS983j6oTLNE4tChXACAIc75qXkNqYOjVtlu4jCvCA1133Yax8iaYp6QMbDih0TRnLJGxTqYrBLoSjCbAku0XCUakFBrelPv4xxdGdZpvtO5TVPgXFDKumQDDeD8HK3ORDDOP9i0qiT3CrMrZCh0k3J8IA */
   id: 'inference',
   schema: {
@@ -150,9 +148,16 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const { getNodes, addNodes, getEdges } = useReactFlow();
+  const { setNodes, getEdges } = useReactFlow();
 
-  const [state, send] = useMachine(inferenceState, {
+  const machineState = data.xState
+    ? (State.create(
+        JSON.parse(data.xState),
+      ) as typeof inferenceMachine.initialState)
+    : inferenceMachine.initialState;
+
+  const [state, send] = useMachine(inferenceMachine, {
+    state: machineState,
     guards: {
       isCompleted: (context) => {
         return context.jobStatus === 'COMPLETED';
@@ -213,20 +218,16 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
   // callback for updating the node data
   const updateNodeData = useCallback(
     (data: NodeData) => {
-      const nodes = getNodes();
-      const node = nodes.find((node) => node.id === id);
-      if (node) {
-        addNodes([
-          {
-            ...node,
-            data: {
-              ...data,
-            },
-          },
-        ]);
-      }
+      setNodes((nodes) =>
+        nodes.map((node) => {
+          if (node.id === id) {
+            node.data = { ...node.data, ...data } as NodeData;
+          }
+          return node;
+        }),
+      );
     },
-    [addNodes, getNodes, id],
+    [id, setNodes],
   );
 
   // defining status as a high level machineState
@@ -236,15 +237,16 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
   useEffect(() => {
     console.log('useEffect on state: ', status);
     // defining a networkLabel to avoid error on updateNodeMachineState
-    const networkLabelDefined = 'none';
+    const labelDefined = 'none';
     // data do be updated on node
     const updateData: NodeData = {
-      label: networkLabelDefined,
-      xState: status,
+      label: labelDefined,
+      xStateName: status,
+      xState: JSON.stringify(state),
     };
     // updating node data
     updateNodeData(updateData);
-  }, [status, updateNodeData]);
+  }, [state, status, updateNodeData]);
 
   // handle node activation if theres a source node connected to it
   const handleActivation = () => {

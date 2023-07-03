@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { type Node, type NodeProps, useReactFlow } from 'reactflow';
 import { Button } from '~/components/ui/button';
 import {
@@ -42,8 +43,13 @@ export function PlusOneNode({ data }: NodeProps<NodeData>) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button className="btn btn-primary btn-sm rounded-lg">+</Button>
+      <DropdownMenuTrigger
+        className="transition data-[state=open]:rotate-45 scale-100 data-[state=open]:scale-50"
+        asChild
+      >
+        <Button variant={'default'} size={'icon'} className="rounded-full">
+          <Plus />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>Create New Node</DropdownMenuLabel>

@@ -18,6 +18,7 @@ import useStore from '~/hooks/use-store';
 export function PlusOneNode() {
   const { nodes, addNode } = useStore(
     (state) => ({
+      workspacePath: state.workspacePath,
       nodes: state.nodes,
       addNode: state.addNode,
     }),

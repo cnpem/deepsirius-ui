@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
-import { type Node, type NodeProps, useReactFlow } from 'reactflow';
+import { type Node, type NodeProps } from 'reactflow';
+import { shallow } from 'zustand/shallow';
 import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
@@ -9,16 +10,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { NodeTypesList } from '~/components/workboard/flow';
-import { type NodeData } from '~/components/workboard/flow';
+import { NodeTypesList } from '~/hooks/use-store';
+import { type NodeData } from '~/hooks/use-store';
+import useStore from '~/hooks/use-store';
 
 // selects the type of node to be created using a dropdown menu
 export function PlusOneNode({ data }: NodeProps<NodeData>) {
-  const { getNodes, addNodes, fitView } = useReactFlow<NodeData>();
+  const { nodes, addNode } = useStore(
+    (state) => ({
+      nodes: state.nodes,
+      addNode: state.addNode,
+    }),
+    shallow,
+  );
 
   const createNewNode = (nodeType: string) => {
     console.log('create new node of type:', nodeType);
-    const nodes = getNodes();
     console.log('nodes', nodes);
     const newNode: Node<NodeData> = {
       id: `${nodes.length + 1}`,
@@ -32,8 +39,7 @@ export function PlusOneNode({ data }: NodeProps<NodeData>) {
         workspacePath: data.workspacePath,
       },
     };
-    addNodes([newNode]);
-    fitView({ padding: 0.2, includeHiddenNodes: true });
+    addNode(newNode);
   };
   // the nodes that can be builded are defined in NodeTypesList except for the type "new"
   // which is used to create a new node

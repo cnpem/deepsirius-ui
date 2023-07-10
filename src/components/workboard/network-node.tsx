@@ -1,7 +1,8 @@
 import { useMachine } from '@xstate/react';
-import { useCallback, useEffect } from 'react';
-import { Handle, type NodeProps, Position, useReactFlow } from 'reactflow';
-import { State, assign, createMachine } from 'xstate';
+import { useEffect } from 'react';
+import { Handle, type NodeProps, Position } from 'reactflow';
+import { State, type StateFrom, assign, createMachine } from 'xstate';
+import { shallow } from 'zustand/shallow';
 import {
   Accordion,
   AccordionContent,
@@ -18,12 +19,13 @@ import {
   CardTitle,
 } from '~/components/ui/card';
 import { toast } from '~/components/ui/use-toast';
-import { type NodeData } from '~/components/workboard/flow';
 import {
   DefaultForm as NetworkForm,
   type NetworkFormType,
   PrefilledForm,
 } from '~/components/workboard/node-component-forms/network-form';
+import { type NodeData, type Status } from '~/hooks/use-store';
+import useStore from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
 interface JobEvent {
@@ -207,16 +209,21 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const { setNodes, getEdges } = useReactFlow();
+  const { edges, onUpdateNode } = useStore(
+    (state) => ({
+      edges: state.edges,
+      onUpdateNode: state.onUpdateNode,
+    }),
+    shallow,
+  );
 
-  const machineState = data.xState
-    ? (State.create(
-        JSON.parse(data.xState),
-      ) as typeof networkMachine.initialState)
+  const stateDef = data.xState
+    ? (JSON.parse(data.xState) as StateFrom<typeof networkMachine>)
     : networkMachine.initialState;
+  const prevState = State.create(stateDef);
 
   const [state, send] = useMachine(networkMachine, {
-    state: machineState,
+    state: prevState,
     guards: {
       isCompleted: (context) => {
         return context.jobStatus === 'COMPLETED';
@@ -280,6 +287,17 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
     },
   });
 
+  // defining status as a high level machineState
+  const status =
+    typeof state.value === 'object' ? 'busy' : (state.value as Status);
+
+  useEffect(() => {
+    onUpdateNode({
+      id: id,
+      data: { status: status, xState: JSON.stringify(state) },
+    });
+  }, [id, onUpdateNode, state, status]);
+
   const isBusy = [
     { training: 'pending' },
     { training: 'running' },
@@ -291,45 +309,9 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
     state.matches(s),
   );
 
-  // callback for updating the node data
-  const updateNodeData = useCallback(
-    (data: NodeData) => {
-      setNodes((nodes) =>
-        nodes.map((node) => {
-          if (node.id === id) {
-            node.data = { ...node.data, ...data } as NodeData;
-          }
-          return node;
-        }),
-      );
-    },
-    [id, setNodes],
-  );
-
-  // defining status as a high level machineState
-  const status = typeof state.value === 'object' ? 'busy' : state.value;
-
-  // updating node data on state change
-  useEffect(() => {
-    console.log('useEffect on state: ', status);
-    // defining a networkLabel to avoid error on updateNodeMachineState
-    const labelDefined =
-      typeof state.context.networkLabel === 'string'
-        ? state.context.networkLabel
-        : 'undefined';
-    // data do be updated on node
-    const updateData: NodeData = {
-      label: labelDefined,
-      xStateName: status,
-      xState: JSON.stringify(state),
-    };
-    // updating node data
-    updateNodeData(updateData);
-  }, [state, status, updateNodeData]);
-
   // handle node activation if theres a source node connected to it
   const handleActivation = () => {
-    const sourceNode = getEdges().find((edge) => edge.target === id)?.source;
+    const sourceNode = edges.find((edge) => edge.target === id)?.source;
     if (sourceNode) {
       send('activate');
     } else {
@@ -508,7 +490,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="target" position={Position.Left} />
           <CardHeader>
             <CardTitle>{state.context.networkLabel}</CardTitle>
-            <CardDescription>{JSON.stringify(state.value)}</CardDescription>
+            <CardDescription>{state.value}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col">

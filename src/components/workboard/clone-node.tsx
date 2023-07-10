@@ -1,4 +1,4 @@
-import { type Node, type NodeProps, useReactFlow } from 'reactflow';
+import { type Node, type NodeProps } from 'reactflow';
 import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
@@ -8,16 +8,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { NodeTypesList } from '~/components/workboard/flow';
-import { type NodeData } from '~/components/workboard/flow';
+import { NodeTypesList } from '~/hooks/use-store';
+import { type NodeData } from '~/hooks/use-store';
+import useStore from '~/hooks/use-store';
 
 // selects the type of node to be created using a dropdown menu
 export function CloneNode({ data }: NodeProps<NodeData>) {
-  const { getNodes, addNodes, fitView } = useReactFlow<NodeData>();
+  const { nodes, addNode } = useStore();
 
   const createNewNode = (nodeType: string) => {
     console.log('create new node of type:', nodeType);
-    const nodes = getNodes();
     console.log('nodes', nodes);
     const newNode: Node<NodeData> = {
       id: `${nodes.length + 1}`,
@@ -31,8 +31,7 @@ export function CloneNode({ data }: NodeProps<NodeData>) {
         workspacePath: data.workspacePath,
       },
     };
-    addNodes([newNode]);
-    fitView({ padding: 0.2, includeHiddenNodes: true });
+    addNode(newNode);
   };
   // the nodes that can be builded are defined in NodeTypesList except for the type "new"
   // which is used to create a new node
@@ -42,7 +41,6 @@ export function CloneNode({ data }: NodeProps<NodeData>) {
 
   const cloneNode = (nodeType: string) => {
     console.log('clone last existing node of type:', nodeType);
-    const nodes = getNodes();
     // get the last node of the type to be cloned
     const sameTypeNodes = nodes.filter((node) => node.type === nodeType);
     const lastNode = sameTypeNodes[sameTypeNodes.length - 1];
@@ -63,8 +61,8 @@ export function CloneNode({ data }: NodeProps<NodeData>) {
         workspacePath: data.workspacePath,
       },
     };
-    addNodes([newNode]);
-    fitView({ padding: 0.2, includeHiddenNodes: true });
+    addNode(newNode);
+    // fitView({ padding: 0.2, includeHiddenNodes: true });
   };
 
   return (

@@ -26,10 +26,6 @@ function Gepetto() {
       }),
       shallow,
     );
-  // print to log all the nodes when the nodes array changes size
-  useEffect(() => {
-    console.log('nodes', nodes);
-  }, [nodes]);
 
   const variant = BackgroundVariant.Dots;
 

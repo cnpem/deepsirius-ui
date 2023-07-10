@@ -15,9 +15,10 @@ import { type NodeData } from '~/hooks/use-store';
 import useStore from '~/hooks/use-store';
 
 // selects the type of node to be created using a dropdown menu
-export function PlusOneNode({ data }: NodeProps<NodeData>) {
-  const { nodes, addNode } = useStore(
+export function PlusOneNode() {
+  const { nodes, addNode, workspacePath } = useStore(
     (state) => ({
+      workspacePath: state.workspacePath,
       nodes: state.nodes,
       addNode: state.addNode,
     }),
@@ -26,7 +27,6 @@ export function PlusOneNode({ data }: NodeProps<NodeData>) {
 
   const createNewNode = (nodeType: string) => {
     console.log('create new node of type:', nodeType);
-    console.log('nodes', nodes);
     const newNode: Node<NodeData> = {
       id: `${nodes.length + 1}`,
       type: nodeType,
@@ -36,7 +36,7 @@ export function PlusOneNode({ data }: NodeProps<NodeData>) {
         y: 50,
       },
       data: {
-        workspacePath: data.workspacePath,
+        workspacePath: workspacePath,
       },
     };
     addNode(newNode);

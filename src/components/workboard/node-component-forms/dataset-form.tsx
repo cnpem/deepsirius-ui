@@ -142,7 +142,6 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
             )}
           />
         )}
-
         <SettingsDialog form={form} />
         <div className={'relative border p-2 rounded-md border-dashed my-6'}>
           <div className="relative">
@@ -154,8 +153,8 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
             <div key={field.id} className="grid gap-4 py-2 grid-cols-3">
               <FormField
                 control={form.control}
-                key={field.id}
                 name={`data.${index}.image`}
+                key={`data.${index}.image`}
                 render={({ field }) => (
                   <FormItem>
                     <HoverCard>
@@ -194,7 +193,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
               />
               <FormField
                 control={form.control}
-                key={field.id}
+                key={`data.${index}.label`}
                 name={`data.${index}.label`}
                 render={({ field }) => (
                   <FormItem>

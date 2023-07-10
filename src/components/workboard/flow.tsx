@@ -7,6 +7,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { shallow } from 'zustand/shallow';
+import CustomConnectionLine from '~/components/workboard/connection-line';
 import useStore, { nodeTypes } from '~/hooks/use-store';
 
 // flow controller component
@@ -37,7 +38,7 @@ function Gepetto() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onInit={onInit}
+        connectionLineComponent={CustomConnectionLine}
         nodeTypes={nodeTypes}
         fitView
       >

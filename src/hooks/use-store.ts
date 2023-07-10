@@ -99,8 +99,9 @@ const useStore = create<RFState>((set, get) => ({
     let isValidConnection = true;
     if (!sourceNode && !targetNode) {
       isValidConnection = false;
-    } else if (status !== 'success') {
-      isValidConnection = false;
+      // this is commented so we can test connections without having to send jobs and wait for the component to change status
+      // } else if (status !== 'success') {
+      //   isValidConnection = false;
     } else if (
       !validConnectionPairs.some(
         ([sourceType, targetType]) =>

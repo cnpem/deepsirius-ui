@@ -26,15 +26,12 @@ function Gepetto() {
       }),
       shallow,
     );
-  // print to log all the nodes when the nodes array changes size
-  useEffect(() => {
-    console.log('nodes', nodes);
-  }, [nodes]);
 
   const variant = BackgroundVariant.Dots;
 
+  //TODO: would be nice to change the height for full screen mode to h-[930px]
   return (
-    <div className="flex h-screen w-full">
+    <div className="p-2 h-[799px]">
       <ReactFlow
         nodes={nodes}
         edges={edges}

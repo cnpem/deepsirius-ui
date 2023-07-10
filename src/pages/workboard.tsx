@@ -11,7 +11,7 @@ const Workboard: NextPage = () => {
         <meta name="description" content="Workboard" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex min-h-screen flex-col items-center justify-center ">
+      <main>
         <Flow />
       </main>
     </Layout>

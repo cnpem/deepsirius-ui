@@ -1,4 +1,4 @@
-import { type Node, type NodeProps } from 'reactflow';
+import { type Node } from 'reactflow';
 import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
@@ -13,7 +13,7 @@ import { type NodeData } from '~/hooks/use-store';
 import useStore from '~/hooks/use-store';
 
 // selects the type of node to be created using a dropdown menu
-export function CloneNode({ data }: NodeProps<NodeData>) {
+export function CloneNode() {
   const { nodes, addNode } = useStore();
 
   const createNewNode = (nodeType: string) => {
@@ -27,9 +27,7 @@ export function CloneNode({ data }: NodeProps<NodeData>) {
         x: 0,
         y: 50,
       },
-      data: {
-        workspacePath: data.workspacePath,
-      },
+      data: {},
     };
     addNode(newNode);
   };
@@ -58,7 +56,6 @@ export function CloneNode({ data }: NodeProps<NodeData>) {
       data: {
         label: lastNode.data.label,
         xState: lastNode.data.xState,
-        workspacePath: data.workspacePath,
       },
     };
     addNode(newNode);

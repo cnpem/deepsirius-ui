@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react';
-import { type Node, type NodeProps } from 'reactflow';
+import { type Node } from 'reactflow';
 import { shallow } from 'zustand/shallow';
 import { Button } from '~/components/ui/button';
 import {
@@ -15,7 +15,7 @@ import { type NodeData } from '~/hooks/use-store';
 import useStore from '~/hooks/use-store';
 
 // selects the type of node to be created using a dropdown menu
-export function PlusOneNode({ data }: NodeProps<NodeData>) {
+export function PlusOneNode() {
   const { nodes, addNode } = useStore(
     (state) => ({
       nodes: state.nodes,
@@ -26,7 +26,6 @@ export function PlusOneNode({ data }: NodeProps<NodeData>) {
 
   const createNewNode = (nodeType: string) => {
     console.log('create new node of type:', nodeType);
-    console.log('nodes', nodes);
     const newNode: Node<NodeData> = {
       id: `${nodes.length + 1}`,
       type: nodeType,
@@ -35,9 +34,7 @@ export function PlusOneNode({ data }: NodeProps<NodeData>) {
         x: 0,
         y: 50,
       },
-      data: {
-        workspacePath: data.workspacePath,
-      },
+      data: {},
     };
     addNode(newNode);
   };

@@ -65,7 +65,7 @@ export function AvatarDrop() {
           <DropdownMenuItem onClick={() => void setWorkspacePath('')}>
             <>
               <Icons.folderx className="mr-2 h-4 w-4" />
-              <span>Leave Workspace</span>
+              <span>Leave &lsquo;{workspacePath}&rsquo;</span>
             </>
           </DropdownMenuItem>
         )}

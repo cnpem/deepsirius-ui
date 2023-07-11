@@ -1,18 +1,20 @@
-import * as React from "react";
-
-import { Icons } from "~/components/icons";
-import { Button } from "~/components/ui/button";
+import { signIn, signOut, useSession } from 'next-auth/react';
+import * as React from 'react';
+import { Icons } from '~/components/icons';
+import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import { signIn, signOut, useSession } from "next-auth/react";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+} from '~/components/ui/dropdown-menu';
+import useStore from '~/hooks/use-store';
+
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 export function AvatarDrop() {
   const { data: sessionData } = useSession();
+  const { workspacePath, setWorkspacePath } = useStore();
 
   return (
     <DropdownMenu>
@@ -43,7 +45,7 @@ export function AvatarDrop() {
         <DropdownMenuItem
           onClick={
             sessionData
-              ? () => void signOut({ callbackUrl: "/" })
+              ? () => void signOut({ callbackUrl: '/' })
               : () => void signIn()
           }
         >
@@ -59,6 +61,14 @@ export function AvatarDrop() {
             </>
           )}
         </DropdownMenuItem>
+        {!!workspacePath && (
+          <DropdownMenuItem onClick={() => void setWorkspacePath('')}>
+            <>
+              <Icons.folderx className="mr-2 h-4 w-4" />
+              <span>Leave Workspace</span>
+            </>
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 import ReactFlow, {
   Background,
   BackgroundVariant,
@@ -7,8 +7,17 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { shallow } from 'zustand/shallow';
+import { Button } from '~/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '~/components/ui/dialog';
 import CustomConnectionLine from '~/components/workboard/connection-line';
 import useStore, { nodeTypes } from '~/hooks/use-store';
+import { api } from '~/utils/api';
 
 // flow controller component
 // can see all nodes and edges and should validade conditional states
@@ -51,51 +60,72 @@ function Gepetto() {
   );
 }
 
-export default function Flow() {
-  const workspaceDialogOpen = false;
-  const selectedWorkspacePath = '/home/test';
+function WorkspaceDialog({ open }: { open: boolean }) {
+  const availableUserWorkspacesQuery =
+    api.workspace.getUserWorkspaces.useQuery();
   const { setWorkspacePath } = useStore();
-  useEffect(() => {
-    setWorkspacePath(selectedWorkspacePath);
-  }, [setWorkspacePath]);
+  const router = useRouter();
 
-  // const WorkspaceDialog = () => {
-  //   return (
-  //     <Dialog open={workspaceDialogOpen}>
-  //       <DialogContent className="sm:w-full">
-  //         <DialogHeader>
-  //           <DialogTitle>Select workspace path</DialogTitle>
-  //           <DialogDescription>
-  //             {'Select an existing workspace or create a new one.'}
-  //           </DialogDescription>
-  //         </DialogHeader>
-  //         <div className="flex flex-col gap-2">
-  //           {/* {availableUserWorkspacesQuery.data?.map((workspace) => (
-  //             <Button
-  //               key={workspace.workspacePath}
-  //               variant="outline"
-  //               onClick={() => handleWorkspaceSelect(workspace.workspacePath)}
-  //             >
-  //               {workspace.workspacePath}
-  //             </Button>
-  //           ))} */}
-  //           <Button
-  //               key={'newinstance'}
-  //               variant="outline"
-  //               onClick={() => handleNewWorkspace()}
-  //             >
-  //               New
-  //             </Button>
-  //         </div>
-  //       </DialogContent>
-  //     </Dialog>
-  //   );
-  // };
+  const handleWorkspaceSelect = (workspacePath: string) => {
+    setWorkspacePath(workspacePath);
+  };
+
+  const handleNewWorkspace = () => {
+    const newWorkspacePath = '/home/test';
+    setWorkspacePath(newWorkspacePath);
+  };
+
+  const handleDialogClose = async (open: boolean) => {
+    // redirect to / if user closes dialog
+    if (open === false) {
+      console.log('closing dialog and redirecting to /');
+      await router.push('/');
+    }
+  };
 
   return (
     <>
-      {/* {workspaceDialogOpen && <WorkspaceDialog />} */}
-      {!workspaceDialogOpen && <Gepetto />}
+      <Dialog open={open} onOpenChange={(e) => void handleDialogClose(e)}>
+        <DialogContent className="sm:w-full">
+          <DialogHeader>
+            <DialogTitle>Select workspace path</DialogTitle>
+            <DialogDescription>
+              {'Select an existing workspace or create a new one.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            {availableUserWorkspacesQuery.data?.map((workspace) => (
+              <Button
+                key={workspace.path}
+                variant="outline"
+                onClick={() => handleWorkspaceSelect(workspace.path)}
+              >
+                {workspace.path}
+              </Button>
+            ))}
+            <Button
+              key={'newinstance'}
+              variant="outline"
+              onClick={() => handleNewWorkspace()}
+            >
+              New
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+export default function Flow() {
+  const { workspacePath } = useStore();
+
+  console.log('isSelected? ', workspacePath, !!workspacePath);
+
+  return (
+    <>
+      <WorkspaceDialog open={!workspacePath} />
+      {!!workspacePath && <Gepetto />}
     </>
   );
 }

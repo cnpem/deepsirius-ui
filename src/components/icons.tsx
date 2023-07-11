@@ -1,14 +1,15 @@
 import {
+  Fish,
+  FolderX,
+  Gitlab,
   Laptop,
+  LogIn,
+  LogOut,
+  type Icon as LucideIcon,
   Moon,
   SunMedium,
-  Gitlab,
-  Fish,
   User,
-  LogOut,
-  LogIn,
-  type Icon as LucideIcon,
-} from "lucide-react";
+} from 'lucide-react';
 
 export type Icon = LucideIcon;
 
@@ -21,4 +22,5 @@ export const Icons = {
   gitlab: Gitlab,
   logout: LogOut,
   login: LogIn,
+  folderx: FolderX,
 };

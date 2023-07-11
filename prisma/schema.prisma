@@ -71,7 +71,7 @@ model Node {
     id            String      @id @default(cuid())
     workspacePath String
     workspace     Workspace @relation(fields: [workspacePath], references: [path])
-    componentId   String
+    nodeId   String
     xState        String
     status        String
     label         String
@@ -86,7 +86,7 @@ model Edge {
     workspace     Workspace @relation(fields: [workspacePath], references: [path])
     source        String
     target        String
-    componentId   String
+    edgeId   String
 
     @@index([workspacePath])
 }

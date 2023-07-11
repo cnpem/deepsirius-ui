@@ -10,13 +10,37 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
+import { toast } from '~/components/ui/use-toast';
 import { NodeTypesList } from '~/hooks/use-store';
 import { type NodeData } from '~/hooks/use-store';
 import useStore from '~/hooks/use-store';
+import { api } from '~/utils/api';
 
 // selects the type of node to be created using a dropdown menu
 export function PlusOneNode() {
-  const { nodes, addNode } = useStore(
+  const { mutate } = api.workspace.createNewNode.useMutation({
+    onSuccess: (data) => {
+      console.log('new node created:', data);
+    },
+    onError: (e) => {
+      const errorMessage = e.data?.zodError?.fieldErrors.content;
+      if (errorMessage && errorMessage[0]) {
+        toast({
+          variant: 'destructive',
+          title: 'Failed to create in the database!',
+          description: errorMessage[0],
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Failed to create in the database!',
+          description: 'Something went wrong. Please try again.',
+        });
+      }
+    },
+  });
+
+  const { nodes, addNode, workspacePath } = useStore(
     (state) => ({
       workspacePath: state.workspacePath,
       nodes: state.nodes,
@@ -37,6 +61,24 @@ export function PlusOneNode() {
       },
       data: {},
     };
+    if (!workspacePath) {
+      toast({
+        variant: 'destructive',
+        title: 'Error: Failed to create!',
+        description: 'workspacePath is not set in the store.',
+      });
+      return;
+    }
+    // registering the new node in the database
+    mutate({
+      workspacePath: workspacePath,
+      label: newNode.data.label || '',
+      type: newNode.type || '', // TODO: this should always be set
+      nodeId: newNode.id,
+      status: newNode.data.status || '',
+      xState: newNode.data.xState || '',
+    });
+    // Adding a node to the store/flow and adding it to the db are two separate actions
     addNode(newNode);
   };
   // the nodes that can be builded are defined in NodeTypesList except for the type "new"

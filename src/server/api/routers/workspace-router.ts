@@ -22,6 +22,26 @@ export const workspaceRouter = createTRPCRouter({
       if (uid === '') {
         throw new Error('User not found');
       }
+      // checking if the user is registered in the user table
+      const user: User | null = await ctx.prisma.user.findUnique({
+        where: {
+          id: uid,
+        },
+      });
+      // if the user is not registered, register the user
+      if (user === null) {
+        await ctx.prisma.user
+          .create({
+            data: {
+              id: uid,
+              name: uid,
+            },
+          })
+          .catch((err: ErrorOptions | undefined) => {
+            throw new Error("Coudn't register the user in the database", err);
+          });
+      }
+      // registering the workspace
       const newWorkspace: Workspace = await ctx.prisma.workspace.create({
         data: {
           path: input.path,
@@ -51,6 +71,38 @@ export const workspaceRouter = createTRPCRouter({
     });
     return userWorkspaces;
   }),
+  createNewNode: protectedProcedure
+    .input(
+      z.object({
+        workspacePath: z.string(),
+        nodeId: z.string(),
+        type: z.string(),
+        label: z.string(),
+        status: z.string(),
+        xState: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const uid = ctx.session.user.id ?? '';
+      if (uid === '') {
+        throw new Error('User not found');
+      }
+      const node: Node = await ctx.prisma.node.create({
+        data: {
+          workspace: {
+            connect: {
+              path: input.workspacePath,
+            },
+          },
+          nodeId: input.nodeId,
+          type: input.type,
+          label: input.label,
+          status: input.status,
+          xState: input.xState,
+        },
+      });
+      return node;
+    }),
 
   // TODO: continue this
 });

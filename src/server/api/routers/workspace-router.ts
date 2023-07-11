@@ -103,6 +103,57 @@ export const workspaceRouter = createTRPCRouter({
       });
       return node;
     }),
+  getWorkspaceNodes: protectedProcedure
+    .input(
+      z.object({
+        workspacePath: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const uid = ctx.session.user.id ?? '';
+      if (uid === '') {
+        throw new Error('User not found');
+      }
+      const nodes: Node[] = await ctx.prisma.node.findMany({
+        where: {
+          workspace: {
+            path: input.workspacePath,
+          },
+        },
+      });
+      return nodes;
+    }),
+  // updateNode: protectedProcedure
+  // .input(
+  //   z.object({
+  //     workspacePath: z.string(),
+  //     nodeId: z.string(),
+  //     label: z.string(),
+  //     status: z.string(),
+  //     xState: z.string(),
+  //   }),
+  // )
+  // .mutation(async ({ ctx, input }) => {
+  //   const uid = ctx.session.user.id ?? '';
+  //   if (uid === '') {
+  //     throw new Error('User not found');
+  //   }
+  //   await ctx.prisma.node.update({
+  //     where: {
+  //       nodeId: input.nodeId,
+  //       and: {
+  //         workspace: {
+  //           path: input.workspacePath,
+  //         },
+  //     },
+  //     data: {
+  //       label: input.label,
+  //       status: input.status,
+  //       xState: input.xState,
+  //     },
+  //   });
+  //   return true;
+  // }),
 
   // TODO: continue this
 });

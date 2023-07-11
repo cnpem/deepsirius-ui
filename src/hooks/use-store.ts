@@ -24,6 +24,7 @@ import { DatasetNode } from '~/components/workboard/dataset-node';
 import { InferenceNode } from '~/components/workboard/inference-node';
 import { NetworkNode } from '~/components/workboard/network-node';
 import { PlusOneNode } from '~/components/workboard/plusone-node';
+import { api } from '~/utils/api';
 
 export const nodeTypes: NodeTypes = {
   dataset: DatasetNode,
@@ -97,6 +98,9 @@ const loggerImpl: LoggerImpl = (f, name) => (set, get, store) => {
 };
 
 export const logger = loggerImpl as unknown as Logger;
+
+// function registerNodeUpdate(nodeId: string, data: NodeData) {
+//   api.workspace.
 
 // this is our useStore hook that we can use in our components to get parts of the store and call actions
 const useStore = create<RFState>()(

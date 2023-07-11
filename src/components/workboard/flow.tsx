@@ -15,14 +15,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog';
+import { toast } from '~/components/ui/use-toast';
 import CustomConnectionLine from '~/components/workboard/connection-line';
 import useStore, { nodeTypes } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
-// flow controller component
-// can see all nodes and edges and should validade conditional states
-// i.e. if a node is in a certain state, it should not be able to connect to another node
-// it should set how the data is exchanged between nodes when a connection is made
+/**
+ * The Gepetto component is the main component for the workspace flow
+ * It uses the ReactFlow component to render the nodes and edges
+ * It also uses the zustand store to manage the state of the nodes and edges
+ *
+ * @returns
+ */
 function Gepetto() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, onInit } =
     useStore(
@@ -60,20 +64,97 @@ function Gepetto() {
   );
 }
 
-function WorkspaceDialog({ open }: { open: boolean }) {
-  const availableUserWorkspacesQuery =
+/**
+ *
+ * @returns buttons for selecting a workspace session from the user's available workspaces from the db
+ */
+function ChooseUserWorkspaces() {
+  // db interactions via tRPC
+  const { isLoading, isError, data, error } =
     api.workspace.getUserWorkspaces.useQuery();
+  // zustand store
   const { setWorkspacePath } = useStore();
-  const router = useRouter();
 
-  const handleWorkspaceSelect = (workspacePath: string) => {
-    setWorkspacePath(workspacePath);
-  };
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+  if (isError) {
+    console.log('error', error);
+    return <p>Error</p>;
+  }
+  if (data) {
+    return (
+      <>
+        {data.map((workspace) => (
+          <Button
+            key={workspace.path}
+            variant="outline"
+            onClick={() => setWorkspacePath(workspace.path)}
+          >
+            {workspace.path}
+          </Button>
+        ))}
+      </>
+    );
+  }
+  return <p>Something went wrong</p>;
+}
+
+/**
+ *
+ * @returns a form component for creating a new workspace session
+ */
+function CreateNewWorkspace() {
+  // db interactions via tRPC
+  const { mutate } = api.workspace.createWorkspace.useMutation({
+    onSuccess: (data) => {
+      console.log('updateWorkspace.onSuccess', data);
+      setWorkspacePath(data.path);
+    },
+    onError: (e) => {
+      const errorMessage = e.data?.zodError?.fieldErrors.content;
+      if (errorMessage && errorMessage[0]) {
+        toast({
+          variant: 'destructive',
+          title: 'Failed to create!',
+          description: errorMessage[0],
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Failed to create!',
+          description: 'Something went wrong. Please try again.',
+        });
+      }
+    },
+  });
+
+  // zustand store
+  const { setWorkspacePath } = useStore();
 
   const handleNewWorkspace = () => {
     const newWorkspacePath = '/home/test';
-    setWorkspacePath(newWorkspacePath);
+    mutate({ path: newWorkspacePath });
   };
+
+  return (
+    <Button
+      key={'newinstance'}
+      variant="outline"
+      onClick={() => handleNewWorkspace()}
+    >
+      New
+    </Button>
+  );
+}
+
+/**
+ *
+ * @param open : boolean to control the dialog trigger from outside this component
+ * @returns the WorkspaceDialog component for selecting or creating a workspace session
+ */
+function WorkspaceDialog({ open }: { open: boolean }) {
+  const router = useRouter();
 
   const handleDialogClose = async (open: boolean) => {
     // redirect to / if user closes dialog
@@ -94,22 +175,8 @@ function WorkspaceDialog({ open }: { open: boolean }) {
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2">
-            {availableUserWorkspacesQuery.data?.map((workspace) => (
-              <Button
-                key={workspace.path}
-                variant="outline"
-                onClick={() => handleWorkspaceSelect(workspace.path)}
-              >
-                {workspace.path}
-              </Button>
-            ))}
-            <Button
-              key={'newinstance'}
-              variant="outline"
-              onClick={() => handleNewWorkspace()}
-            >
-              New
-            </Button>
+            <ChooseUserWorkspaces />
+            <CreateNewWorkspace />
           </div>
         </DialogContent>
       </Dialog>
@@ -117,10 +184,12 @@ function WorkspaceDialog({ open }: { open: boolean }) {
   );
 }
 
+/**
+ *
+ * @returns the WorkspaceDialog if no workspacePath is set in the store or the Gepetto (Workspace Flow component) if it is
+ */
 export default function Flow() {
   const { workspacePath } = useStore();
-
-  console.log('isSelected? ', workspacePath, !!workspacePath);
 
   return (
     <>

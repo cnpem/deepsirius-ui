@@ -2,6 +2,13 @@ import type { Edge, Node, User, Workspace } from '@prisma/client';
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 
+/**
+ * Workspace Router
+ * This router is responsible for handling all requests related to workspaces
+ * Workspaces are the main data structure of the application
+ * Workspaces are associated with a user
+ * Workspaces contain nodes and edges
+ */
 export const workspaceRouter = createTRPCRouter({
   // Crud: Creates a new workspace and associates it with the user
   createWorkspace: protectedProcedure

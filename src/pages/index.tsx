@@ -2,7 +2,6 @@ import { type NextPage } from 'next';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useHotkeys } from 'react-hotkeys-hook';
 import { Layout } from '~/components/layout';
 import { api } from '~/utils/api';
 
@@ -13,10 +12,6 @@ const AuthShowcase: React.FC = () => {
     {
       enabled: sessionData?.user !== undefined,
     },
-  );
-
-  useHotkeys('ctrl+q', () =>
-    sessionData ? void signOut() : console.log('i quit!'),
   );
 
   return (

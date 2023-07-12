@@ -1,11 +1,12 @@
-import Link from "next/link";
+import Link from 'next/link';
+import { Icons } from '~/components/icons';
+import { MainNav } from '~/components/main-nav';
+import { ThemeToggle } from '~/components/theme-toggle';
+import { Button } from '~/components/ui/button';
+import { siteConfig } from '~/config/site';
 
-import { siteConfig } from "~/config/site";
-import { Icons } from "~/components/icons";
-import { MainNav } from "~/components/main-nav";
-import { ThemeToggle } from "~/components/theme-toggle";
-import { buttonVariants } from "~/components/ui/button";
-import { AvatarDrop } from "./avatar-dropdown";
+import { AvatarDrop } from './avatar-dropdown';
+import { HelpDialog } from './help';
 
 export function SiteHeader() {
   return (
@@ -19,17 +20,12 @@ export function SiteHeader() {
               target="_blank"
               rel="noreferrer"
             >
-              <div
-                className={buttonVariants({
-                  size: "sm",
-                  variant: "ghost",
-                  className: "text-slate-700 dark:text-slate-400",
-                })}
-              >
-                <Icons.gitlab className="h-5 w-5 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100" />
+              <Button variant={'ghost'} size={'icon'} title="to gitlab">
+                <Icons.gitlab className="h-5 w-5  dark:text-slate-400 dark:hover:text-slate-100" />
                 <span className="sr-only">Gitlab</span>
-              </div>
+              </Button>
             </Link>
+            <HelpDialog />
             <ThemeToggle />
             <AvatarDrop />
           </nav>

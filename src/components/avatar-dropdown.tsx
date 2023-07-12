@@ -1,28 +1,33 @@
-import * as React from "react";
-
-import { Icons } from "~/components/icons";
-import { Button } from "~/components/ui/button";
+import { signIn, signOut, useSession } from 'next-auth/react';
+import * as React from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
+import { Icons } from '~/components/icons';
+import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import { signIn, signOut, useSession } from "next-auth/react";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+} from '~/components/ui/dropdown-menu';
+
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 export function AvatarDrop() {
   const { data: sessionData } = useSession();
+  useHotkeys('shift+alt+l', () =>
+    sessionData
+      ? void signOut({ callbackUrl: '/' })
+      : void signIn(undefined, { callbackUrl: '/workboard' }),
+  );
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex h-10 w-10 rounded-full"
-        >
-          <Avatar className="h-7 w-7">
+        <Button variant="ghost" size="icon" title="user info">
+          <Avatar className="h-6 w-6">
             <AvatarImage
               src="https://source.boringavatars.com/bauhaus"
               alt="@user"
@@ -32,33 +37,56 @@ export function AvatarDrop() {
           <span className="sr-only">User info</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" forceMount>
-        {sessionData && (
-          <DropdownMenuItem>
-            <Icons.user className="mr-2 h-4 w-4" />
-            <span className="font-bold">{sessionData.user?.name}</span>
+      <DropdownMenuContent className="w-64" align="end" forceMount>
+        {!sessionData ? (
+          <DropdownMenuItem
+            onClick={() =>
+              void signIn(undefined, { callbackUrl: '/workboard' })
+            }
+          >
+            <Icons.login className="mr-2 h-4 w-4" />
+            <span>Sign In</span>
+            <DropdownMenuShortcut>Shift+Alt+L</DropdownMenuShortcut>
           </DropdownMenuItem>
-        )}
-
-        <DropdownMenuItem
-          onClick={
-            sessionData
-              ? () => void signOut({ callbackUrl: "/" })
-              : () => void signIn()
-          }
-        >
-          {sessionData ? (
-            <>
+        ) : (
+          <>
+            <DropdownMenuItem>
+              <Icons.user className="mr-2 h-4 w-4" />
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {sessionData.user?.name}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground dark:text-gray-500">
+                  {sessionData.user?.email}
+                </p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem>
+                Profile
+                <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                Billing
+                <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                Settings
+                <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem>New Team</DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => void signOut({ callbackUrl: '/' })}
+            >
               <Icons.logout className="mr-2 h-4 w-4" />
               <span>Sign Out</span>
-            </>
-          ) : (
-            <>
-              <Icons.login className="mr-2 h-4 w-4" />
-              <span>Sign In</span>
-            </>
-          )}
-        </DropdownMenuItem>
+              <DropdownMenuShortcut>Shift+Alt+L</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

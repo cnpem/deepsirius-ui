@@ -12,6 +12,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
+import useStore from '~/hooks/use-store';
 
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
@@ -22,6 +23,7 @@ export function AvatarDrop() {
       ? void signOut({ callbackUrl: '/' })
       : void signIn(undefined, { callbackUrl: '/workboard' }),
   );
+  const { workspacePath, setWorkspacePath } = useStore();
 
   return (
     <DropdownMenu>
@@ -76,6 +78,14 @@ export function AvatarDrop() {
                 <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
               </DropdownMenuItem>
               <DropdownMenuItem>New Team</DropdownMenuItem>
+              {!!workspacePath && (
+                <DropdownMenuItem onClick={() => void setWorkspacePath('')}>
+                  <>
+                    <Icons.folderx className="mr-2 h-4 w-4" />
+                    <span>Leave &lsquo;{workspacePath}&rsquo;</span>
+                  </>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem

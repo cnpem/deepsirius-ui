@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+    provider        = "prisma-client-js"
     previewFeatures = ["jsonProtocol"]
 }
 
@@ -49,13 +49,14 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
+    id            String        @id @default(cuid())
     name          String?
-    email         String?   @unique
+    email         String?       @unique
     emailVerified DateTime?
     image         String?
     accounts      Account[]
     sessions      Session[]
+    Workspaces  Workspace[]
 }
 
 model VerificationToken {
@@ -66,60 +67,38 @@ model VerificationToken {
     @@unique([identifier, token])
 }
 
+model Node {
+    id            String      @id @default(cuid())
+    workspacePath String
+    workspace     Workspace @relation(fields: [workspacePath], references: [path])
+    nodeId   String
+    xState        String
+    status        String
+    label         String
+    type          String
+
+    @@index([workspacePath])
+}
+
+model Edge {
+    id            String      @id @default(cuid())
+    workspacePath String
+    workspace     Workspace @relation(fields: [workspacePath], references: [path])
+    source        String
+    target        String
+    edgeId   String
+
+    @@index([workspacePath])
+}
+
 model Workspace {
-    id       String   @id @default(cuid())
+    id        String   @id @default(cuid())
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-    path      String @unique
-    networks Network[]
-    datasets Dataset[]
-    inferences Inference[]
-    jobs      Job[]
-}
+    path      String   @unique
+    nodes     Node[]
+    edges     Edge[]
+    users     User[]
 
-model Network {
-    id          String   @id @default(cuid())
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-    name        String
-    description String?
-    workspace   Workspace @relation(fields: [workspaceId], references: [id])
-    workspaceId String
-    status      String
-    jobId       String?
-}
-
-model Dataset {
-    id          String   @id @default(cuid())
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-    name        String
-    workspace   Workspace @relation(fields: [workspaceId], references: [id])
-    workspaceId String
-    status      String
-    jobId       String?
-}
-
-model Inference {
-    id          String   @id @default(cuid())
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-    input       String
-    output      String
-    workspace   Workspace @relation(fields: [workspaceId], references: [id])
-    workspaceId String
-    status      String
-    jobId       String?
-}
-
-model Job {
-    id          String   @id @default(cuid())
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-    name        String
-    description String?
-    workspace   Workspace @relation(fields: [workspaceId], references: [id])
-    workspaceId String
-    status      String
-    jobId       String
+    @@index([path])
 }

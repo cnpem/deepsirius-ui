@@ -15,11 +15,12 @@ export default function CustomConnectionLine(
     <g>
       {/* renders a cubic bezier curve animated following the edge path */}
       <path
-        className="animated react-flow__edge-path"
-        d={`M${fromX},${fromY} C ${fromX} ${toY} ${fromX} ${toY} ${toX},${toY}`}
+        className="animated react-flow__connection-path"
+        d={`M${fromX} ${fromY} S ${fromX} ${toY} ${toX} ${toY}`}
       />
       {/* renders a small circle at the end of the path */}
-      <circle cx={toX} cy={toY} r={3} />
+      <circle className="dark:fill-white" cx={toX} cy={toY} r={4} />
+      <circle className="fill-green-400" cx={toX} cy={toY} r={3} />
     </g>
   );
 }

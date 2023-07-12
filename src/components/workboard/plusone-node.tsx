@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react';
+import { nanoid } from 'nanoid';
 import { type Node } from 'reactflow';
 import { shallow } from 'zustand/shallow';
 import { Button } from '~/components/ui/button';
@@ -16,10 +17,8 @@ import useStore from '~/hooks/use-store';
 
 // selects the type of node to be created using a dropdown menu
 export function PlusOneNode() {
-  const { nodes, addNode } = useStore(
+  const { addNode } = useStore(
     (state) => ({
-      workspacePath: state.workspacePath,
-      nodes: state.nodes,
       addNode: state.addNode,
     }),
     shallow,
@@ -28,12 +27,12 @@ export function PlusOneNode() {
   const createNewNode = (nodeType: string) => {
     console.log('create new node of type:', nodeType);
     const newNode: Node<NodeData> = {
-      id: `${nodes.length + 1}`,
+      id: nanoid(),
       type: nodeType,
       position: {
         // TODO: fix this
         x: 0,
-        y: 50,
+        y: 0,
       },
       data: {},
     };
@@ -48,10 +47,15 @@ export function PlusOneNode() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="transition data-[state=open]:rotate-45 scale-100 data-[state=open]:scale-50"
+        className="transition data-[state=open]:rotate-45 scale-100 data-[state=open]:scale-75"
         asChild
       >
-        <Button variant={'default'} size={'icon'} className="rounded-full">
+        <Button
+          title="add node"
+          variant={'default'}
+          size={'icon'}
+          className="rounded-full"
+        >
           <Plus />
         </Button>
       </DropdownMenuTrigger>

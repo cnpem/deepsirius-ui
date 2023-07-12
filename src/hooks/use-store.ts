@@ -38,22 +38,21 @@ export const NodeTypesList = Object.keys(nodeTypes);
 export type Status = 'success' | 'error' | 'active' | 'busy' | 'inactive';
 
 export type NodeData = {
-  label?: string;
   status?: Status; // this is just a state label without spaces for controlling the flow
   xState?: string; // this is a long json
 };
 
 const initialNodes = [
-  {
-    id: '1',
-    position: { x: 0, y: 0 },
-    type: 'new',
-  },
-  {
-    id: '2',
-    position: { x: 100, y: 0 },
-    type: 'clone',
-  },
+  // {
+  //   id: '1',
+  //   position: { x: 0, y: 0 },
+  //   type: 'new',
+  // },
+  // {
+  //   id: '2',
+  //   position: { x: 100, y: 0 },
+  //   type: 'clone',
+  // },
 ] as Node<NodeData>[];
 
 const initialEdges = [] as Edge[];

@@ -1,4 +1,6 @@
+import { nanoid } from 'nanoid';
 import { type Node } from 'reactflow';
+import { shallow } from 'zustand/shallow';
 import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
@@ -14,13 +16,18 @@ import useStore from '~/hooks/use-store';
 
 // selects the type of node to be created using a dropdown menu
 export function CloneNode() {
-  const { nodes, addNode } = useStore();
+  const { nodes, addNode } = useStore(
+    (state) => ({
+      nodes: state.nodes,
+      addNode: state.addNode,
+    }),
+    shallow,
+  );
 
   const createNewNode = (nodeType: string) => {
     console.log('create new node of type:', nodeType);
-    console.log('nodes', nodes);
     const newNode: Node<NodeData> = {
-      id: `${nodes.length + 1}`,
+      id: nanoid(),
       type: nodeType,
       position: {
         // TODO: fix this
@@ -54,7 +61,6 @@ export function CloneNode() {
         y: 50,
       },
       data: {
-        label: lastNode.data.label,
         xState: lastNode.data.xState,
       },
     };

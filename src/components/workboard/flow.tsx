@@ -58,7 +58,6 @@ function GetNodes({ workspacePath }: { workspacePath: string | undefined }) {
                 y: 0,
               },
               data: {
-                label: node.label,
                 status: node.status as Status,
                 xState: node.xState,
               },
@@ -194,7 +193,12 @@ function ChooseUserWorkspaces() {
   const { isLoading, isError, data, error } =
     api.workspace.getUserWorkspaces.useQuery();
   // zustand store
-  const { setWorkspacePath } = useStore();
+  const { setWorkspacePath } = useStore(
+    (state) => ({
+      setWorkspacePath: state.setWorkspacePath,
+    }),
+    shallow,
+  );
 
   if (isLoading) {
     return <p>Loading...</p>;

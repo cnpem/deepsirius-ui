@@ -44,6 +44,8 @@ export function PlusOneNode() {
   const { nodes, addNode, workspacePath } = useStore(
     (state) => ({
       addNode: state.addNode,
+      nodes: state.nodes,
+      workspacePath: state.workspacePath,
     }),
     shallow,
   );
@@ -71,7 +73,6 @@ export function PlusOneNode() {
     // registering the new node in the database
     mutate({
       workspacePath: workspacePath,
-      label: newNode.data.label || '',
       type: newNode.type || '', // TODO: this should always be set
       nodeId: newNode.id,
       status: newNode.data.status || '',

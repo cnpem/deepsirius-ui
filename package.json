@@ -37,6 +37,7 @@
     "dree": "^4.5.2",
     "ldapjs": "^3.0.2",
     "lucide-react": "^0.138.0",
+    "nanoid": "^4.0.2",
     "next": "^13.3.1",
     "next-auth": "4.20.1",
     "next-themes": "^0.2.1",

@@ -66,36 +66,39 @@ model VerificationToken {
     @@unique([identifier, token])
 }
 
-model Node {
-    id            String    @id @default(cuid())
+model NodeRegistry {
+    id          String @id @default(cuid())
+    componentId String
+    type        String
+    position    String
+    status      String
+    xState      String
+
     workspacePath String
     workspace     Workspace @relation(fields: [workspacePath], references: [path])
-    nodeId        String
-    xState        String
-    status        String
-    type          String
 
     @@index([workspacePath])
 }
 
-model Edge {
-    id            String    @id @default(cuid())
+model EdgeRegistry {
+    id          String @id @default(cuid())
+    source      String
+    target      String
+    componentId String
+
     workspacePath String
     workspace     Workspace @relation(fields: [workspacePath], references: [path])
-    source        String
-    target        String
-    edgeId        String
 
     @@index([workspacePath])
 }
 
 model Workspace {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    path      String   @unique
-    nodes     Node[]
-    edges     Edge[]
+    id        String         @id @default(cuid())
+    createdAt DateTime       @default(now())
+    updatedAt DateTime       @updatedAt
+    path      String         @unique
+    nodes     NodeRegistry[]
+    edges     EdgeRegistry[]
     users     User[]
 
     @@index([path])

@@ -1,7 +1,8 @@
-import { useMachine } from '@xstate/react';
-import { useEffect } from 'react';
+import { useActor, useInterpret } from '@xstate/react';
+import { useCallback, useEffect, useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
+import { shallow } from 'zustand/shallow';
 import {
   Accordion,
   AccordionContent,
@@ -140,85 +141,18 @@ const inferenceMachine = createMachine({
 });
 
 export function InferenceNode({ id, data }: NodeProps<NodeData>) {
+  const thisNodeNachine = inferenceMachine; // hack for writing the same functions for all nodes (TODO: there's a better way to do this)
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const { edges, onUpdateNode } = useStore();
-
-  const stateDef = data.xState
-    ? (JSON.parse(data.xState) as StateFrom<typeof inferenceMachine>)
-    : inferenceMachine.initialState;
-  const prevState = State.create(stateDef);
-
-  const [state, send] = useMachine(inferenceMachine, {
-    state: prevState,
-    guards: {
-      isCompleted: (context) => {
-        return context.jobStatus === 'COMPLETED';
-      },
-      isFailed: (context) => {
-        return context.jobStatus === 'FAILED';
-      },
-      isCancelled: (context) => {
-        return context.jobStatus === 'CANCELLED';
-      },
-    },
-    actions: {
-      cancelJob: (context) => {
-        cancelJob.mutate({ jobId: context.jobId });
-      },
-    },
-    services: {
-      submitJob: (_, event) => {
-        return new Promise((resolve, reject) => {
-          const formData =
-            event.type !== 'cancel' && event.type !== 'activate'
-              ? event.data.formData
-              : '';
-          console.log('data submit: ', formData);
-          const jobInput = {
-            jobName: 'deepsirius-inference',
-            output: 'output-do-pai-custom.txt',
-            error: 'error-dos-outros-custom.txt',
-            ntasks: 1,
-            partition: 'dev-gcd',
-            command:
-              'echo "' +
-              JSON.stringify({ ...formData, ...data }) +
-              '" \n sleep 5 \n echo "job completed."',
-          };
-          createJob
-            .mutateAsync(jobInput)
-            .then((data) => {
-              resolve({ ...data, formData });
-            })
-            .catch((err) => reject(err));
-        });
-      },
-
-      jobStatus: (context) => {
-        return new Promise((resolve, reject) => {
-          checkJob
-            .mutateAsync({ jobId: context.jobId })
-            .then((data) => {
-              resolve(data);
-            })
-            .catch((err) => reject(err));
-        });
-      },
-    },
-  });
-
-  // defining status as a high level machineState
-  const status =
-    typeof state.value === 'object' ? 'busy' : (state.value as Status);
-
-  useEffect(() => {
-    onUpdateNode({
-      id: id,
-      data: { status: status, xState: JSON.stringify(state) },
-    });
-  }, [id, onUpdateNode, state, status]);
+  const updateNodeDbData = api.workspace.updateNodeData.useMutation();
+  const { edges, onUpdateNode } = useStore(
+    (state) => ({
+      edges: state.edges,
+      onUpdateNode: state.onUpdateNode,
+    }),
+    shallow,
+  );
 
   // handle node activation if theres a source node connected to it
   const handleActivation = () => {
@@ -230,6 +164,121 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
       alert('Please connect a source node to this node.');
     }
   };
+
+  const [status, setStatus] = useState<Status>(data.status);
+
+  const updateData = useCallback(
+    (data: NodeData) => {
+      console.log('useCallback on update node data', data);
+      // updating in the store
+      onUpdateNode({
+        id: id, // this is the component id from the react-flow
+        data: data,
+      });
+      // updating on the db
+      void updateNodeDbData.mutate(
+        data as { registryId: string; status: string; xState: string },
+      );
+    },
+    [onUpdateNode, id, updateNodeDbData],
+  );
+
+  const prevXState = State.create(
+    data.xState
+      ? (JSON.parse(data.xState) as StateFrom<typeof thisNodeNachine>)
+      : thisNodeNachine.initialState,
+  );
+
+  const defineStatus = (state: StateFrom<typeof thisNodeNachine>) => {
+    return typeof state.value === 'object' ? 'busy' : (state.value as Status);
+  };
+
+  const actor = useInterpret(
+    thisNodeNachine,
+    {
+      state: prevXState,
+      guards: {
+        isCompleted: (context) => {
+          return context.jobStatus === 'COMPLETED';
+        },
+        isFailed: (context) => {
+          return context.jobStatus === 'FAILED';
+        },
+        isCancelled: (context) => {
+          return context.jobStatus === 'CANCELLED';
+        },
+      },
+      actions: {
+        cancelJob: (context) => {
+          cancelJob.mutate({ jobId: context.jobId });
+        },
+      },
+      services: {
+        submitJob: (_, event) => {
+          return new Promise((resolve, reject) => {
+            const formData =
+              event.type !== 'cancel' && event.type !== 'activate'
+                ? event.data.formData
+                : '';
+            console.log('data submit: ', formData);
+            const jobInput = {
+              jobName: 'deepsirius-inference',
+              output: 'output-do-pai-custom.txt',
+              error: 'error-dos-outros-custom.txt',
+              ntasks: 1,
+              partition: 'dev-gcd',
+              command:
+                'echo "' +
+                JSON.stringify({ ...formData, ...data }) +
+                '" \n sleep 5 \n echo "job completed."',
+            };
+            createJob
+              .mutateAsync(jobInput)
+              .then((data) => {
+                resolve({ ...data, formData });
+              })
+              .catch((err) => reject(err));
+          });
+        },
+
+        jobStatus: (context) => {
+          return new Promise((resolve, reject) => {
+            checkJob
+              .mutateAsync({ jobId: context.jobId })
+              .then((data) => {
+                resolve(data);
+              })
+              .catch((err) => reject(err));
+          });
+        },
+      },
+    },
+    // observer
+    (state) => {
+      // subscribes to state changes and check if there is a status change to update the node data
+      if (defineStatus(state) !== status) {
+        console.log(
+          'State Machine: status changed: ',
+          status,
+          ' => ',
+          defineStatus(state),
+        );
+        setStatus(defineStatus(state));
+        updateData({
+          ...data,
+          status: defineStatus(state),
+          xState: JSON.stringify(state),
+        });
+      }
+    },
+  );
+
+  const [
+    // The current state of the actor
+    state,
+    // A function to send the machine events
+    send,
+  ] = useActor(actor);
 
   return (
     <Card

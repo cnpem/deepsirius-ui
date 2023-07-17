@@ -1,5 +1,5 @@
-import { useMachine } from '@xstate/react';
-import { useEffect } from 'react';
+import { useActor, useInterpret } from '@xstate/react';
+import { useCallback, useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
 import { shallow } from 'zustand/shallow';
@@ -145,87 +145,130 @@ const datasetMachine = createMachine({
 });
 
 export function DatasetNode({ id, data }: NodeProps<NodeData>) {
+  const thisNodeNachine = datasetMachine; // hack for writing the same functions for all nodes (TODO: there's a better way to do this)
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
+  const updateNodeDbData = api.workspace.updateNodeData.useMutation();
   const { onUpdateNode } = useStore(
     (state) => ({ onUpdateNode: state.onUpdateNode }),
     shallow,
   );
 
-  const stateDef = data.xState
-    ? (JSON.parse(data.xState) as StateFrom<typeof datasetMachine>)
-    : datasetMachine.initialState;
-  const prevState = State.create(stateDef);
+  const [status, setStatus] = useState<Status>(data.status);
 
-  const [state, send] = useMachine(datasetMachine, {
-    state: prevState,
-    guards: {
-      isCompleted: (context) => {
-        return context.jobStatus === 'COMPLETED';
+  const updateData = useCallback(
+    (data: NodeData) => {
+      console.log('useCallback on update node data', data);
+      // updating in the store
+      onUpdateNode({
+        id: id, // this is the component id from the react-flow
+        data: data,
+      });
+      // updating on the db
+      void updateNodeDbData.mutate(
+        data as { registryId: string; status: string; xState: string },
+      );
+    },
+    [onUpdateNode, id, updateNodeDbData],
+  );
+
+  const prevXState = State.create(
+    data.xState
+      ? (JSON.parse(data.xState) as StateFrom<typeof thisNodeNachine>)
+      : thisNodeNachine.initialState,
+  );
+
+  const defineStatus = (state: StateFrom<typeof thisNodeNachine>) => {
+    return typeof state.value === 'object' ? 'busy' : (state.value as Status);
+  };
+
+  const actor = useInterpret(
+    thisNodeNachine,
+    // options
+    {
+      state: prevXState,
+      guards: {
+        isCompleted: (context) => {
+          return context.jobStatus === 'COMPLETED';
+        },
+        isFailed: (context) => {
+          return context.jobStatus === 'FAILED';
+        },
+        isCancelled: (context) => {
+          return context.jobStatus === 'CANCELLED';
+        },
       },
-      isFailed: (context) => {
-        return context.jobStatus === 'FAILED';
+      actions: {
+        cancelJob: (context) => {
+          cancelJob.mutate({ jobId: context.jobId });
+        },
       },
-      isCancelled: (context) => {
-        return context.jobStatus === 'CANCELLED';
+      services: {
+        submitJob: (_, event) => {
+          return new Promise((resolve, reject) => {
+            const formData =
+              event.type !== 'cancel' && event.type !== 'activate'
+                ? event.data.formData
+                : '';
+            console.log('data submit: ', formData);
+            const jobInput = {
+              jobName: 'deepsirius-inference',
+              output: 'output-do-pai-custom.txt',
+              error: 'error-dos-outros-custom.txt',
+              ntasks: 1,
+              partition: 'dev-gcd',
+              command:
+                'echo "' +
+                JSON.stringify({ ...formData, ...data }) +
+                '" \n sleep 5 \n echo "job completed."',
+            };
+            createJob
+              .mutateAsync(jobInput)
+              .then((data) => {
+                resolve({ ...data, formData });
+              })
+              .catch((err) => reject(err));
+          });
+        },
+        jobStatus: (context) => {
+          return new Promise((resolve, reject) => {
+            checkJob
+              .mutateAsync({ jobId: context.jobId })
+              .then((data) => {
+                resolve(data);
+              })
+              .catch((err) => reject(err));
+          });
+        },
       },
     },
-    actions: {
-      cancelJob: (context) => {
-        cancelJob.mutate({ jobId: context.jobId });
-      },
-    },
-    services: {
-      submitJob: (_, event) => {
-        return new Promise((resolve, reject) => {
-          const formData =
-            event.type !== 'cancel' && event.type !== 'activate'
-              ? event.data.formData
-              : '';
-          console.log('data submit: ', formData);
-          const jobInput = {
-            jobName: 'deepsirius-inference',
-            output: 'output-do-pai-custom.txt',
-            error: 'error-dos-outros-custom.txt',
-            ntasks: 1,
-            partition: 'dev-gcd',
-            command:
-              'echo "' +
-              JSON.stringify({ ...formData, ...data }) +
-              '" \n sleep 5 \n echo "job completed."',
-          };
-          createJob
-            .mutateAsync(jobInput)
-            .then((data) => {
-              resolve({ ...data, formData });
-            })
-            .catch((err) => reject(err));
+    // observer
+    (state) => {
+      // subscribes to state changes and check if there is a status change to update the node data
+      if (defineStatus(state) !== status) {
+        console.log(
+          'State Machine: status changed: ',
+          status,
+          ' => ',
+          defineStatus(state),
+        );
+        setStatus(defineStatus(state));
+        updateData({
+          ...data,
+          status: defineStatus(state),
+          xState: JSON.stringify(state),
         });
-      },
-      jobStatus: (context) => {
-        return new Promise((resolve, reject) => {
-          checkJob
-            .mutateAsync({ jobId: context.jobId })
-            .then((data) => {
-              resolve(data);
-            })
-            .catch((err) => reject(err));
-        });
-      },
+      }
     },
-  });
+  );
 
-  // defining status as a high level machineState
-  const status =
-    typeof state.value === 'object' ? 'busy' : (state.value as Status);
-
-  useEffect(() => {
-    onUpdateNode({
-      id: id,
-      data: { status: status, xState: JSON.stringify(state) },
-    });
-  }, [id, onUpdateNode, state, status]);
+  const [
+    // The current state of the actor
+    state,
+    // A function to send the machine events
+    send,
+  ] = useActor(actor);
 
   return (
     <Card
@@ -240,7 +283,8 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
         <CardTitle>{state.context.datasetName}</CardTitle>
         <CardDescription>{status}</CardDescription>
       </CardHeader>
-      {state.matches('active') && (
+      {/* {state.matches('active') && ( */}
+      {status === 'active' && (
         <CardContent>
           <Accordion type="single" collapsible>
             <AccordionItem value="item-1">
@@ -279,7 +323,8 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </Accordion>
         </CardContent>
       )}
-      {state.matches('busy') && (
+      {/* {state.matches('busy') && ( */}
+      {status === 'busy' && (
         <>
           <CardContent>
             <div className="flex flex-col">
@@ -305,7 +350,8 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </CardFooter>
         </>
       )}
-      {state.matches('error') && (
+      {/* {state.matches('error') && ( */}
+      {status === 'error' && (
         <CardContent>
           <div className="flex flex-col">
             <p className="mb-2 text-3xl font-extrabold text-center">
@@ -344,7 +390,8 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </Accordion>
         </CardContent>
       )}
-      {state.matches('success') && (
+      {/* {state.matches('success') && ( */}
+      {status === 'success' && (
         <CardContent>
           <div className="flex flex-col">
             <p className="mb-2 text-3xl font-extrabold text-center">
@@ -359,7 +406,8 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </div>
         </CardContent>
       )}
-      {state.matches('inactive') && (
+      {/* {state.matches('inactive') && ( */}
+      {status === 'inactive' && (
         <CardFooter className="flex justify-start">
           <Button onClick={() => send('activate')}>activate</Button>
         </CardFooter>

@@ -1,7 +1,11 @@
 import { type NextPage } from 'next';
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { Layout } from '~/components/layout';
-import Flow from '~/components/workboard/flow';
+
+const NoSSRFlow = dynamic(() => import('~/components/workboard/flow'), {
+  ssr: false,
+});
 
 const Workboard: NextPage = () => {
   return (
@@ -12,7 +16,7 @@ const Workboard: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-        <Flow />
+        <NoSSRFlow />
       </main>
     </Layout>
   );

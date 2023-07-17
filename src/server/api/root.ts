@@ -1,5 +1,4 @@
 import { exampleRouter } from '~/server/api/routers/example';
-import { sillyRouter } from '~/server/api/routers/sillyrouter';
 import { createTRPCRouter } from '~/server/api/trpc';
 
 import { remoteJobRouter } from './routers/remote-job';
@@ -13,7 +12,6 @@ import { workspaceRouter } from './routers/workspace-router';
 export const appRouter = createTRPCRouter({
   example: exampleRouter,
   remotejob: remoteJobRouter,
-  silly: sillyRouter,
   workspace: workspaceRouter,
 });
 

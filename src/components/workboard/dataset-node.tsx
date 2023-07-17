@@ -2,7 +2,6 @@ import { useActor, useInterpret } from '@xstate/react';
 import { useCallback, useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
-import { shallow } from 'zustand/shallow';
 import {
   Accordion,
   AccordionContent,
@@ -11,8 +10,7 @@ import {
 } from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
 import { toast } from '~/components/ui/use-toast';
-import { type NodeData, type Status } from '~/hooks/use-store';
-import useStore from '~/hooks/use-store';
+import { type NodeData, type Status, useStoreActions } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
 import {
@@ -150,10 +148,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
   const updateNodeDbData = api.workspace.updateNodeData.useMutation();
-  const { onUpdateNode } = useStore(
-    (state) => ({ onUpdateNode: state.onUpdateNode }),
-    shallow,
-  );
+  const { onUpdateNode } = useStoreActions();
 
   const [status, setStatus] = useState<Status>(data.status);
 

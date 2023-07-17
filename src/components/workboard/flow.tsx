@@ -11,12 +11,16 @@ import ReactFlow, {
 } from 'reactflow';
 import { type Node } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { shallow } from 'zustand/shallow';
 import CustomConnectionLine from '~/components/workboard/connection-line';
-import useStore, {
+import {
   type NodeData,
   type Status,
   nodeTypes,
+  useStoreActions,
+  useStoreEdges,
+  useStoreEnableQuery,
+  useStoreNodes,
+  useStoreWorkspacePath,
 } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
@@ -32,32 +36,13 @@ import WorkspaceSelectDialog from './workspace-select-dialog';
  * @returns
  */
 function Gepetto() {
-  const {
-    nodes,
-    addNode,
-    edges,
-    onNodesChange,
-    onEdgesChange,
-    onConnect,
-    enableQuery,
-    setEnableQuery,
-    // onInit,
-    workspacePath,
-  } = useStore(
-    (state) => ({
-      workspacePath: state.workspacePath,
-      nodes: state.nodes,
-      edges: state.edges,
-      onNodesChange: state.onNodesChange,
-      onEdgesChange: state.onEdgesChange,
-      onConnect: state.onConnect,
-      enableQuery: state.enableQuery,
-      setEnableQuery: state.setEnableQuery,
-      // onInit: state.onInit,
-      addNode: state.addNode,
-    }),
-    shallow,
-  );
+  const { edges } = useStoreEdges();
+  const { nodes } = useStoreNodes();
+  const { workspacePath } = useStoreWorkspacePath();
+  const { enableQuery } = useStoreEnableQuery();
+  const { addNode, onNodesChange, onEdgesChange, onConnect, setEnableQuery } =
+    useStoreActions();
+
   // component should break if workspacePath is undefined
   if (!workspacePath) {
     return <></>; //<div>Workspace path is undefined</div>;
@@ -245,7 +230,7 @@ function AlertDemo() {
  * @returns the Select if no workspacePath is set in the store or the Gepetto (Workspace Flow component) if it is
  */
 export default function Flow() {
-  const { workspacePath } = useStore();
+  const { workspacePath } = useStoreWorkspacePath();
 
   return (
     <>

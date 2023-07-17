@@ -7,7 +7,6 @@ import {
   type NodeTypes,
   type OnConnect,
   type OnEdgesChange,
-  type OnInit,
   type OnNodesChange,
   addEdge,
   applyEdgeChanges,
@@ -19,6 +18,7 @@ import {
   create,
 } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { shallow } from 'zustand/shallow';
 import { DatasetNode } from '~/components/workboard/dataset-node';
 import { InferenceNode } from '~/components/workboard/inference-node';
 import { NetworkNode } from '~/components/workboard/network-node';
@@ -49,16 +49,19 @@ export type RFState = {
   nodes: Node<NodeData>[];
   edges: Edge[];
   workspacePath?: string;
-  resetStore: () => void;
-  onNodesChange: OnNodesChange;
-  onEdgesChange: OnEdgesChange;
-  onConnect: OnConnect;
-  // onInit: () => void;
   enableQuery: boolean;
-  setEnableQuery: (enableQuery: boolean) => void;
-  setWorkspacePath: (workspacePath: string) => void;
-  onUpdateNode: ({ id, data }: { id: string; data: NodeData }) => void;
-  addNode: (node: Node<NodeData>) => void;
+  actions: {
+    resetStore: () => void;
+    onNodesChange: OnNodesChange;
+    onEdgesChange: OnEdgesChange;
+    onConnect: OnConnect;
+    // onInit: () => void;
+
+    setEnableQuery: (enableQuery: boolean) => void;
+    setWorkspacePath: (workspacePath: string) => void;
+    onUpdateNode: ({ id, data }: { id: string; data: NodeData }) => void;
+    addNode: (node: Node<NodeData>) => void;
+  };
 };
 
 // Log every time state is changed
@@ -97,75 +100,77 @@ const useStore = create<RFState>()(
         edges: [],
         workspacePath: undefined,
         enableQuery: true,
-        setEnableQuery: (enableQuery: boolean) => {
-          set({ enableQuery });
-        },
-        resetStore: () => {
-          set({
-            nodes: [],
-            edges: [],
-            enableQuery: true,
-            workspacePath: undefined,
-          });
-        },
-        addNode: (node: Node<NodeData>) => {
-          set({
-            nodes: [...get().nodes, node],
-          });
-        },
-        onNodesChange: (changes: NodeChange[]) => {
-          set({
-            nodes: applyNodeChanges(changes, get().nodes),
-          });
-        },
-        onEdgesChange: (changes: EdgeChange[]) => {
-          set({
-            edges: applyEdgeChanges(changes, get().edges),
-          });
-        },
-        onConnect: (params: Edge | Connection) => {
-          const sourceNode = get().nodes.find(
-            (node) => node.id === params.source,
-          );
-          const targetNode = get().nodes.find(
-            (node) => node.id === params.target,
-          );
-          const data = sourceNode?.data as NodeData;
-          const status = data.status;
-          const validConnectionPairs = [
-            ['dataset', 'network'],
-            ['network', 'inference'],
-          ];
-          let isValidConnection = true;
-          if (!sourceNode && !targetNode) {
-            isValidConnection = false;
-          } else if (status !== 'success') {
-            isValidConnection = false;
-          } else if (
-            !validConnectionPairs.some(
-              ([sourceType, targetType]) =>
-                sourceNode?.type === sourceType &&
-                targetNode?.type === targetType,
-            )
-          ) {
-            isValidConnection = false;
-          }
-          if (isValidConnection) {
+        actions: {
+          setEnableQuery: (enableQuery: boolean) => {
+            set({ enableQuery });
+          },
+          resetStore: () => {
             set({
-              edges: addEdge(params, get().edges),
+              nodes: [],
+              edges: [],
+              enableQuery: true,
+              workspacePath: undefined,
             });
-          }
-        },
-        onUpdateNode: ({ id, data }: { id: string; data: NodeData }) => {
-          const nodes = get().nodes;
-          const node = nodes.find((node) => node.id === id);
-          if (node) {
-            node.data = { ...node.data, ...data } as NodeData;
-            set({ nodes });
-          }
-        },
-        setWorkspacePath: (workspacePath: string) => {
-          set({ workspacePath: workspacePath });
+          },
+          addNode: (node: Node<NodeData>) => {
+            set({
+              nodes: [...get().nodes, node],
+            });
+          },
+          onNodesChange: (changes: NodeChange[]) => {
+            set({
+              nodes: applyNodeChanges(changes, get().nodes),
+            });
+          },
+          onEdgesChange: (changes: EdgeChange[]) => {
+            set({
+              edges: applyEdgeChanges(changes, get().edges),
+            });
+          },
+          onConnect: (params: Edge | Connection) => {
+            const sourceNode = get().nodes.find(
+              (node) => node.id === params.source,
+            );
+            const targetNode = get().nodes.find(
+              (node) => node.id === params.target,
+            );
+            const data = sourceNode?.data as NodeData;
+            const status = data.status;
+            const validConnectionPairs = [
+              ['dataset', 'network'],
+              ['network', 'inference'],
+            ];
+            let isValidConnection = true;
+            if (!sourceNode && !targetNode) {
+              isValidConnection = false;
+            } else if (status !== 'success') {
+              isValidConnection = false;
+            } else if (
+              !validConnectionPairs.some(
+                ([sourceType, targetType]) =>
+                  sourceNode?.type === sourceType &&
+                  targetNode?.type === targetType,
+              )
+            ) {
+              isValidConnection = false;
+            }
+            if (isValidConnection) {
+              set({
+                edges: addEdge(params, get().edges),
+              });
+            }
+          },
+          onUpdateNode: ({ id, data }: { id: string; data: NodeData }) => {
+            const nodes = get().nodes;
+            const node = nodes.find((node) => node.id === id);
+            if (node) {
+              node.data = { ...node.data, ...data } as NodeData;
+              set({ nodes });
+            }
+          },
+          setWorkspacePath: (workspacePath: string) => {
+            set({ workspacePath: workspacePath });
+          },
         },
         // onInit: () => {
         //   const nodes = get().nodes;
@@ -184,4 +189,13 @@ const useStore = create<RFState>()(
   ),
 );
 
-export default useStore;
+// export default useStore;
+export const useStoreNodes = () =>
+  useStore((state) => ({ nodes: state.nodes }), shallow);
+export const useStoreEdges = () =>
+  useStore((state) => ({ edges: state.edges }), shallow);
+export const useStoreWorkspacePath = () =>
+  useStore((state) => ({ workspacePath: state.workspacePath }), shallow);
+export const useStoreEnableQuery = () =>
+  useStore((state) => ({ enableQuery: state.enableQuery }), shallow);
+export const useStoreActions = () => useStore((state) => state.actions);

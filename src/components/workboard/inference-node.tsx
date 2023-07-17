@@ -1,8 +1,7 @@
 import { useActor, useInterpret } from '@xstate/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
-import { shallow } from 'zustand/shallow';
 import {
   Accordion,
   AccordionContent,
@@ -23,8 +22,12 @@ import {
   type FormType,
   InferenceForm,
 } from '~/components/workboard/node-component-forms/inference-form';
-import { type NodeData, type Status } from '~/hooks/use-store';
-import useStore from '~/hooks/use-store';
+import {
+  type NodeData,
+  type Status,
+  useStoreActions,
+  useStoreEdges,
+} from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
 interface JobEvent {
@@ -146,13 +149,8 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
   const updateNodeDbData = api.workspace.updateNodeData.useMutation();
-  const { edges, onUpdateNode } = useStore(
-    (state) => ({
-      edges: state.edges,
-      onUpdateNode: state.onUpdateNode,
-    }),
-    shallow,
-  );
+  const { edges } = useStoreEdges();
+  const { onUpdateNode } = useStoreActions();
 
   // handle node activation if theres a source node connected to it
   const handleActivation = () => {

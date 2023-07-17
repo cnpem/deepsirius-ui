@@ -12,13 +12,15 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import useStore from '~/hooks/use-store';
+import { useStoreActions, useStoreWorkspacePath } from '~/hooks/use-store';
 
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 export function AvatarDrop() {
   const { data: sessionData } = useSession();
-  const { workspacePath, resetStore } = useStore();
+
+  const { workspacePath } = useStoreWorkspacePath();
+  const { resetStore } = useStoreActions();
 
   const logOut = useCallback(async () => {
     await signOut({ callbackUrl: '/' }).then(() => {

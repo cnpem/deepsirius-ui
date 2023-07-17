@@ -1,7 +1,6 @@
 import { Plus } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { type Node, type XYPosition } from 'reactflow';
-import { shallow } from 'zustand/shallow';
 import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
@@ -12,9 +11,13 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { toast } from '~/components/ui/use-toast';
-import { NodeTypesList, type Status } from '~/hooks/use-store';
+import {
+  NodeTypesList,
+  type Status,
+  useStoreActions,
+  useStoreWorkspacePath,
+} from '~/hooks/use-store';
 import { type NodeData } from '~/hooks/use-store';
-import useStore from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
 // selects the type of node to be created using a dropdown menu
@@ -53,14 +56,8 @@ export function PlusOneNode() {
     },
   });
 
-  const { addNode, workspacePath } = useStore(
-    (state) => ({
-      addNode: state.addNode,
-      nodes: state.nodes,
-      workspacePath: state.workspacePath,
-    }),
-    shallow,
-  );
+  const { addNode } = useStoreActions();
+  const { workspacePath } = useStoreWorkspacePath();
 
   const createNewNode = (nodeType: string) => {
     console.log('create new node of type:', nodeType);

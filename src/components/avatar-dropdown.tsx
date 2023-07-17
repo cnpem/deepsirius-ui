@@ -1,5 +1,5 @@
 import { signIn, signOut, useSession } from 'next-auth/react';
-import * as React from 'react';
+import { useCallback } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Icons } from '~/components/icons';
 import { Button } from '~/components/ui/button';
@@ -18,12 +18,25 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 export function AvatarDrop() {
   const { data: sessionData } = useSession();
+  const { workspacePath, resetStore } = useStore();
+
+  const logOut = useCallback(async () => {
+    await signOut({ callbackUrl: '/' }).then(() => {
+      // TODO: Make it a toast
+      console.log('Successfully signed out');
+      resetStore();
+    });
+  }, [resetStore]);
+
+  const leaveWorkspace = useCallback(() => {
+    resetStore();
+  }, [resetStore]);
+
   useHotkeys('shift+alt+l', () =>
     sessionData
-      ? void signOut({ callbackUrl: '/' })
+      ? void logOut()
       : void signIn(undefined, { callbackUrl: '/workboard' }),
   );
-  const { workspacePath, setWorkspacePath } = useStore();
 
   return (
     <DropdownMenu>
@@ -79,7 +92,7 @@ export function AvatarDrop() {
               </DropdownMenuItem>
               <DropdownMenuItem>New Team</DropdownMenuItem>
               {!!workspacePath && (
-                <DropdownMenuItem onClick={() => void setWorkspacePath('')}>
+                <DropdownMenuItem onClick={() => leaveWorkspace()}>
                   <>
                     <Icons.folderx className="mr-2 h-4 w-4" />
                     <span>Leave &lsquo;{workspacePath}&rsquo;</span>
@@ -88,9 +101,7 @@ export function AvatarDrop() {
               )}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => void signOut({ callbackUrl: '/' })}
-            >
+            <DropdownMenuItem onClick={() => void logOut()}>
               <Icons.logout className="mr-2 h-4 w-4" />
               <span>Sign Out</span>
               <DropdownMenuShortcut>Shift+Alt+L</DropdownMenuShortcut>

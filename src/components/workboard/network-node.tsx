@@ -1,5 +1,5 @@
-import { useMachine } from '@xstate/react';
-import { useEffect } from 'react';
+import { useActor, useInterpret } from '@xstate/react';
+import { useCallback, useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
 import { shallow } from 'zustand/shallow';
@@ -206,107 +206,17 @@ const networkMachine = createMachine({
 });
 
 export function NetworkNode({ id, data }: NodeProps<NodeData>) {
+  const thisNodeNachine = networkMachine; // hack for writing the same functions for all nodes (TODO: there's a better way to do this)
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
+  const updateNodeDbData = api.workspace.updateNodeData.useMutation();
   const { edges, onUpdateNode } = useStore(
     (state) => ({
       edges: state.edges,
       onUpdateNode: state.onUpdateNode,
     }),
     shallow,
-  );
-
-  const stateDef = data.xState
-    ? (JSON.parse(data.xState) as StateFrom<typeof networkMachine>)
-    : networkMachine.initialState;
-  const prevState = State.create(stateDef);
-
-  const [state, send] = useMachine(networkMachine, {
-    state: prevState,
-    guards: {
-      isCompleted: (context) => {
-        return context.jobStatus === 'COMPLETED';
-      },
-      isFailed: (context) => {
-        return context.jobStatus === 'FAILED';
-      },
-      isCancelled: (context) => {
-        return context.jobStatus === 'CANCELLED';
-      },
-    },
-    actions: {
-      cancelJob: (context) => {
-        cancelJob.mutate({ jobId: context.jobId });
-      },
-    },
-    services: {
-      submitJob: (_, event) => {
-        return new Promise((resolve, reject) => {
-          const formData =
-            event.type !== 'cancel' && event.type !== 'activate'
-              ? event.data.formData
-              : '';
-          const jobInput = {
-            jobName: 'deepsirius-network',
-            output: 'output-do-pai-custom.txt',
-            error: 'error-dos-outros-custom.txt',
-            ntasks: 1,
-            partition: 'dev-gcd',
-            command:
-              'echo "' +
-              JSON.stringify({ ...formData, ...data }) +
-              '" \n sleep 5 \n echo "job completed."',
-          };
-          if (state.matches('tuning') || event.type === 'finetune') {
-            console.log('tuning');
-          }
-          if (state.matches('training') || event.type === 'start training') {
-            console.log('training');
-          }
-
-          createJob
-            .mutateAsync(jobInput)
-            .then((data) => {
-              resolve({ ...data, formData });
-            })
-            .catch((err) => reject(err));
-        });
-      },
-
-      jobStatus: (context) => {
-        return new Promise((resolve, reject) => {
-          checkJob
-            .mutateAsync({ jobId: context.jobId })
-            .then((data) => {
-              resolve(data);
-            })
-            .catch((err) => reject(err));
-        });
-      },
-    },
-  });
-
-  // defining status as a high level machineState
-  const status =
-    typeof state.value === 'object' ? 'busy' : (state.value as Status);
-
-  useEffect(() => {
-    onUpdateNode({
-      id: id,
-      data: { status: status, xState: JSON.stringify(state) },
-    });
-  }, [id, onUpdateNode, state, status]);
-
-  const isBusy = [
-    { training: 'pending' },
-    { training: 'running' },
-    { tuning: 'pending' },
-    { tuning: 'running' },
-  ].some((s) => state.matches(s));
-
-  const isError = [{ training: 'error' }, { tuning: 'error' }].some((s) =>
-    state.matches(s),
   );
 
   // handle node activation if theres a source node connected to it
@@ -320,14 +230,165 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
     }
   };
 
+  const [status, setStatus] = useState<Status>(data.status);
+
+  const updateData = useCallback(
+    (data: NodeData) => {
+      console.log('useCallback on update node data', data);
+      // updating in the store
+      onUpdateNode({
+        id: id, // this is the component id from the react-flow
+        data: data,
+      });
+      // updating on the db
+      void updateNodeDbData.mutate(
+        data as { registryId: string; status: string; xState: string },
+      );
+    },
+    [onUpdateNode, id, updateNodeDbData],
+  );
+
+  const prevXState = State.create(
+    data.xState
+      ? (JSON.parse(data.xState) as StateFrom<typeof thisNodeNachine>)
+      : thisNodeNachine.initialState,
+  );
+
+  // TODO: this should be simplified
+  const defineStatus = (state: StateFrom<typeof thisNodeNachine>) => {
+    // possible object states
+    if (typeof state.value === 'object') {
+      const checkError = (s: StateFrom<typeof thisNodeNachine>) => {
+        const errorStates = [{ training: 'error' }, { tuning: 'error' }];
+        return errorStates.some((es) => s.matches(es));
+      };
+
+      const checkBusy = (s: StateFrom<typeof thisNodeNachine>) => {
+        const busyStates = [
+          { training: 'pending' },
+          { training: 'running' },
+          { tuning: 'pending' },
+          { tuning: 'running' },
+        ];
+        return busyStates.some((bs) => s.matches(bs));
+      };
+
+      if (checkBusy(state)) {
+        return 'busy' as Status;
+      } else if (checkError(state)) {
+        return 'error' as Status;
+      } else {
+        throw new Error('Unknown state');
+      }
+    }
+    // possible string states
+    else {
+      return state.value as Status;
+    }
+  };
+
+  const actor = useInterpret(
+    thisNodeNachine,
+    {
+      state: prevXState,
+      guards: {
+        isCompleted: (context) => {
+          return context.jobStatus === 'COMPLETED';
+        },
+        isFailed: (context) => {
+          return context.jobStatus === 'FAILED';
+        },
+        isCancelled: (context) => {
+          return context.jobStatus === 'CANCELLED';
+        },
+      },
+      actions: {
+        cancelJob: (context) => {
+          cancelJob.mutate({ jobId: context.jobId });
+        },
+      },
+      services: {
+        submitJob: (_, event) => {
+          return new Promise((resolve, reject) => {
+            const formData =
+              event.type !== 'cancel' && event.type !== 'activate'
+                ? event.data.formData
+                : '';
+            const jobInput = {
+              jobName: 'deepsirius-network',
+              output: 'output-do-pai-custom.txt',
+              error: 'error-dos-outros-custom.txt',
+              ntasks: 1,
+              partition: 'dev-gcd',
+              command:
+                'echo "' +
+                JSON.stringify({ ...formData, ...data }) +
+                '" \n sleep 5 \n echo "job completed."',
+            };
+            if (state.matches('tuning') || event.type === 'finetune') {
+              console.log('tuning');
+            }
+            if (state.matches('training') || event.type === 'start training') {
+              console.log('training');
+            }
+
+            createJob
+              .mutateAsync(jobInput)
+              .then((data) => {
+                resolve({ ...data, formData });
+              })
+              .catch((err) => reject(err));
+          });
+        },
+
+        jobStatus: (context) => {
+          return new Promise((resolve, reject) => {
+            checkJob
+              .mutateAsync({ jobId: context.jobId })
+              .then((data) => {
+                resolve(data);
+              })
+              .catch((err) => reject(err));
+          });
+        },
+      },
+    },
+    // observer
+    (state) => {
+      // subscribes to state changes and check if there is a status change to update the node data
+      if (defineStatus(state) !== status) {
+        console.log(
+          'State Machine: status changed: ',
+          status,
+          ' => ',
+          defineStatus(state),
+        );
+        setStatus(defineStatus(state));
+        updateData({
+          ...data,
+          status: defineStatus(state),
+          xState: JSON.stringify(state),
+        });
+      }
+    },
+  );
+
+  const [
+    // The current state of the actor
+    state,
+    // A function to send the machine events
+    send,
+  ] = useActor(actor);
+
   return (
     <>
-      {state.matches('inactive') && (
+      {/* {state.matches('inactive') && ( */}
+      {status === 'inactive' && (
         <Card className="w-[380px] bg-gray-100 dark:bg-muted">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
             <CardTitle>{state.context.networkLabel}</CardTitle>
-            <CardDescription>{state.value}</CardDescription>
+            <CardDescription>{status}</CardDescription>
           </CardHeader>
           <CardFooter className="flex justify-start">
             <Button onClick={handleActivation}>activate</Button>
@@ -335,12 +396,13 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {state.matches('active') && (
+      {/* {state.matches('active') && ( */}
+      {status === 'active' && (
         <Card className="w-[380px] bg-green-100 dark:bg-teal-800">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
             <CardTitle>{state.context.networkLabel}</CardTitle>
-            <CardDescription>{state.value}</CardDescription>
+            <CardDescription>{status}</CardDescription>
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible>
@@ -376,7 +438,8 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {isBusy && (
+      {/* {isBusy && ( */}
+      {status === 'busy' && (
         <Card className="w-[380px] bg-yellow-100 dark:bg-amber-700">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
@@ -412,7 +475,8 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {isError && (
+      {/* {isError && ( */}
+      {status === 'error' && (
         <Card className="w-[380px] bg-red-100 dark:bg-rose-700">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
@@ -485,12 +549,13 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {state.matches('success') && (
+      {/* {state.matches('success') && ( */}
+      {status === 'success' && (
         <Card className="w-[380px] bg-blue-100 dark:bg-cyan-700">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
             <CardTitle>{state.context.networkLabel}</CardTitle>
-            <CardDescription>{state.value}</CardDescription>
+            <CardDescription>{status}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col">

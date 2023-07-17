@@ -1,4 +1,9 @@
-import type { Edge, Node, User, Workspace } from '@prisma/client';
+import type {
+  EdgeRegistry,
+  NodeRegistry,
+  User,
+  Workspace,
+} from '@prisma/client';
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 
@@ -10,7 +15,7 @@ import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
  * Workspaces contain nodes and edges
  */
 export const workspaceRouter = createTRPCRouter({
-  // Crud: Creates a new workspace and associates it with the user
+  // Create a new workspace and associate it with an user
   createWorkspace: protectedProcedure
     .input(
       z.object({
@@ -54,7 +59,7 @@ export const workspaceRouter = createTRPCRouter({
       });
       return newWorkspace;
     }),
-  // cRud: Get all workspaces associated with the user
+  // Get all workspaces associated with the user
   getUserWorkspaces: protectedProcedure.query(async ({ ctx }) => {
     const uid = ctx.session.user.id ?? '';
     if (uid === '') {
@@ -71,12 +76,17 @@ export const workspaceRouter = createTRPCRouter({
     });
     return userWorkspaces;
   }),
+  // Register a new node to the workspace
   createNewNode: protectedProcedure
     .input(
       z.object({
         workspacePath: z.string(),
-        nodeId: z.string(),
+        componentId: z.string(),
         type: z.string(),
+        position: z.object({
+          x: z.number(),
+          y: z.number(),
+        }),
         status: z.string(),
         xState: z.string(),
       }),
@@ -86,21 +96,23 @@ export const workspaceRouter = createTRPCRouter({
       if (uid === '') {
         throw new Error('User not found');
       }
-      const node: Node = await ctx.prisma.node.create({
+      const node: NodeRegistry = await ctx.prisma.nodeRegistry.create({
         data: {
           workspace: {
             connect: {
               path: input.workspacePath,
             },
           },
-          nodeId: input.nodeId,
+          componentId: input.componentId,
           type: input.type,
+          position: JSON.stringify(input.position),
           status: input.status,
           xState: input.xState,
         },
       });
       return node;
     }),
+  // Get all nodes associated with the workspace
   getWorkspaceNodes: protectedProcedure
     .input(
       z.object({
@@ -112,7 +124,7 @@ export const workspaceRouter = createTRPCRouter({
       if (uid === '') {
         throw new Error('User not found');
       }
-      const nodes: Node[] = await ctx.prisma.node.findMany({
+      const nodes: NodeRegistry[] = await ctx.prisma.nodeRegistry.findMany({
         where: {
           workspace: {
             path: input.workspacePath,
@@ -121,160 +133,199 @@ export const workspaceRouter = createTRPCRouter({
       });
       return nodes;
     }),
-  // updateNode: protectedProcedure
-  // .input(
-  //   z.object({
-  //     workspacePath: z.string(),
-  //     nodeId: z.string(),
-  //     label: z.string(),
-  //     status: z.string(),
-  //     xState: z.string(),
-  //   }),
-  // )
-  // .mutation(async ({ ctx, input }) => {
-  //   const uid = ctx.session.user.id ?? '';
-  //   if (uid === '') {
-  //     throw new Error('User not found');
-  //   }
-  //   await ctx.prisma.node.update({
-  //     where: {
-  //       nodeId: input.nodeId,
-  //       and: {
-  //         workspace: {
-  //           path: input.workspacePath,
+  // Update the node data
+  updateNodeData: protectedProcedure
+    .input(
+      z.object({
+        registryId: z.string(),
+        status: z.string(),
+        xState: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const uid = ctx.session.user.id ?? '';
+      if (uid === '') {
+        throw new Error('User not found');
+      }
+      await ctx.prisma.nodeRegistry.update({
+        where: {
+          id: input.registryId,
+        },
+        data: {
+          status: input.status,
+          xState: input.xState,
+        },
+      });
+      return true;
+    }),
+  // Update the node position
+  updateNodePos: protectedProcedure
+    .input(
+      z.object({
+        registryId: z.string(),
+        position: z.object({
+          x: z.number(),
+          y: z.number(),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const uid = ctx.session.user.id ?? '';
+      if (uid === '') {
+        throw new Error('User not found');
+      }
+      await ctx.prisma.nodeRegistry
+        .update({
+          where: {
+            id: input.registryId,
+          },
+          data: {
+            position: JSON.stringify(input.position),
+          },
+        })
+        .catch((err: ErrorOptions | undefined) => {
+          throw new Error(
+            "Coudn't update the node position in the database",
+            err,
+          );
+        });
+      return true;
+    }),
+
+  // // Update all nodes positions (cant do that in bulk because of the way the nodes are stored in the database?)
+  // updateAllNodesPos: protectedProcedure
+  //   .input(
+  //     z.object({
+  //       nodes: z.array(
+  //         z.object({
+  //           registryId: z.string(),
+  //           position: z.object({
+  //             x: z.number(),
+  //             y: z.number(),
+  //           }),
+  //         }),
+  //       ),
+  //     }),
+  //   )
+  //   .mutation(async ({ ctx, input }) => {
+  //     const uid = ctx.session.user.id ?? '';
+  //     if (uid === '') {
+  //       throw new Error('User not found');
+  //     }
+  //     const promises = input.nodes.map((node) =>
+  //       ctx.prisma.nodeRegistry.update({
+  //         where: {
+  //           id: node.registryId,
   //         },
-  //     },
-  //     data: {
-  //       label: input.label,
-  //       status: input.status,
-  //       xState: input.xState,
-  //     },
-  //   });
-  //   return true;
-  // }),
-
-  // TODO: continue this
+  //         data: {
+  //           position: JSON.stringify(node.position),
+  //         },
+  //       }),
+  //     );
+  //     await Promise.all(promises).then(() => {
+  //       return true;
+  //     }).catch((err) => { throw new Error(err as string) });
+  //   }),
+  // Delete a node
+  deleteNode: protectedProcedure
+    .input(
+      z.object({
+        registryId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const uid = ctx.session.user.id ?? '';
+      if (uid === '') {
+        throw new Error('User not found');
+      }
+      await ctx.prisma.nodeRegistry.delete({
+        where: {
+          id: input.registryId,
+        },
+      });
+      return true;
+    }),
+  // Register a new edge to the workspace
+  createEdge: protectedProcedure
+    .input(
+      z.object({
+        workspacePath: z.string(),
+        sourceId: z.string(),
+        targetId: z.string(),
+        componentId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const uid = ctx.session.user.id ?? '';
+      if (uid === '') {
+        throw new Error('User not found');
+      }
+      const NewEdge = await ctx.prisma.edgeRegistry.create({
+        data: {
+          workspace: {
+            connect: {
+              path: input.workspacePath,
+            },
+          },
+          source: input.sourceId,
+          target: input.targetId,
+          componentId: input.componentId,
+        },
+      });
+      return NewEdge;
+    }),
+  // Get all edges associated with the workspace
+  getWorkspaceEdges: protectedProcedure
+    .input(
+      z.object({
+        workspacePath: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const uid = ctx.session.user.id ?? '';
+      if (uid === '') {
+        throw new Error('User not found');
+      }
+      const edges: EdgeRegistry[] = await ctx.prisma.edgeRegistry.findMany({
+        where: {
+          workspace: {
+            path: input.workspacePath,
+          },
+        },
+      });
+      return edges;
+    }),
+  // Delete an edge
+  deleteEdge: protectedProcedure
+    .input(
+      z.object({
+        registryId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const uid = ctx.session.user.id ?? '';
+      if (uid === '') {
+        throw new Error('User not found');
+      }
+      await ctx.prisma.edgeRegistry.delete({
+        where: {
+          id: input.registryId,
+        },
+      });
+      return true;
+    }),
+  // update the workspace TODO:
+  // updateWorkspaceStore: protectedProcedure
+  //   .input(
+  //     z.object({
+  //       nodeList: z.array(
+  //         z.object({
+  //           registryId: z.string(),
+  //           status: z.string(),
+  //           xState: z.string(),
+  //           position: z.object({
+  //             x: z.number(),
+  //             y: z.number(),
+  //           }),
+  //         }),
 });
-
-//     const newUserWorkspace: UserWorkspaces = await ctx.prisma.userWorkspaces
-//       .create({
-//         data: {
-//           userId: uid,
-//           userName: uid,
-//           workspace: {
-//             connect: {
-//               id: newWorkspace.id,
-//           },
-//         },
-//       },
-//     });
-//     return newWorkspace;
-//   }),
-// // cRud: Get all workspaces associated with the user
-// getUserWorkspaces: protectedProcedure.query(async ({ ctx }) => {
-//   const uid = ctx.session.user.name ?? '';
-//   if (uid === '') {
-//     throw new Error('User not found');
-//   }
-//   const userWorkspaces: UserWorkspaces[] = await ctx.prisma.userWorkspaces
-//     .findMany({
-//       where: {
-//         userId: uid,
-//       },
-//     });
-//   return userWorkspaces;
-// }),
-// // TODO: crUd: Update a workspace
-// updateWorkspace: protectedProcedure
-//   .input(
-//     z.object({
-//       id: z.string(), // workspaceId
-//       path: z.string(), // workspacePath
-//       nodes: z.string(),
-//       edges: z.string(),
-//     }),
-//   )
-//   .mutation(async ({ ctx, input }) => {
-//     // updating the nodes and edges associated with the workspace
-//     console.log('input', input)
-//     const updatedWorkspace: Workspace = await ctx.prisma.workspace.update({
-//       where: {
-//         path: input.path,
-//       },
-//       data: {
-//         id: input.id,
-//         path: input.path,
-//         nodes:  input.nodes,
-//         edges: input.edges,
-//       },
-//     });
-//     return updatedWorkspace;
-//   }),
-
-// // TODO: cruD: Delete a workspace
-
-// export const workspaceRouter = createTRPCRouter({
-//   // Crud: Create a new workspace
-//   createWorkspace: protectedProcedure
-//   .input(z.object({
-//     path: z.string(),
-//   }))
-//   .mutation(async ({ ctx, input }) => {
-//     const uid = ctx.session.user.name;
-//     if (uid === '') {
-//       throw new Error('User not found');
-//     }
-//     const workspace = await ctx.prisma.userWorkspaces
-//       .create({
-//         data: {
-//           path: input.path,
-//           userId: uid,
-//           userName: uid,
-//         },
-//       });
-//     return workspace;
-//   }),
-//   // cRud: Get all workspaces associated with the user
-//   getUserWorkspaces: protectedProcedure.query(async ({ ctx }) => {
-//     const uid = ctx.session.user.name ?? '';
-//     if (uid === '') {
-//       throw new Error('User not found');
-//     }
-//     const userWorkspaces = await ctx.prisma.userWorkspaces
-//       .findMany({
-//         where: {
-//           userId: uid,
-//         },
-//       });
-//     return userWorkspaces;
-//   }),
-//   // TODO: crUd: Update a workspace
-//   // updateWorkspace: protectedProcedure
-//   //   .input(
-//   //     z.object({
-//   //       id: z.string(), // workspaceId
-//   //       path: z.string(),
-//   //       nodes: z.array(z.object({
-//   //         workspaceId: z.string(), // workspaceId
-//   //         nodeId: z.string(),
-//   //         label: z.string(),
-//   //         type: z.string(),
-//   //         status: z.string(),
-//   //         xState: z.string(),
-//   //       })),
-//   //       edges: z.array(z.object({
-//   //         workspaceId: z.string(), // workspaceId
-//   //         edgeId: z.string(),
-//   //         source: z.string(),
-//   //         target: z.string(),
-//   //       })),
-//   //     }),
-//   //   )
-//   //   .mutation(async ({ ctx, input }) => {
-//   //     const uid = ctx.session.user.name ?? '';
-//   //     if (uid === '') {
-//   //       throw new Error('User not found');
-//   //     }
-//   //   }),
-//   // TODO: cruD: Delete a workspace
-// });

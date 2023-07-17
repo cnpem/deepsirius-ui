@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react';
 import { nanoid } from 'nanoid';
-import { type Node } from 'reactflow';
+import { type Node, type XYPosition } from 'reactflow';
 import { shallow } from 'zustand/shallow';
 import { Button } from '~/components/ui/button';
 import {
@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { toast } from '~/components/ui/use-toast';
-import { NodeTypesList } from '~/hooks/use-store';
+import { NodeTypesList, type Status } from '~/hooks/use-store';
 import { type NodeData } from '~/hooks/use-store';
 import useStore from '~/hooks/use-store';
 import { api } from '~/utils/api';
@@ -22,6 +22,18 @@ export function PlusOneNode() {
   const { mutate } = api.workspace.createNewNode.useMutation({
     onSuccess: (data) => {
       console.log('new node created:', data);
+      const newNode: Node<NodeData> = {
+        id: data.componentId,
+        type: data.type,
+        position: JSON.parse(data.position) as XYPosition,
+        data: {
+          registryId: data.id,
+          status: data.status as Status,
+          xState: data.xState,
+        },
+      };
+      // now that the node is created in the database, we can add it to the store with an always defined registryId
+      addNode(newNode);
     },
     onError: (e) => {
       const errorMessage = e.data?.zodError?.fieldErrors.content;
@@ -41,7 +53,7 @@ export function PlusOneNode() {
     },
   });
 
-  const { nodes, addNode, workspacePath } = useStore(
+  const { addNode, workspacePath } = useStore(
     (state) => ({
       addNode: state.addNode,
       nodes: state.nodes,
@@ -52,16 +64,6 @@ export function PlusOneNode() {
 
   const createNewNode = (nodeType: string) => {
     console.log('create new node of type:', nodeType);
-    const newNode: Node<NodeData> = {
-      id: nanoid(),
-      type: nodeType,
-      position: {
-        // TODO: fix this
-        x: 0,
-        y: 0,
-      },
-      data: {},
-    };
     if (!workspacePath) {
       toast({
         variant: 'destructive',
@@ -70,16 +72,15 @@ export function PlusOneNode() {
       });
       return;
     }
-    // registering the new node in the database
+    // creating the new node in the database
     mutate({
       workspacePath: workspacePath,
-      type: newNode.type || '', // TODO: this should always be set
-      nodeId: newNode.id,
-      status: newNode.data.status || '',
-      xState: newNode.data.xState || '',
+      type: nodeType,
+      componentId: nanoid(),
+      position: { x: 0, y: 0 },
+      status: 'inactive',
+      xState: '',
     });
-    // Adding a node to the store/flow and adding it to the db are two separate actions
-    addNode(newNode);
   };
   // the nodes that can be builded are defined in NodeTypesList except for the type "new"
   // which is used to create a new node

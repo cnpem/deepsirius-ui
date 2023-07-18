@@ -1,5 +1,4 @@
 import { useRouter } from 'next/router';
-import { shallow } from 'zustand/shallow';
 import { Button } from '~/components/ui/button';
 import {
   Dialog,
@@ -9,7 +8,7 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { toast } from '~/components/ui/use-toast';
-import useStore from '~/hooks/use-store';
+import { useStoreActions } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
 /**
@@ -21,16 +20,10 @@ function ChooseUserWorkspaces() {
   // getting the workspaces for the user
   const { isLoading, isError, data, error } =
     api.workspace.getUserWorkspaces.useQuery();
-  // zustand store
-  const { setWorkspacePath } = useStore(
-    (state) => ({
-      setWorkspacePath: state.setWorkspacePath,
-    }),
-    shallow,
-  );
+  const store = useStoreActions();
 
   const handleSelectWorkspace = (workspacePath: string) => {
-    setWorkspacePath(workspacePath);
+    store.setWorkspacePath(workspacePath);
   };
 
   if (isLoading) {
@@ -63,11 +56,12 @@ function ChooseUserWorkspaces() {
  * @returns a form component for creating a new workspace session
  */
 function CreateNewWorkspace() {
+  const store = useStoreActions();
   // db interactions via tRPC
   const { mutate } = api.workspace.createWorkspace.useMutation({
     onSuccess: (data) => {
       console.log('updateWorkspace.onSuccess', data);
-      setWorkspacePath(data.path);
+      store.setWorkspacePath(data.path);
     },
     onError: (e) => {
       const errorMessage = e.data?.zodError?.fieldErrors.content;
@@ -86,14 +80,6 @@ function CreateNewWorkspace() {
       }
     },
   });
-
-  // zustand store
-  const { setWorkspacePath } = useStore(
-    (state) => ({
-      setWorkspacePath: state.setWorkspacePath,
-    }),
-    shallow,
-  );
 
   const handleNewWorkspace = () => {
     const newWorkspacePath = '/home/test';

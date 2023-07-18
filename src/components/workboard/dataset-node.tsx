@@ -1,5 +1,5 @@
 import { useActor, useInterpret } from '@xstate/react';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
 import {
@@ -10,7 +10,11 @@ import {
 } from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
 import { toast } from '~/components/ui/use-toast';
-import { type NodeData, type Status, useStoreActions } from '~/hooks/use-store';
+import {
+  type NodeData,
+  type Status,
+  useUpdateNodeData,
+} from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
 import {
@@ -143,37 +147,18 @@ const datasetMachine = createMachine({
 });
 
 export function DatasetNode({ id, data }: NodeProps<NodeData>) {
-  const thisNodeNachine = datasetMachine; // hack for writing the same functions for all nodes (TODO: there's a better way to do this)
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const updateNodeDbData = api.workspace.updateNodeData.useMutation();
-  const { onUpdateNode } = useStoreActions();
-
+  const updateNodeData = useUpdateNodeData();
   const [status, setStatus] = useState<Status>(data.status);
 
-  const updateData = useCallback(
-    (data: NodeData) => {
-      console.log('useCallback on update node data', data);
-      // updating in the store
-      onUpdateNode({
-        id: id, // this is the component id from the react-flow
-        data: data,
-      });
-      // updating on the db
-      void updateNodeDbData.mutate(
-        data as { registryId: string; status: string; xState: string },
-      );
-    },
-    [onUpdateNode, id, updateNodeDbData],
-  );
-
+  const thisNodeNachine = datasetMachine; // hack for writing the same functions for all nodes (TODO: there's a better way to do this)
   const prevXState = State.create(
     data.xState
       ? (JSON.parse(data.xState) as StateFrom<typeof thisNodeNachine>)
       : thisNodeNachine.initialState,
   );
-
   const defineStatus = (state: StateFrom<typeof thisNodeNachine>) => {
     return typeof state.value === 'object' ? 'busy' : (state.value as Status);
   };
@@ -249,10 +234,13 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           defineStatus(state),
         );
         setStatus(defineStatus(state));
-        updateData({
-          ...data,
-          status: defineStatus(state),
-          xState: JSON.stringify(state),
+        updateNodeData({
+          id: id, // this is the component id from the react-flow
+          data: {
+            ...data,
+            status: defineStatus(state),
+            xState: JSON.stringify(state),
+          },
         });
       }
     },

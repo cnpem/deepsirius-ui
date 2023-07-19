@@ -4,8 +4,6 @@ import ReactFlow, {
   BackgroundVariant,
   Controls,
   MiniMap,
-  type NodeDragHandler,
-  type OnNodesDelete,
   Panel,
 } from 'reactflow';
 import { type Node } from 'reactflow';
@@ -20,41 +18,23 @@ import {
   useStoreNodes,
   useStoreWorkspacePath,
 } from '~/hooks/use-store';
-import { api } from '~/utils/api';
 
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { PlusOneNode } from './plusone-node';
 import WorkspaceSelectDialog from './workspace-select-dialog';
 
 /**
- * The Gepetto component is the main component for the workspace flow
+ * The Geppetto component is the main component for the workspace flow
  * It uses the ReactFlow component to render the nodes and edges
  * It also uses the zustand store to manage the state of the nodes and edges
  *
  * @returns
  */
-function Gepetto({ workspacePath }: { workspacePath: string }) {
-  const { nodes } = useStoreNodes();
-  const { enableQuery } = useInitStoreQuery({ workspacePath });
-  const { onNodesChange, onEdgesChange, setEnableQuery } = useStoreActions();
+function Geppetto({ workspacePath }: { workspacePath: string }) {
+  const initQueryStatus = useInitStoreQuery({ workspacePath });
+  const { onNodesChange, onEdgesChange, onInit } = useStoreActions();
+  const { nodes, onNodeDragStop, onNodesDelete } = useStoreNodes();
   const { edges, onEdgesConnect, onEdgesDelete } = useStoreEdges();
-
-  const updateNodePos = api.workspace.updateNodePos.useMutation({
-    onSuccess: (data) => {
-      console.log('Geppetto: update node pos success', data);
-    },
-    onError: (e) => {
-      console.log('Geppetto: update node pos error', e);
-    },
-  });
-  const deleteNode = api.workspace.deleteNode.useMutation({
-    onSuccess: (data) => {
-      console.log('Geppetto: delete node success', data);
-    },
-    onError: (e) => {
-      console.log('Geppetto: delete node error', e);
-    },
-  });
 
   const variant = BackgroundVariant.Dots;
 
@@ -73,35 +53,10 @@ function Gepetto({ workspacePath }: { workspacePath: string }) {
     }
   };
 
-  const onInit = () => {
-    console.log('Geppetto: onInit');
-    if (enableQuery) {
-      setEnableQuery(false);
-    }
-  };
-
-  const onNodeDragStop: NodeDragHandler = (event, node: Node<NodeData>) => {
-    console.log('Geppetto: node drag stop', event, node);
-    // how to differentiate a real movement from an involuntary click to activate or something else?
-    updateNodePos.mutate({
-      registryId: node.data.registryId,
-      position: node.position as { x: number; y: number },
-    });
-  };
-
-  const onNodesDelete: OnNodesDelete = (
-    nodesToDelete: Node<NodeData>[] | undefined,
-  ) => {
-    if (!nodesToDelete) {
-      return;
-    }
-    console.log('Geppetto: node delete', nodesToDelete);
-    nodesToDelete.map((node) => {
-      deleteNode.mutate({
-        registryId: node.data.registryId,
-      });
-    });
-  };
+  console.log('Geppetto: initQueryStatus', {
+    nodes: initQueryStatus.nodesQuery.status,
+    edges: initQueryStatus.edgesQuery.status,
+  });
 
   //TODO: would be nice to change the height for full screen mode to h-[930px]
   return (
@@ -159,8 +114,8 @@ function AlertDemo() {
 }
 
 /**
- *
- * @returns the Select if no workspacePath is set in the store or the Gepetto (Workspace Flow component) if it is
+ * The Flow component is the component that manages the selection of a workspace ReactFlow instance (managed by Geppetto)
+ * @returns the WorkspaceSelectDialog component if no workspacePath is set in the store or the Geppetto (Workspace Flow component) if it is
  */
 export default function Flow() {
   const { workspacePath } = useStoreWorkspacePath();
@@ -168,7 +123,7 @@ export default function Flow() {
   return (
     <>
       <WorkspaceSelectDialog open={!workspacePath} />
-      {!!workspacePath && <Gepetto workspacePath={workspacePath} />}
+      {!!workspacePath && <Geppetto workspacePath={workspacePath} />}
     </>
   );
 }

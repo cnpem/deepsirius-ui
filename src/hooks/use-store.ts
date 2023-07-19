@@ -6,11 +6,13 @@ import {
   type EdgeChange,
   type Node,
   type NodeChange,
+  NodeDragHandler,
   type NodeTypes,
   type OnConnect,
   type OnEdgesChange,
   OnEdgesDelete,
   type OnNodesChange,
+  OnNodesDelete,
   type XYPosition,
   addEdge,
   applyEdgeChanges,
@@ -72,6 +74,7 @@ type RFActions = {
   initEdges: (edges: Edge[]) => void;
   addNode: (node: Node<NodeData>) => void;
   addEdge: (edge: Edge) => void;
+  onInit: () => void;
 };
 
 export type RFStore = RFState & {
@@ -124,6 +127,11 @@ const useStore = create<RFStore>()(
           },
           resetStore: () => {
             set(initialState);
+          },
+          onInit: () => {
+            if (get().enableQuery) {
+              set({ enableQuery: false });
+            }
           },
           initNodes: (nodes: Node<NodeData>[]) => {
             set({
@@ -259,10 +267,6 @@ const useStore = create<RFStore>()(
   ),
 );
 
-// export default useStore;
-export const useStoreNodes = () =>
-  useStore((state) => ({ nodes: state.nodes }), shallow);
-
 export const useStoreWorkspacePath = () =>
   useStore((state) => ({ workspacePath: state.workspacePath }), shallow);
 export const useStoreEnableQuery = () =>
@@ -276,7 +280,7 @@ export const useInitStoreQuery = ({
   workspacePath: string;
 }) => {
   const { enableQuery } = useStoreEnableQuery();
-  const { setEnableQuery, initNodes, initEdges } = useStoreActions();
+  const { initNodes, initEdges } = useStoreActions();
   const nodesQuery = api.workspace.getWorkspaceNodes.useQuery(
     { workspacePath: workspacePath },
     {
@@ -410,5 +414,41 @@ export const useStoreEdges = () => {
     edges,
     onEdgesDelete,
     onEdgesConnect,
+  };
+};
+
+export const useStoreNodes = () => {
+  // db interactions
+  const updateNodePos = api.workspace.updateNodePos.useMutation();
+  const deleteNode = api.workspace.deleteNode.useMutation();
+  // store actions
+  const nodes = useStore((state) => state.nodes, shallow);
+  // flow callbacks
+  const onNodeDragStop: NodeDragHandler = (event, node: Node<NodeData>) => {
+    console.log('Geppetto: node drag stop', event, node);
+    // how to differentiate a real movement from an involuntary click to activate or something else?
+    updateNodePos.mutate({
+      registryId: node.data.registryId,
+      position: node.position as { x: number; y: number },
+    });
+  };
+  const onNodesDelete: OnNodesDelete = (
+    nodesToDelete: Node<NodeData>[] | undefined,
+  ) => {
+    if (!nodesToDelete) {
+      return;
+    }
+    console.log('Geppetto: node delete', nodesToDelete);
+    nodesToDelete.map((node) => {
+      deleteNode.mutate({
+        registryId: node.data.registryId,
+      });
+    });
+  };
+
+  return {
+    nodes,
+    onNodeDragStop,
+    onNodesDelete,
   };
 };

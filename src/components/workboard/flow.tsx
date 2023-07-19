@@ -14,11 +14,10 @@ import 'reactflow/dist/style.css';
 import CustomConnectionLine from '~/components/workboard/connection-line';
 import {
   type NodeData,
-  type Status,
   nodeTypes,
+  useInitStoreQuery,
   useStoreActions,
   useStoreEdges,
-  useStoreEnableQuery,
   useStoreNodes,
   useStoreWorkspacePath,
 } from '~/hooks/use-store';
@@ -39,46 +38,15 @@ function Gepetto() {
   const { edges } = useStoreEdges();
   const { nodes } = useStoreNodes();
   const { workspacePath } = useStoreWorkspacePath();
-  const { enableQuery } = useStoreEnableQuery();
-  const { addNode, onNodesChange, onEdgesChange, onConnect, setEnableQuery } =
-    useStoreActions();
+  const { isLoading, isError } = useInitStoreQuery();
+  // const { enableQuery } = useStoreEnableQuery();
+  const { onNodesChange, onEdgesChange, onConnect } = useStoreActions();
 
   // component should break if workspacePath is undefined
   if (!workspacePath) {
     return <></>; //<div>Workspace path is undefined</div>;
   }
-  // db interactions via tRPC
-  const workspaceNodesQuery = api.workspace.getWorkspaceNodes.useQuery(
-    { workspacePath: workspacePath },
-    {
-      onSuccess: (data) => {
-        console.log('Geppetto: onSuccess: query node data', data);
-        data.map((node) => {
-          const newNode: Node<NodeData> = {
-            id: node.componentId,
-            type: node.type,
-            position: JSON.parse(node.position) as XYPosition,
-            data: {
-              registryId: node.id,
-              status: node.status as Status,
-              xState: node.xState,
-            },
-          };
-          console.log('Geppetto: new node', newNode);
-          addNode(newNode);
-        });
-        // after loading the data from the db for the first time, we set enableQuery to false
-        // so that the store will use its own state data instead of fetching from the db
-        setEnableQuery(false);
-      },
-      onError: (e) => {
-        console.log('Geppetto: query node error', e);
-      },
-      // the store decides if it should fetch data from the db or using its own state data
-      enabled: enableQuery,
-      staleTime: Infinity,
-    },
-  );
+
   const updateNodePos = api.workspace.updateNodePos.useMutation({
     onSuccess: (data) => {
       console.log('Geppetto: update node pos success', data);
@@ -131,12 +99,12 @@ function Gepetto() {
     }
   };
 
-  const onInit = () => {
-    console.log('Geppetto: onInit');
-    if (enableQuery) {
-      void workspaceNodesQuery.refetch();
-    }
-  };
+  // const onInit = () => {
+  //   console.log('Geppetto: onInit');
+  //   if (enableQuery) {
+  //     void workspaceNodesQuery.refetch();
+  //   }
+  // };
 
   const onNodeDragStop: NodeDragHandler = (event, node: Node<NodeData>) => {
     console.log('Geppetto: node drag stop', event, node);
@@ -184,7 +152,7 @@ function Gepetto() {
         // onEdgesDelete={onEdgesDelete}
         connectionLineComponent={CustomConnectionLine}
         nodeTypes={nodeTypes}
-        onInit={onInit}
+        // onInit={onInit}
         fitView
       >
         <Panel position="top-left" className="flex flex-col gap-2">

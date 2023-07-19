@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { toast } from '~/components/ui/use-toast';
-import { useStoreActions } from '~/hooks/use-store';
+import { useStoreActions, useWorkspaceSession } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
 /**
@@ -20,10 +20,11 @@ function ChooseUserWorkspaces() {
   // getting the workspaces for the user
   const { isLoading, isError, data, error } =
     api.workspace.getUserWorkspaces.useQuery();
-  const store = useStoreActions();
+  const { setWorkspacePath } = useWorkspaceSession();
 
   const handleSelectWorkspace = (workspacePath: string) => {
-    store.setWorkspacePath(workspacePath);
+    // store.setWorkspacePath(workspacePath);
+    setWorkspacePath(workspacePath);
   };
 
   if (isLoading) {
@@ -40,7 +41,7 @@ function ChooseUserWorkspaces() {
           <Button
             key={workspace.path}
             variant="outline"
-            onClick={() => handleSelectWorkspace(workspace.path)}
+            onClick={() => void handleSelectWorkspace(workspace.path)}
           >
             {workspace.path}
           </Button>

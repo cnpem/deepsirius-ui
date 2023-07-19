@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import {
   type Connection,
   type Edge,
@@ -8,6 +9,7 @@ import {
   type OnConnect,
   type OnEdgesChange,
   type OnNodesChange,
+  type XYPosition,
   addEdge,
   applyEdgeChanges,
   applyNodeChanges,
@@ -47,24 +49,28 @@ export type NodeData = {
   xState?: string; // this is a long json
 };
 
-export type RFState = {
+type RFState = {
   nodes: Node<NodeData>[];
   edges: Edge[];
   workspacePath?: string;
   enableQuery: boolean;
-  actions: {
-    resetStore: () => void;
-    onNodesChange: OnNodesChange;
-    onEdgesChange: OnEdgesChange;
-    onConnect: OnConnect;
-    checkConnectedSource: (targetId: string) => boolean;
-    // onInit: () => void;
+};
 
-    setEnableQuery: (enableQuery: boolean) => void;
-    setWorkspacePath: (workspacePath: string) => void;
-    onUpdateNode: ({ id, data }: { id: string; data: NodeData }) => void;
-    addNode: (node: Node<NodeData>) => void;
-  };
+type RFActions = {
+  resetStore: () => void;
+  onNodesChange: OnNodesChange;
+  onEdgesChange: OnEdgesChange;
+  onConnect: OnConnect;
+  checkConnectedSource: (targetId: string) => boolean;
+  setEnableQuery: (enableQuery: boolean) => void;
+  setWorkspacePath: (workspacePath: string) => void;
+  onUpdateNode: ({ id, data }: { id: string; data: NodeData }) => void;
+  initNodes: (nodes: Node<NodeData>[]) => void;
+  addNode: (node: Node<NodeData>) => void;
+};
+
+export type RFStore = RFState & {
+  actions: RFActions;
 };
 
 // Log every time state is changed
@@ -94,25 +100,29 @@ const loggerImpl: LoggerImpl = (f, name) => (set, get, store) => {
 
 export const logger = loggerImpl as unknown as Logger;
 
+const initialState: RFState = {
+  nodes: [],
+  edges: [],
+  workspacePath: undefined,
+  enableQuery: true,
+};
+
 // this is our useStore hook that we can use in our components to get parts of the store and call actions
-const useStore = create<RFState>()(
+const useStore = create<RFStore>()(
   persist(
     logger(
       (set, get) => ({
-        nodes: [],
-        edges: [],
-        workspacePath: undefined,
-        enableQuery: true,
+        ...initialState,
         actions: {
           setEnableQuery: (enableQuery: boolean) => {
             set({ enableQuery });
           },
           resetStore: () => {
+            set(initialState);
+          },
+          initNodes: (nodes: Node<NodeData>[]) => {
             set({
-              nodes: [],
-              edges: [],
-              enableQuery: true,
-              workspacePath: undefined,
+              nodes: nodes,
             });
           },
           addNode: (node: Node<NodeData>) => {
@@ -224,12 +234,6 @@ const useStore = create<RFState>()(
             set({ workspacePath: workspacePath });
           },
         },
-        // onInit: () => {
-        //   const nodes = get().nodes;
-        //   set({
-        //     nodes: nodes,
-        //   });
-        // },
       }),
       'useStore',
     ),
@@ -251,6 +255,41 @@ export const useStoreWorkspacePath = () =>
 export const useStoreEnableQuery = () =>
   useStore((state) => ({ enableQuery: state.enableQuery }), shallow);
 export const useStoreActions = () => useStore((state) => state.actions);
+// returns the query state and update the store state data when the query is done
+// should be called in the compnent that renders the data from the query
+export const useInitStoreQuery = () => {
+  const { enableQuery } = useStoreEnableQuery();
+  const { workspacePath } = useStoreWorkspacePath();
+  const { setEnableQuery, initNodes } = useStoreActions();
+  const { isLoading, isError } = api.workspace.getWorkspaceNodes.useQuery(
+    { workspacePath: workspacePath as string },
+    {
+      enabled: enableQuery && !!workspacePath,
+      onSuccess: (data) => {
+        console.log('Store: onSuccess: query node data', data);
+        const Nodes: Node<NodeData>[] = data.map((node) => {
+          return {
+            id: node.componentId,
+            type: node.type,
+            position: JSON.parse(node.position) as XYPosition,
+            data: {
+              registryId: node.id,
+              status: node.status as Status,
+              xState: node.xState,
+            },
+          } as Node<NodeData>;
+        });
+        initNodes(Nodes);
+        setEnableQuery(false);
+      },
+    },
+  );
+
+  return {
+    isLoading,
+    isError,
+  };
+};
 
 // hook for updating the node data on the store and the database
 export const useUpdateNodeData = () => {
@@ -261,5 +300,19 @@ export const useUpdateNodeData = () => {
   return ({ id, data }: { id: string; data: NodeData }) => {
     onUpdateNode({ id, data });
     mutate(data as { registryId: string; status: string; xState: string });
+  };
+};
+
+// hook for creating a session on the store and loading the database and leaving the session on unmount and reseting the store
+export const useWorkspaceSession = () => {
+  // store action
+  const { setWorkspacePath, resetStore } = useStoreActions();
+  const { workspacePath } = useStoreWorkspacePath();
+
+  // returning the actions triggered by setPath
+  return {
+    workspacePath,
+    setWorkspacePath,
+    resetStore,
   };
 };

@@ -26,7 +26,7 @@ import {
   type NodeData,
   type Status,
   useStoreActions,
-  useUpdateNodeData,
+  useStoreNodes,
 } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
@@ -148,7 +148,7 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
   const { checkConnectedSource } = useStoreActions();
-  const updateNodeData = useUpdateNodeData();
+  const { onUpdateNodeData } = useStoreNodes();
   const [status, setStatus] = useState<Status>(data.status);
 
   // handle node activation if theres a source node connected to it
@@ -243,7 +243,7 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
           defineStatus(state),
         );
         setStatus(defineStatus(state));
-        updateNodeData({
+        onUpdateNodeData({
           id: id, // this is the component id from the react-flow
           data: {
             ...data,

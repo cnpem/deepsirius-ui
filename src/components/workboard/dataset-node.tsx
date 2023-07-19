@@ -10,11 +10,7 @@ import {
 } from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
 import { toast } from '~/components/ui/use-toast';
-import {
-  type NodeData,
-  type Status,
-  useUpdateNodeData,
-} from '~/hooks/use-store';
+import { type NodeData, type Status, useStoreNodes } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
 import {
@@ -150,7 +146,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const updateNodeData = useUpdateNodeData();
+  const { onUpdateNodeData } = useStoreNodes();
   const [status, setStatus] = useState<Status>(data.status);
 
   const thisNodeNachine = datasetMachine; // hack for writing the same functions for all nodes (TODO: there's a better way to do this)
@@ -234,7 +230,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           defineStatus(state),
         );
         setStatus(defineStatus(state));
-        updateNodeData({
+        onUpdateNodeData({
           id: id, // this is the component id from the react-flow
           data: {
             ...data,

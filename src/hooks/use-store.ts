@@ -1,24 +1,21 @@
 import { nanoid } from 'nanoid';
-import { useCallback, useState } from 'react';
 import {
   type Connection,
   type Edge,
   type EdgeChange,
   type Node,
   type NodeChange,
-  NodeDragHandler,
+  type NodeDragHandler,
   type NodeTypes,
   type OnConnect,
   type OnEdgesChange,
-  OnEdgesDelete,
+  type OnEdgesDelete,
   type OnNodesChange,
-  OnNodesDelete,
+  type OnNodesDelete,
   type XYPosition,
-  addEdge,
   applyEdgeChanges,
   applyNodeChanges,
 } from 'reactflow';
-import { set } from 'zod';
 import {
   type StateCreator,
   type StoreMutatorIdentifier,
@@ -328,18 +325,6 @@ export const useInitStoreQuery = ({
   };
 };
 
-// hook for updating the node data on the store and the database
-export const useUpdateNodeData = () => {
-  // store action
-  const { onUpdateNode } = useStoreActions();
-  // api action
-  const { mutate } = api.workspace.updateNodeData.useMutation();
-  return ({ id, data }: { id: string; data: NodeData }) => {
-    onUpdateNode({ id, data });
-    mutate(data as { registryId: string; status: string; xState: string });
-  };
-};
-
 // hook for creating a session on the store and loading the database and leaving the session on unmount and reseting the store
 export const useWorkspaceSession = () => {
   // store action
@@ -417,15 +402,31 @@ export const useStoreEdges = () => {
   };
 };
 
+export type UpdateNodeDataHandler = ({
+  id,
+  data,
+}: {
+  id: string;
+  data: NodeData;
+}) => void;
 export const useStoreNodes = () => {
   // db interactions
   const updateNodePos = api.workspace.updateNodePos.useMutation();
   const deleteNode = api.workspace.deleteNode.useMutation();
+  const updateNodeData = api.workspace.updateNodeData.useMutation();
   // store actions
   const nodes = useStore((state) => state.nodes, shallow);
+  const { onUpdateNode, addNode } = useStoreActions();
   // flow callbacks
+  const onUpdateNodeData: UpdateNodeDataHandler = ({ id, data }) => {
+    console.log('useStoreNodes: Node update:', id, data.status);
+    onUpdateNode({ id, data });
+    updateNodeData.mutate(
+      data as { registryId: string; status: string; xState: string },
+    );
+  };
   const onNodeDragStop: NodeDragHandler = (event, node: Node<NodeData>) => {
-    console.log('Geppetto: node drag stop', event, node);
+    console.log('useStoreNodes: node drag stop', event, node);
     // how to differentiate a real movement from an involuntary click to activate or something else?
     updateNodePos.mutate({
       registryId: node.data.registryId,
@@ -438,7 +439,7 @@ export const useStoreNodes = () => {
     if (!nodesToDelete) {
       return;
     }
-    console.log('Geppetto: node delete', nodesToDelete);
+    console.log('useStoreNodes: node delete', nodesToDelete);
     nodesToDelete.map((node) => {
       deleteNode.mutate({
         registryId: node.data.registryId,
@@ -448,6 +449,7 @@ export const useStoreNodes = () => {
 
   return {
     nodes,
+    onUpdateNodeData,
     onNodeDragStop,
     onNodesDelete,
   };

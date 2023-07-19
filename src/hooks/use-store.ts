@@ -36,12 +36,16 @@ export const nodeTypes: NodeTypes = {
   new: PlusOneNode,
 };
 
+export const AllowedNodeTypesList = Object.keys(nodeTypes).filter(
+  (nodeType) => nodeType !== 'new',
+);
+
+export type AllowedNodeTypes = (typeof AllowedNodeTypesList)[number];
+
 const validConnectionPairs = [
   ['dataset', 'network'],
   ['network', 'inference'],
 ];
-
-export const NodeTypesList = Object.keys(nodeTypes);
 
 export type Status = 'success' | 'error' | 'active' | 'busy' | 'inactive';
 
@@ -360,14 +364,7 @@ export const useStoreEdges = () => {
       console.log('useStoreEdges: create edge error', e);
     },
   });
-  const deleteEdge = api.workspace.deleteEdge.useMutation({
-    onSuccess: (data) => {
-      console.log('useStoreEdges: delete edge success', data);
-    },
-    onError: (e) => {
-      console.log('useStoreEdges: delete edge error', e);
-    },
-  });
+  const deleteEdge = api.workspace.deleteEdge.useMutation();
 
   // flow callbacks
   const onEdgesDelete: OnEdgesDelete = (edges: Edge[]) => {
@@ -402,6 +399,7 @@ export const useStoreEdges = () => {
   };
 };
 
+export type OnNodeAdd = (nodeType: AllowedNodeTypes) => void;
 export type UpdateNodeDataHandler = ({
   id,
   data,
@@ -411,13 +409,49 @@ export type UpdateNodeDataHandler = ({
 }) => void;
 export const useStoreNodes = () => {
   // db interactions
+  const createNode = api.workspace.createNewNode.useMutation({
+    onSuccess: (data) => {
+      console.log('useStoreNodes: new node created!');
+      const newNode: Node<NodeData> = {
+        id: data.componentId,
+        type: data.type,
+        position: JSON.parse(data.position) as XYPosition,
+        data: {
+          registryId: data.id,
+          status: data.status as Status,
+          xState: data.xState,
+        },
+      };
+      // now that the node is created in the database, we can add it to the store with an always defined registryId
+      addNode(newNode);
+    },
+  });
   const updateNodePos = api.workspace.updateNodePos.useMutation();
-  const deleteNode = api.workspace.deleteNode.useMutation();
   const updateNodeData = api.workspace.updateNodeData.useMutation();
-  // store actions
-  const nodes = useStore((state) => state.nodes, shallow);
+  const deleteNode = api.workspace.deleteNode.useMutation();
+  // store
+  const { nodes, workspacePath } = useStore(
+    (state) => ({
+      nodes: state.nodes,
+      workspacePath: state.workspacePath,
+    }),
+    shallow,
+  );
   const { onUpdateNode, addNode } = useStoreActions();
   // flow callbacks
+  const onNodeAdd: OnNodeAdd = (nodeType: AllowedNodeTypes) => {
+    console.log('useStoreNodes: node add', nodeType);
+    if (!workspacePath) return;
+    createNode.mutate({
+      workspacePath: workspacePath,
+      type: nodeType,
+      componentId: nanoid(),
+      position: { x: 0, y: 0 },
+      status: 'inactive',
+      xState: '',
+    });
+  };
+
   const onUpdateNodeData: UpdateNodeDataHandler = ({ id, data }) => {
     console.log('useStoreNodes: Node update:', id, data.status);
     onUpdateNode({ id, data });
@@ -449,6 +483,7 @@ export const useStoreNodes = () => {
 
   return {
     nodes,
+    onNodeAdd,
     onUpdateNodeData,
     onNodeDragStop,
     onNodesDelete,

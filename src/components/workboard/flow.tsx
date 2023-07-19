@@ -53,11 +53,6 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     }
   };
 
-  console.log('Geppetto: initQueryStatus', {
-    nodes: initQueryStatus.nodesQuery.status,
-    edges: initQueryStatus.edgesQuery.status,
-  });
-
   //TODO: would be nice to change the height for full screen mode to h-[930px]
   return (
     <div className="p-2 h-[799px]">

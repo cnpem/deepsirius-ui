@@ -364,7 +364,6 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
 
   return (
     <>
-      {/* {state.matches('inactive') && ( */}
       {status === 'inactive' && (
         <Card className="w-[380px] bg-gray-100 dark:bg-muted">
           <Handle type="target" position={Position.Left} />
@@ -378,7 +377,6 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {/* {state.matches('active') && ( */}
       {status === 'active' && (
         <Card className="w-[380px] bg-green-100 dark:bg-teal-800">
           <Handle type="target" position={Position.Left} />
@@ -420,7 +418,6 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {/* {isBusy && ( */}
       {status === 'busy' && (
         <Card className="w-[380px] bg-yellow-100 dark:bg-amber-700">
           <Handle type="target" position={Position.Left} />
@@ -457,7 +454,6 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {/* {isError && ( */}
       {status === 'error' && (
         <Card className="w-[380px] bg-red-100 dark:bg-rose-700">
           <Handle type="target" position={Position.Left} />
@@ -531,7 +527,6 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {/* {state.matches('success') && ( */}
       {status === 'success' && (
         <Card className="w-[380px] bg-blue-100 dark:bg-cyan-700">
           <Handle type="target" position={Position.Left} />

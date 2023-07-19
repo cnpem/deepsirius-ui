@@ -262,6 +262,8 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
     send,
   ] = useActor(actor);
 
+  console.log('status: ', status);
+
   return (
     <Card
       data-state={status}
@@ -276,7 +278,7 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
         <CardTitle>{'inference'}</CardTitle>
         <CardDescription>{status}</CardDescription>
       </CardHeader>
-      {state.matches('active') && (
+      {status === 'active' && (
         <CardContent>
           <Accordion type="single" collapsible>
             <AccordionItem value="item-1">
@@ -309,7 +311,7 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
           </Accordion>
         </CardContent>
       )}
-      {state.matches('busy') && (
+      {status === 'busy' && (
         <>
           <CardContent>
             <div className="flex flex-col">
@@ -335,7 +337,7 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
           </CardFooter>
         </>
       )}
-      {state.matches('error') && (
+      {status === 'error' && (
         <CardContent>
           <div className="flex flex-col">
             <p className="mb-2 text-3xl font-extrabold text-center">
@@ -373,7 +375,7 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
           </Accordion>
         </CardContent>
       )}
-      {state.matches('success') && (
+      {status === 'success' && (
         <CardContent>
           <div className="flex flex-col">
             <p className="mb-2 text-3xl font-extrabold text-center">
@@ -402,7 +404,7 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
           </div>
         </CardContent>
       )}
-      {state.matches('inactive') && (
+      {status === 'inactive' && (
         <CardFooter className="flex justify-start">
           <Button onClick={handleActivation}>activate</Button>
         </CardFooter>

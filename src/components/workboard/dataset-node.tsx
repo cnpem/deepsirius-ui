@@ -262,7 +262,6 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
         <CardTitle>{state.context.datasetName}</CardTitle>
         <CardDescription>{status}</CardDescription>
       </CardHeader>
-      {/* {state.matches('active') && ( */}
       {status === 'active' && (
         <CardContent>
           <Accordion type="single" collapsible>
@@ -302,7 +301,6 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </Accordion>
         </CardContent>
       )}
-      {/* {state.matches('busy') && ( */}
       {status === 'busy' && (
         <>
           <CardContent>
@@ -329,7 +327,6 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </CardFooter>
         </>
       )}
-      {/* {state.matches('error') && ( */}
       {status === 'error' && (
         <CardContent>
           <div className="flex flex-col">
@@ -369,7 +366,6 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </Accordion>
         </CardContent>
       )}
-      {/* {state.matches('success') && ( */}
       {status === 'success' && (
         <CardContent>
           <div className="flex flex-col">
@@ -385,7 +381,6 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </div>
         </CardContent>
       )}
-      {/* {state.matches('inactive') && ( */}
       {status === 'inactive' && (
         <CardFooter className="flex justify-start">
           <Button onClick={() => send('activate')}>activate</Button>

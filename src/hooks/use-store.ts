@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+import { nanoid } from 'nanoid';
+import { useCallback, useState } from 'react';
 import {
   type Connection,
   type Edge,
@@ -8,12 +9,14 @@ import {
   type NodeTypes,
   type OnConnect,
   type OnEdgesChange,
+  OnEdgesDelete,
   type OnNodesChange,
   type XYPosition,
   addEdge,
   applyEdgeChanges,
   applyNodeChanges,
 } from 'reactflow';
+import { set } from 'zod';
 import {
   type StateCreator,
   type StoreMutatorIdentifier,
@@ -60,13 +63,15 @@ type RFActions = {
   resetStore: () => void;
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
-  onConnect: OnConnect;
+  isValidConnection: (edge: Edge | Connection) => boolean;
   checkConnectedSource: (targetId: string) => boolean;
   setEnableQuery: (enableQuery: boolean) => void;
   setWorkspacePath: (workspacePath: string) => void;
   onUpdateNode: ({ id, data }: { id: string; data: NodeData }) => void;
   initNodes: (nodes: Node<NodeData>[]) => void;
+  initEdges: (edges: Edge[]) => void;
   addNode: (node: Node<NodeData>) => void;
+  addEdge: (edge: Edge) => void;
 };
 
 export type RFStore = RFState & {
@@ -125,9 +130,19 @@ const useStore = create<RFStore>()(
               nodes: nodes,
             });
           },
+          initEdges: (edges: Edge[]) => {
+            set({
+              edges: edges,
+            });
+          },
           addNode: (node: Node<NodeData>) => {
             set({
               nodes: [...get().nodes, node],
+            });
+          },
+          addEdge: (edge: Edge) => {
+            set({
+              edges: [...get().edges, edge],
             });
           },
           onNodesChange: (changes: NodeChange[]) => {
@@ -140,7 +155,7 @@ const useStore = create<RFStore>()(
               edges: applyEdgeChanges(changes, get().edges),
             });
           },
-          onConnect: (params: Edge | Connection) => {
+          isValidConnection: (params: Edge | Connection) => {
             // checking if there is already a source connected to the target:
             // find all the nodes connected to the target node and
             // return without making the connection if a connection already exists
@@ -148,7 +163,7 @@ const useStore = create<RFStore>()(
               console.log(
                 'Store.OnConnect: There is already a source connected to the target',
               );
-              return;
+              return false;
             }
             // find nodes
             const sourceNode = get().nodes.find(
@@ -163,7 +178,7 @@ const useStore = create<RFStore>()(
                 source: params.source,
                 target: params.target,
               });
-              return;
+              return false;
             }
             // check source status
             if (sourceNode.data.status !== 'success') {
@@ -171,7 +186,7 @@ const useStore = create<RFStore>()(
                 'Store.OnConnect: Source node is not ready. Source status:',
                 sourceNode.data.status,
               );
-              return;
+              return false;
             }
             // check connection pairs and connect if valid
             if (
@@ -181,20 +196,19 @@ const useStore = create<RFStore>()(
                   targetNode?.type === targetType,
               )
             ) {
-              set({
-                edges: addEdge(params, get().edges),
-              });
-              return;
+              return true;
             } else {
               console.log(
                 'Store.OnConnect: Invalid connection pair',
                 sourceNode?.type,
                 targetNode?.type,
               );
+              return false;
             }
-            // if somehow we get here, we didn't make the connection
-            console.log('Store.OnConnect: Connection not made. unknown error.');
           },
+          // onConnect: (params: Edge | Connection) => {
+          //   return;
+          // },
           checkConnectedSource: (targetId: string) => {
             const edge = get().edges.find((edge) => edge.target === targetId);
             if (!edge) {
@@ -248,8 +262,7 @@ const useStore = create<RFStore>()(
 // export default useStore;
 export const useStoreNodes = () =>
   useStore((state) => ({ nodes: state.nodes }), shallow);
-export const useStoreEdges = () =>
-  useStore((state) => ({ edges: state.edges }), shallow);
+
 export const useStoreWorkspacePath = () =>
   useStore((state) => ({ workspacePath: state.workspacePath }), shallow);
 export const useStoreEnableQuery = () =>
@@ -257,12 +270,15 @@ export const useStoreEnableQuery = () =>
 export const useStoreActions = () => useStore((state) => state.actions);
 // returns the query state and update the store state data when the query is done
 // should be called in the compnent that renders the data from the query
-export const useInitStoreQuery = () => {
+export const useInitStoreQuery = ({
+  workspacePath,
+}: {
+  workspacePath: string;
+}) => {
   const { enableQuery } = useStoreEnableQuery();
-  const { workspacePath } = useStoreWorkspacePath();
-  const { setEnableQuery, initNodes } = useStoreActions();
-  const { isLoading, isError } = api.workspace.getWorkspaceNodes.useQuery(
-    { workspacePath: workspacePath as string },
+  const { setEnableQuery, initNodes, initEdges } = useStoreActions();
+  const nodesQuery = api.workspace.getWorkspaceNodes.useQuery(
+    { workspacePath: workspacePath },
     {
       enabled: enableQuery && !!workspacePath,
       onSuccess: (data) => {
@@ -280,14 +296,31 @@ export const useInitStoreQuery = () => {
           } as Node<NodeData>;
         });
         initNodes(Nodes);
-        setEnableQuery(false);
+      },
+    },
+  );
+  const edgesQuery = api.workspace.getWorkspaceEdges.useQuery(
+    { workspacePath: workspacePath },
+    {
+      enabled: enableQuery && !!workspacePath,
+      onSuccess: (data) => {
+        console.log('Store: onSuccess: query edge data', data);
+        const Edges: Edge[] = data.map((edge) => {
+          return {
+            id: edge.id, // testing using the same id for tb and store
+            source: edge.source,
+            target: edge.target,
+          };
+        });
+        initEdges(Edges);
       },
     },
   );
 
   return {
-    isLoading,
-    isError,
+    enableQuery,
+    nodesQuery,
+    edgesQuery,
   };
 };
 
@@ -314,5 +347,68 @@ export const useWorkspaceSession = () => {
     workspacePath,
     setWorkspacePath,
     resetStore,
+  };
+};
+
+export const useStoreEdges = () => {
+  // store actions
+  const { edges } = useStore((state) => ({ edges: state.edges }), shallow);
+  const { addEdge, isValidConnection } = useStoreActions();
+  const { workspacePath } = useStoreWorkspacePath();
+  // db interactions
+  const createEdge = api.workspace.createEdge.useMutation({
+    onSuccess: (data) => {
+      console.log('useStoreEdges: create edge success', data);
+      // if success, update the store
+      const NewEdge: Edge = {
+        id: data.id, // testing using the same id for tb and store
+        source: data.source,
+        target: data.target,
+      };
+      addEdge(NewEdge);
+    },
+    onError: (e) => {
+      console.log('useStoreEdges: create edge error', e);
+    },
+  });
+  const deleteEdge = api.workspace.deleteEdge.useMutation({
+    onSuccess: (data) => {
+      console.log('useStoreEdges: delete edge success', data);
+    },
+    onError: (e) => {
+      console.log('useStoreEdges: delete edge error', e);
+    },
+  });
+
+  // flow callbacks
+  const onEdgesDelete: OnEdgesDelete = (edges: Edge[]) => {
+    edges.map((edge) => {
+      console.log('useStoreEdges: edge delete', edge);
+      deleteEdge.mutate({
+        registryId: edge.id,
+      });
+    });
+  };
+
+  const onEdgesConnect: OnConnect = (params: Connection) => {
+    if (!workspacePath || !params.source || !params.target) return;
+    console.log('useStoreEdges: edge connect', params);
+    if (isValidConnection(params)) {
+      console.log('useStoreEdges: edge connect: valid connection');
+      createEdge.mutate({
+        workspacePath: workspacePath,
+        componentId: nanoid(), // testing using the same id for tb and storeand creating it here
+        sourceId: params.source,
+        targetId: params.target,
+      });
+    } else {
+      console.log('useStoreEdges: edge connect: invalid connection');
+    }
+  };
+
+  return {
+    edges,
+    onEdgesDelete,
+    onEdgesConnect,
   };
 };

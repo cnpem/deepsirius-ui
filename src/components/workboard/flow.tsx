@@ -7,7 +7,6 @@ import ReactFlow, {
   type NodeDragHandler,
   type OnNodesDelete,
   Panel,
-  type XYPosition,
 } from 'reactflow';
 import { type Node } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -34,18 +33,11 @@ import WorkspaceSelectDialog from './workspace-select-dialog';
  *
  * @returns
  */
-function Gepetto() {
-  const { edges } = useStoreEdges();
+function Gepetto({ workspacePath }: { workspacePath: string }) {
   const { nodes } = useStoreNodes();
-  const { workspacePath } = useStoreWorkspacePath();
-  const { isLoading, isError } = useInitStoreQuery();
-  // const { enableQuery } = useStoreEnableQuery();
-  const { onNodesChange, onEdgesChange, onConnect } = useStoreActions();
-
-  // component should break if workspacePath is undefined
-  if (!workspacePath) {
-    return <></>; //<div>Workspace path is undefined</div>;
-  }
+  const { enableQuery } = useInitStoreQuery({ workspacePath });
+  const { onNodesChange, onEdgesChange, setEnableQuery } = useStoreActions();
+  const { edges, onEdgesConnect, onEdgesDelete } = useStoreEdges();
 
   const updateNodePos = api.workspace.updateNodePos.useMutation({
     onSuccess: (data) => {
@@ -64,24 +56,6 @@ function Gepetto() {
     },
   });
 
-  // this inmplies in rewriting the store here
-  // const createEdge = api.workspace.createEdge.useMutation({
-  //   onSuccess: (data) => {
-  //     console.log('Geppetto: create edge success', data);
-  //   },
-  //   onError: (e) => {
-  //     console.log('Geppetto: create edge error', e);
-  //   },
-  // });
-  // const deleteEdge = api.workspace.deleteEdge.useMutation({
-  //   onSuccess: (data) => {
-  //     console.log('Geppetto: delete edge success', data);
-  //   },
-  //   onError: (e) => {
-  //     console.log('Geppetto: delete edge error', e);
-  //   },
-  // });
-
   const variant = BackgroundVariant.Dots;
 
   const nodeColor = (node: Node<NodeData>) => {
@@ -99,12 +73,12 @@ function Gepetto() {
     }
   };
 
-  // const onInit = () => {
-  //   console.log('Geppetto: onInit');
-  //   if (enableQuery) {
-  //     void workspaceNodesQuery.refetch();
-  //   }
-  // };
+  const onInit = () => {
+    console.log('Geppetto: onInit');
+    if (enableQuery) {
+      setEnableQuery(false);
+    }
+  };
 
   const onNodeDragStop: NodeDragHandler = (event, node: Node<NodeData>) => {
     console.log('Geppetto: node drag stop', event, node);
@@ -129,15 +103,6 @@ function Gepetto() {
     });
   };
 
-  // const onEdgesDelete: OnEdgesDelete = (edges: Edge[]) => {
-  //   edges.map((edge) => {
-  //     console.log('Geppetto: edge delete', edge);
-  //     deleteEdge.mutate({
-  //       registryId: edge.id,
-  //     });
-  //   });
-  // };
-
   //TODO: would be nice to change the height for full screen mode to h-[930px]
   return (
     <div className="p-2 h-[799px]">
@@ -146,13 +111,13 @@ function Gepetto() {
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange} // not really being used
-        onConnect={onConnect}
+        onConnect={onEdgesConnect}
         onNodeDragStop={onNodeDragStop}
         onNodesDelete={onNodesDelete}
-        // onEdgesDelete={onEdgesDelete}
+        onEdgesDelete={onEdgesDelete}
         connectionLineComponent={CustomConnectionLine}
         nodeTypes={nodeTypes}
-        // onInit={onInit}
+        onInit={onInit}
         fitView
       >
         <Panel position="top-left" className="flex flex-col gap-2">
@@ -203,7 +168,7 @@ export default function Flow() {
   return (
     <>
       <WorkspaceSelectDialog open={!workspacePath} />
-      {!!workspacePath && <Gepetto />}
+      {!!workspacePath && <Gepetto workspacePath={workspacePath} />}
     </>
   );
 }

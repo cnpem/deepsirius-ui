@@ -191,42 +191,6 @@ export const workspaceRouter = createTRPCRouter({
         });
       return true;
     }),
-
-  // // Update all nodes positions (cant do that in bulk because of the way the nodes are stored in the database?)
-  // updateAllNodesPos: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       nodes: z.array(
-  //         z.object({
-  //           registryId: z.string(),
-  //           position: z.object({
-  //             x: z.number(),
-  //             y: z.number(),
-  //           }),
-  //         }),
-  //       ),
-  //     }),
-  //   )
-  //   .mutation(async ({ ctx, input }) => {
-  //     const uid = ctx.session.user.id ?? '';
-  //     if (uid === '') {
-  //       throw new Error('User not found');
-  //     }
-  //     const promises = input.nodes.map((node) =>
-  //       ctx.prisma.nodeRegistry.update({
-  //         where: {
-  //           id: node.registryId,
-  //         },
-  //         data: {
-  //           position: JSON.stringify(node.position),
-  //         },
-  //       }),
-  //     );
-  //     await Promise.all(promises).then(() => {
-  //       return true;
-  //     }).catch((err) => { throw new Error(err as string) });
-  //   }),
-  // Delete a node
   deleteNode: protectedProcedure
     .input(
       z.object({
@@ -314,18 +278,4 @@ export const workspaceRouter = createTRPCRouter({
       });
       return true;
     }),
-  // update the workspace TODO:
-  // updateWorkspaceStore: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       nodeList: z.array(
-  //         z.object({
-  //           registryId: z.string(),
-  //           status: z.string(),
-  //           xState: z.string(),
-  //           position: z.object({
-  //             x: z.number(),
-  //             y: z.number(),
-  //           }),
-  //         }),
 });

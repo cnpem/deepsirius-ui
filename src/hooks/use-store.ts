@@ -459,8 +459,8 @@ export const useStoreNodes = () => {
       data as { registryId: string; status: string; xState: string },
     );
   };
-  const onNodeDragStop: NodeDragHandler = (event, node: Node<NodeData>) => {
-    console.log('useStoreNodes: node drag stop', event, node);
+  const onNodeDragStop: NodeDragHandler = (_, node: Node<NodeData>) => {
+    console.log('useStoreNodes: node drag stop', node);
     // how to differentiate a real movement from an involuntary click to activate or something else?
     updateNodePos.mutate({
       registryId: node.data.registryId,

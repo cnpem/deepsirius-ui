@@ -1,4 +1,4 @@
-import { useActor, useInterpret } from '@xstate/react';
+import { useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
@@ -242,12 +242,19 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
     },
   );
 
-  const [
-    // The current state of the actor
-    state,
-    // A function to send the machine events
-    send,
-  ] = useActor(actor);
+  const selector = (state: StateFrom<typeof thisNodeNachine>) => {
+    return {
+      jobId: state.context.jobId,
+      jobStatus: state.context.jobStatus,
+      datasetName: state.context.datasetName,
+      contextData: state.context.data,
+    };
+  };
+
+  const { jobId, jobStatus, datasetName, contextData } = useSelector(
+    actor,
+    selector,
+  );
 
   return (
     <Card
@@ -259,7 +266,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
     data-[state=inactive]:dark:bg-muted data-[state=success]:dark:bg-cyan-700"
     >
       <CardHeader>
-        <CardTitle>{state.context.datasetName}</CardTitle>
+        <CardTitle>{datasetName}</CardTitle>
         <CardDescription>{status}</CardDescription>
       </CardHeader>
       {status === 'active' && (
@@ -276,7 +283,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
                     },
                   ]}
                   onSubmitHandler={(formSubmitData) => {
-                    send({
+                    actor.send({
                       type: 'start',
                       data: { formData: formSubmitData },
                     });
@@ -306,17 +313,17 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           <CardContent>
             <div className="flex flex-col">
               <p className="mb-2 text-3xl font-extrabold text-center">
-                {state.context.jobId}
+                {jobId}
               </p>
               <p className="text-gray-500 dark:text-gray-400 text-center">
-                {state.context.jobStatus}
+                {jobStatus}
               </p>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button
               onClick={() => {
-                send('cancel');
+                actor.send('cancel');
                 toast({
                   title: 'Canceling job...',
                 });
@@ -330,11 +337,9 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
       {status === 'error' && (
         <CardContent>
           <div className="flex flex-col">
-            <p className="mb-2 text-3xl font-extrabold text-center">
-              {state.context.jobId}
-            </p>
+            <p className="mb-2 text-3xl font-extrabold text-center">{jobId}</p>
             <p className="text-gray-500 dark:text-gray-400 text-center">
-              {state.context.jobStatus}
+              {jobStatus}
             </p>
           </div>
           <Accordion type="single" collapsible>
@@ -342,10 +347,10 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
               <AccordionTrigger>Retry?</AccordionTrigger>
               <AccordionContent>
                 <DatasetForm
-                  name={state.context.datasetName}
-                  data={state.context.data}
+                  name={datasetName}
+                  data={contextData}
                   onSubmitHandler={(data) => {
-                    send({
+                    actor.send({
                       type: 'retry',
                       data: { formData: data },
                     });
@@ -369,21 +374,19 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
       {status === 'success' && (
         <CardContent>
           <div className="flex flex-col">
-            <p className="mb-2 text-3xl font-extrabold text-center">
-              {state.context.jobId}
+            <p className="mb-2 text-3xl font-extrabold text-center">{jobId}</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center">
+              {jobStatus}
             </p>
             <p className="text-gray-500 dark:text-gray-400 text-center">
-              {state.context.jobStatus}
-            </p>
-            <p className="text-gray-500 dark:text-gray-400 text-center">
-              {`Successfully generated ${state.context.datasetName}.h5`}
+              {`Successfully generated ${datasetName}.h5`}
             </p>
           </div>
         </CardContent>
       )}
       {status === 'inactive' && (
         <CardFooter className="flex justify-start">
-          <Button onClick={() => send('activate')}>activate</Button>
+          <Button onClick={() => actor.send('activate')}>activate</Button>
         </CardFooter>
       )}
       <Handle type="source" position={Position.Right} />

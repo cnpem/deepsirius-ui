@@ -143,7 +143,11 @@ export function FsTree({ path, handlePathChange, width, hidden }: FsTreeProps) {
     <div className="sm:max-w-[825px]">
       <div className="grid gap-4 py-4">
         <div className="flex flex-col w-full space-y-2">
-          <Label htmlFor="treepath">Selected Path</Label>
+          {!hideTree ? (
+            <Label htmlFor="treepath">Selected Path</Label>
+          ) : (
+            <Label htmlFor="treepath">Input path</Label>
+          )}
           <div className="flex space-x-1">
             <Button
               variant={hideTree ? 'outline' : 'default'}

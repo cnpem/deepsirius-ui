@@ -1,4 +1,4 @@
-import { useActor, useInterpret } from '@xstate/react';
+import { useActor, useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
@@ -155,7 +155,7 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
   const handleActivation = () => {
     const checkSource = checkConnectedSource(id);
     if (checkSource) {
-      send('activate');
+      actor.send('activate');
     } else {
       // TODO: make this pretty
       alert('Please connect a source node to this node.');
@@ -255,14 +255,15 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
     },
   );
 
-  const [
-    // The current state of the actor
-    state,
-    // A function to send the machine events
-    send,
-  ] = useActor(actor);
+  const selector = (state: StateFrom<typeof thisNodeNachine>) => {
+    return {
+      jobId: state.context.jobId,
+      jobStatus: state.context.jobStatus,
+      inputImages: state.context.inputImages,
+    };
+  };
 
-  console.log('status: ', status);
+  const { jobId, jobStatus, inputImages } = useSelector(actor, selector);
 
   return (
     <Card
@@ -286,7 +287,7 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
               <AccordionContent>
                 <InferenceForm
                   onSubmitHandler={(formSubmitData) => {
-                    send({
+                    actor.send({
                       type: 'start',
                       data: { formData: formSubmitData },
                     });
@@ -316,17 +317,17 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
           <CardContent>
             <div className="flex flex-col">
               <p className="mb-2 text-3xl font-extrabold text-center">
-                {state.context.jobId}
+                {jobId}
               </p>
               <p className="text-gray-500 dark:text-gray-400 text-center">
-                {state.context.jobStatus}
+                {jobStatus}
               </p>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button
               onClick={() => {
-                send('cancel');
+                actor.send('cancel');
                 toast({
                   title: 'Canceling job...',
                 });
@@ -340,11 +341,9 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
       {status === 'error' && (
         <CardContent>
           <div className="flex flex-col">
-            <p className="mb-2 text-3xl font-extrabold text-center">
-              {state.context.jobId}
-            </p>
+            <p className="mb-2 text-3xl font-extrabold text-center">{jobId}</p>
             <p className="text-gray-500 dark:text-gray-400 text-center">
-              {state.context.jobStatus}
+              {jobStatus}
             </p>
           </div>
           <Accordion type="single" collapsible>
@@ -352,9 +351,9 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
               <AccordionTrigger>Retry?</AccordionTrigger>
               <AccordionContent>
                 <InferenceForm
-                  inputImages={state.context.inputImages}
+                  inputImages={inputImages}
                   onSubmitHandler={(data) => {
-                    send({
+                    actor.send({
                       type: 'retry',
                       data: { formData: data },
                     });
@@ -378,18 +377,16 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
       {status === 'success' && (
         <CardContent>
           <div className="flex flex-col">
-            <p className="mb-2 text-3xl font-extrabold text-center">
-              {state.context.jobId}
-            </p>
+            <p className="mb-2 text-3xl font-extrabold text-center">{jobId}</p>
             <p className="text-gray-500 dark:text-gray-400 text-center">
-              {state.context.jobStatus}
+              {jobStatus}
             </p>
             <div>
               <Accordion type="single" collapsible>
                 <AccordionItem value="item-1">
                   <AccordionTrigger>Inferred images</AccordionTrigger>
                   <AccordionContent>
-                    {state.context.inputImages.map((image, idx) => (
+                    {inputImages.map((image, idx) => (
                       <div
                         key={idx}
                         className="rounded-md border border-sky-800 hover:bg-blue-200 dark:hover:bg-cyan-800 px-4 py-3 font-mono text-sm"

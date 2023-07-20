@@ -47,9 +47,19 @@ export const workspaceRouter = createTRPCRouter({
           });
       }
       // registering the workspace
-      const newWorkspace: Workspace = await ctx.prisma.workspace.create({
-        data: {
+      const newWorkspace: Workspace = await ctx.prisma.workspace.upsert({
+        where: {
           path: input.path,
+        },
+        create: {
+          path: input.path,
+          users: {
+            connect: {
+              id: uid,
+            },
+          },
+        },
+        update: {
           users: {
             connect: {
               id: uid,

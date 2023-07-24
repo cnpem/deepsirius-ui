@@ -80,24 +80,16 @@ export function AvatarDrop() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                Profile
-                <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                Billing
-                <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                Settings
-                <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-              </DropdownMenuItem>
-              <DropdownMenuItem>New Team</DropdownMenuItem>
               {!!workspacePath && (
                 <DropdownMenuItem onClick={() => leaveWorkspace()}>
                   <>
                     <Icons.folderx className="mr-2 h-4 w-4" />
-                    <span>Leave &lsquo;{workspacePath}&rsquo;</span>
+                    <span>
+                      Leave{' '}
+                      <span className="text-purple-500 dark:text-purple-400 font-semibold">
+                        workspace
+                      </span>
+                    </span>
                   </>
                 </DropdownMenuItem>
               )}

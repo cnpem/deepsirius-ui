@@ -23,6 +23,7 @@ type FsTreeProps = {
   path: string;
   handlePathChange: (path: string) => void;
   width: number;
+  height?: number;
   hidden?: boolean;
 };
 
@@ -88,7 +89,13 @@ export function FsTreeDialog({
   );
 }
 
-export function FsTree({ path, handlePathChange, width, hidden }: FsTreeProps) {
+export function FsTree({
+  path,
+  handlePathChange,
+  width,
+  height,
+  hidden,
+}: FsTreeProps) {
   const treePath = env.NEXT_PUBLIC_TREE_PATH;
   const { tree, mutate, isLoading } = useTree(treePath);
   const [hideTree, setHideTree] = useState(hidden);
@@ -175,6 +182,7 @@ export function FsTree({ path, handlePathChange, width, hidden }: FsTreeProps) {
               openByDefault={false}
               disableDrag={true}
               width={width}
+              height={height}
               className="flex h-full w-full"
               rowClassName="flex w-full h-full"
               onActivate={(node) => handleActivate(node)}

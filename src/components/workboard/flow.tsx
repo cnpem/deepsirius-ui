@@ -31,7 +31,7 @@ import WorkspaceSelectDialog from './workspace-select-dialog';
  * @returns
  */
 function Geppetto({ workspacePath }: { workspacePath: string }) {
-  const initQueryStatus = useInitStoreQuery({ workspacePath });
+  useInitStoreQuery({ workspacePath });
   const { onNodesChange, onEdgesChange, onInit } = useStoreActions();
   const { nodes, onNodeDragStop, onNodesDelete } = useStoreNodes();
   const { edges, onEdgesConnect, onEdgesDelete } = useStoreEdges();
@@ -73,6 +73,14 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         <Panel position="top-left" className="flex flex-col gap-2">
           <PlusOneNode />
         </Panel>
+        <Panel position="bottom-center" className="flex flex-col gap-2">
+          <span className="text-xs font-semibold border rounded-sm p-2 bg-muted text-slate-500 dark:text-slate-400 ">
+            <span className="text-purple-500 dark:text-purple-400">
+              Workspace:
+            </span>{' '}
+            {workspacePath}
+          </span>
+        </Panel>
         {nodes.length === 0 && (
           <Panel position="top-center" className="flex flex-col gap-2">
             <AlertDemo />
@@ -100,7 +108,10 @@ function AlertDemo() {
       <ArrowBigLeft className="h-6 w-6 animate-bounce-x" />
       <AlertTitle>Heads up!</AlertTitle>
       <AlertDescription>
-        You can add <span className="text-purple-500 font-semibold">nodes</span>{' '}
+        You can add{' '}
+        <span className="text-purple-500 dark:text-purple-400 font-semibold">
+          nodes
+        </span>{' '}
         to your workspace by clicking on the{' '}
         <PlusCircle className="inline h-5 w-5" /> button on the top left corner.
       </AlertDescription>

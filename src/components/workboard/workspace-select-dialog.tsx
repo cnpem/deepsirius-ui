@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router';
+import { useState } from 'react';
 import { Button } from '~/components/ui/button';
 import {
   Dialog,
@@ -8,8 +9,12 @@ import {
   DialogTitle,
 } from '~/components/ui/dialog';
 import { toast } from '~/components/ui/use-toast';
+import { env } from '~/env.mjs';
 import { useStoreActions, useWorkspaceSession } from '~/hooks/use-store';
 import { api } from '~/utils/api';
+
+import { FsTree } from '../fs-treeview';
+import { ScrollArea } from '../ui/scroll-area';
 
 /**
  *
@@ -37,15 +42,31 @@ function ChooseUserWorkspaces() {
   if (data) {
     return (
       <>
-        {data.map((workspace) => (
-          <Button
-            key={workspace.path}
-            variant="outline"
-            onClick={() => void handleSelectWorkspace(workspace.path)}
-          >
-            {workspace.path}
-          </Button>
-        ))}
+        {data.length > 0 && (
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+        )}
+        <ScrollArea className="h-[200px] w-[780px] p-4">
+          <div className="flex flex-col gap-1">
+            {data.map((workspace) => (
+              <Button
+                key={workspace.path}
+                variant="outline"
+                onClick={() => void handleSelectWorkspace(workspace.path)}
+              >
+                {workspace.path}
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
       </>
     );
   }
@@ -54,11 +75,10 @@ function ChooseUserWorkspaces() {
 
 /**
  *
- * @returns a form component for creating a new workspace session
+ * @param open : boolean to control the dialog trigger from outside this component
+ * @returns the WorkspaceSelectDialog component for selecting or creating a workspace session
  */
-function CreateNewWorkspace() {
-  const store = useStoreActions();
-  // db interactions via tRPC
+export default function WorkspaceSelectDialog({ open }: { open: boolean }) {
   const { mutate } = api.workspace.createWorkspace.useMutation({
     onSuccess: (data) => {
       console.log('updateWorkspace.onSuccess', data);
@@ -82,53 +102,68 @@ function CreateNewWorkspace() {
     },
   });
 
-  const handleNewWorkspace = () => {
-    const newWorkspacePath = '/home/test';
-    mutate({ path: newWorkspacePath });
+  const store = useStoreActions();
+  const handleNewWorkspace = (path: string) => {
+    mutate({ path: path });
   };
 
   return (
-    <>
-      <Button
-        key={'newinstance'}
-        variant="outline"
-        onClick={() => handleNewWorkspace()}
-      >
-        New
-      </Button>
-    </>
+    <FsTreeDialog
+      open={open}
+      handleSelect={(path) => handleNewWorkspace(path)}
+      message={{
+        title: 'Select workspace path',
+        description: 'Select an existing workspace or create a new one.',
+      }}
+    >
+      <ChooseUserWorkspaces />
+    </FsTreeDialog>
   );
 }
 
-/**
- *
- * @param open : boolean to control the dialog trigger from outside this component
- * @returns the WorkspaceSelectDialog component for selecting or creating a workspace session
- */
-export default function WorkspaceSelectDialog({ open }: { open: boolean }) {
+function FsTreeDialog({
+  open,
+  children,
+  handleSelect,
+  message,
+}: {
+  open: boolean;
+  children: React.ReactNode;
+  handleSelect: (path: string) => void;
+  message: { title: string; description: string };
+}) {
   const router = useRouter();
+  const treePath = env.NEXT_PUBLIC_TREE_PATH;
+  const [path, setPath] = useState(treePath);
 
-  const handleDialogClose = async (open: boolean) => {
-    // redirect to / if user closes dialog
-    if (open === false) {
+  const handleOpenChange = async (open: boolean) => {
+    if (!open) {
       console.log('closing dialog and redirecting to /');
       await router.push('/');
     }
   };
+  const onSelect = (path: string) => {
+    handleSelect(path);
+    setPath(treePath);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={(e) => void handleDialogClose(e)}>
-      <DialogContent className="sm:w-full">
+    <Dialog open={open} onOpenChange={(e) => void handleOpenChange(e)}>
+      <DialogContent className="sm:max-w-[825px]">
         <DialogHeader>
-          <DialogTitle>Select workspace path</DialogTitle>
-          <DialogDescription>
-            {'Select an existing workspace or create a new one.'}
-          </DialogDescription>
+          <DialogTitle>{message.title}</DialogTitle>
+          <DialogDescription>{message.description}</DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-2">
-          <ChooseUserWorkspaces />
-          <CreateNewWorkspace />
-        </div>
+        <FsTree
+          path={path}
+          handlePathChange={setPath}
+          width={780}
+          height={250}
+        />
+        <Button className="w-full" onClick={() => onSelect(path)}>
+          New
+        </Button>
+        {children}
       </DialogContent>
     </Dialog>
   );

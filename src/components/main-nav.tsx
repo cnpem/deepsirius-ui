@@ -41,7 +41,7 @@ export function MainNav({ items }: MainNavProps) {
                   href={item.href}
                   className={cn(
                     pathname === item.href
-                      ? 'text-purple-500'
+                      ? 'text-purple-500 dark:text-purple-400'
                       : 'text-slate-500 dark:text-slate-400',
                     'flex items-center text-lg font-semibold hover:text-slate-900 dark:hover:text-slate-100 sm:text-sm',
                     item.disabled && 'cursor-not-allowed opacity-80',

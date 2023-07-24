@@ -1,4 +1,4 @@
-import { useActor, useInterpret } from '@xstate/react';
+import { useActor, useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
@@ -220,7 +220,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
   const handleActivation = () => {
     const checkSource = checkConnectedSource(id);
     if (checkSource) {
-      send('activate');
+      actor.send('activate');
     } else {
       // TODO: make this pretty
       alert('Please connect a source node to this node.');
@@ -287,7 +287,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
         },
       },
       services: {
-        submitJob: (_, event) => {
+        submitJob: (state, event) => {
           return new Promise((resolve, reject) => {
             const formData =
               event.type !== 'cancel' && event.type !== 'activate'
@@ -304,13 +304,6 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
                 JSON.stringify({ ...formData, ...data }) +
                 '" \n sleep 5 \n echo "job completed."',
             };
-            if (state.matches('tuning') || event.type === 'finetune') {
-              console.log('tuning');
-            }
-            if (state.matches('training') || event.type === 'start training') {
-              console.log('training');
-            }
-
             createJob
               .mutateAsync(jobInput)
               .then((data) => {
@@ -336,12 +329,6 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
     (state) => {
       // subscribes to state changes and check if there is a status change to update the node data
       if (defineStatus(state) !== status) {
-        console.log(
-          'State Machine: status changed: ',
-          status,
-          ' => ',
-          defineStatus(state),
-        );
         setStatus(defineStatus(state));
         onUpdateNodeData({
           id: id, // this is the component id from the react-flow
@@ -355,12 +342,27 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
     },
   );
 
-  const [
-    // The current state of the actor
-    state,
-    // A function to send the machine events
-    send,
-  ] = useActor(actor);
+  const selector = (state: StateFrom<typeof thisNodeNachine>) => {
+    return {
+      stateValue: state.value,
+      isTrainingError: state.matches({ training: 'error' }),
+      isTuningError: state.matches({ tuning: 'error' }),
+      jobId: state.context.jobId,
+      jobStatus: state.context.jobStatus,
+      networkLabel: state.context.networkLabel,
+      networkType: state.context.networkType,
+    };
+  };
+
+  const {
+    stateValue,
+    isTrainingError,
+    isTuningError,
+    jobId,
+    jobStatus,
+    networkLabel,
+    networkType,
+  } = useSelector(actor, selector);
 
   return (
     <>
@@ -368,7 +370,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
         <Card className="w-[380px] bg-gray-100 dark:bg-muted">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
-            <CardTitle>{state.context.networkLabel}</CardTitle>
+            <CardTitle>{networkLabel}</CardTitle>
             <CardDescription>{status}</CardDescription>
           </CardHeader>
           <CardFooter className="flex justify-start">
@@ -381,7 +383,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
         <Card className="w-[380px] bg-green-100 dark:bg-teal-800">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
-            <CardTitle>{state.context.networkLabel}</CardTitle>
+            <CardTitle>{networkLabel}</CardTitle>
             <CardDescription>{status}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -391,7 +393,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
                 <AccordionContent>
                   <NetworkForm
                     onSubmitHandler={(formSubmitData) => {
-                      send({
+                      actor.send({
                         type: 'start training',
                         data: { formData: formSubmitData },
                       });
@@ -422,9 +424,9 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
         <Card className="w-[380px] bg-yellow-100 dark:bg-amber-700">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
-            <CardTitle>{state.context.networkLabel}</CardTitle>
+            <CardTitle>{networkLabel}</CardTitle>
             <CardDescription>
-              {Object.entries(state.value)
+              {Object.entries(stateValue)
                 .map(([key, value]) => `${key}: ${value as string}`)
                 .join('<br/>')}
             </CardDescription>
@@ -432,17 +434,17 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <CardContent>
             <div className="flex flex-col">
               <p className="mb-2 text-3xl font-extrabold text-center">
-                {state.context.jobId}
+                {jobId}
               </p>
               <p className="text-gray-500 dark:text-gray-400 text-center">
-                {state.context.jobStatus}
+                {jobStatus}
               </p>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button
               onClick={() => {
-                send('cancel');
+                actor.send('cancel');
                 toast({
                   title: 'Canceling job...',
                 });
@@ -458,9 +460,9 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
         <Card className="w-[380px] bg-red-100 dark:bg-rose-700">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
-            <CardTitle>{state.context.networkLabel}</CardTitle>
+            <CardTitle>{networkLabel}</CardTitle>
             <CardDescription>
-              {Object.entries(state.value)
+              {Object.entries(stateValue)
                 .map(([key, value]) => `${key}: ${value as string}`)
                 .join('<br/>')}
             </CardDescription>
@@ -468,20 +470,20 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <CardContent>
             <div className="flex flex-col">
               <p className="mb-2 text-3xl font-extrabold text-center">
-                {state.context.jobId}
+                {jobId}
               </p>
               <p className="text-gray-500 dark:text-gray-400 text-center">
-                {state.context.jobStatus}
+                {jobStatus}
               </p>
             </div>
             <Accordion type="single" collapsible>
               <AccordionItem value="item-1">
                 <AccordionTrigger>Retry?</AccordionTrigger>
                 <AccordionContent>
-                  {state.matches('training.error') && (
+                  {isTrainingError && (
                     <NetworkForm
                       onSubmitHandler={(data) => {
-                        send({
+                        actor.send({
                           type: 'retry',
                           data: { formData: data },
                         });
@@ -498,12 +500,12 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
                       }}
                     />
                   )}
-                  {state.matches('tuning.error') && (
+                  {isTuningError && (
                     <PrefilledForm
-                      networkTypeName={state.context.networkType}
-                      networkUserLabel={state.context.networkLabel}
+                      networkTypeName={networkType}
+                      networkUserLabel={networkLabel}
                       onSubmitHandler={(data) => {
-                        send({
+                        actor.send({
                           type: 'retry',
                           data: { formData: data },
                         });
@@ -531,16 +533,16 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
         <Card className="w-[380px] bg-blue-100 dark:bg-cyan-700">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
-            <CardTitle>{state.context.networkLabel}</CardTitle>
+            <CardTitle>{networkLabel}</CardTitle>
             <CardDescription>{status}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col">
               <p className="mb-2 text-3xl font-extrabold text-center">
-                {state.context.jobId}
+                {jobId}
               </p>
               <p className="text-gray-500 dark:text-gray-400 text-center">
-                {state.context.jobStatus}
+                {jobStatus}
               </p>
             </div>
             <Accordion type="single" collapsible>
@@ -548,10 +550,10 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
                 <AccordionTrigger>Finetune?</AccordionTrigger>
                 <AccordionContent>
                   <PrefilledForm
-                    networkTypeName={state.context.networkType}
-                    networkUserLabel={state.context.networkLabel}
+                    networkTypeName={networkType}
+                    networkUserLabel={networkLabel}
                     onSubmitHandler={(data) => {
-                      send({
+                      actor.send({
                         type: 'finetune',
                         data: { formData: data },
                       });

@@ -1,4 +1,4 @@
-import { useActor, useInterpret, useSelector } from '@xstate/react';
+import { useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';

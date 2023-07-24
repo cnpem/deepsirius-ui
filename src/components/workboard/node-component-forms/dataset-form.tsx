@@ -166,9 +166,21 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                         handleSelect={(path) => onSelectImage(path, index)}
                       >
                         <HoverCardTrigger asChild>
-                          <Button className="w-full">
-                            <Image className="mr-2 h-4 w-4" /> {`# ${index}`}
-                          </Button>
+                          {field.value.split('/').slice(-1)[0] === 'image' ? (
+                            <Button className="w-full">
+                              <Image className="mr-2 h-4 w-4" /> {`# ${index}`}
+                            </Button>
+                          ) : (
+                            <Button className="relative w-full">
+                              <div className="absolute top-0 right-0 translate-x-1 -translate-y-1">
+                                <span className="relative flex h-3 w-3">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                                  <span className=" relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+                                </span>
+                              </div>
+                              <Image className="mr-2 h-4 w-4" /> {`# ${index}`}
+                            </Button>
+                          )}
                         </HoverCardTrigger>
                       </FsTreeDialog>
                       <HoverCardContent className="w-80">
@@ -206,9 +218,21 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                         }}
                       >
                         <HoverCardTrigger asChild>
-                          <Button className="w-full">
-                            <Tag className="mr-2 h-4 w-4" /> {`# ${index}`}
-                          </Button>
+                          {field.value.split('/').slice(-1)[0] === 'label' ? (
+                            <Button className="w-full">
+                              <Tag className="mr-2 h-4 w-4" /> {`# ${index}`}
+                            </Button>
+                          ) : (
+                            <Button className="relative w-full">
+                              <div className="absolute top-0 right-0 translate-x-1 -translate-y-1">
+                                <span className="relative flex h-3 w-3">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                                  <span className=" relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+                                </span>
+                              </div>
+                              <Tag className="mr-2 h-4 w-4" /> {`# ${index}`}
+                            </Button>
+                          )}
                         </HoverCardTrigger>
                       </FsTreeDialog>
                       <HoverCardContent className="w-80">

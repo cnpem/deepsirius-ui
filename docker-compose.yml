@@ -1,5 +1,27 @@
 version: '3.8'
 services:
+  app:
+    platform: 'linux/amd64'
+    network_mode: 'host'
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_TREE_PATH: '${NEXT_PUBLIC_TREE_PATH}'
+    working_dir: /app
+    volumes:
+      - /mnt/work/ibira:/mnt
+    ports:
+      - '3000:3000'
+    image: deepsirius-ui
+    environment:
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - LDAP_URI=${LDAP_URI}
+      - SSH_HOST=${SSH_HOST}
+      - CA_CERT=${CA_CERT}
+      - DATABASE_URL=${DATABASE_URL}
+
   postgres:
     image: postgres:10.3
     restart: always
@@ -10,5 +32,6 @@ services:
       - postgres:/var/lib/postgresql/data
     ports:
       - '5432:5432'
+
 volumes:
   postgres:

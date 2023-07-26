@@ -49,3 +49,15 @@ Can also close issues!
 ```shell
 git commit -m "Closes / Resolves / Fixes ISSUE-ID"
 ```
+
+### Usage with docker
+
+You should create a `.env-docker` file with different variables that should be passed to the docker compose cli as an option, so that the compose cli doesn't use the default .env file in the build.
+
+Threre is a `.env-docker.example` file that you can use as a template, with public variables already suggested for a docker deployment i.e. `NEXT_PUBLIC_TREE_PATH` set to "/mnt", given its the suggested path for the docker volume mount for the fs mount for the tree view.
+
+The docker-compose.yml file is then responsible to separate the env variables available to the client and to the server.
+
+```shell
+   docker compose --env-file .env-docker up
+```

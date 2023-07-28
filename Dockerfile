@@ -8,8 +8,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install Prisma Client - remove if not using Prisma
-
 COPY prisma ./
+
 
 # Install dependencies based on the preferred package manager
 COPY --link package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
@@ -24,13 +24,13 @@ RUN \
 # Rebuild the source code only when needed
 FROM base AS builder
 # These are the environment variables lodaded in the docker compose file
-ARG NEXTAUTH_URL
-ARG NEXTAUTH_SECRET
-ARG LDAP_URI
-ARG SSH_HOST
-ARG CA_CERT
+# ARG NEXTAUTH_URL
+# ARG NEXTAUTH_SECRET
+# ARG LDAP_URI
+# ARG SSH_HOST
+# ARG CA_CERT
 ARG NEXT_PUBLIC_TREE_PATH
-ARG DATABASE_URL
+# ARG DATABASE_URL
 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -41,10 +41,9 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# RUN yarn build
+# this should fix the fail when starting with a new database
+RUN npx prisma generate && npx prisma migrate dev --name init
 
-# If using npm comment out above and use below instead
-# RUN npm run build
 RUN \
   if [ -f yarn.lock ]; then SKIP_ENV_VALIDATION=1 yarn build; \
   elif [ -f package-lock.json ]; then SKIP_ENV_VALIDATION=1 npm run build; \
@@ -54,13 +53,22 @@ RUN \
 
 # Production image, copy all the files and run next
 FROM base AS runner
-WORKDIR /app
+
+ARG CA_CERT
+ARG CA_CERT_HOST
 
 ENV NODE_ENV production
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+# Install openssh-keygen for writing the ssh host key in remotejob
+RUN apk update && apk add --no-cache openssh-keygen
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+WORKDIR /app
+
+COPY --chown=nextjs:nodejs $CA_CERT_HOST $CA_CERT
 
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/public ./public

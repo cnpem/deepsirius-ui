@@ -11,8 +11,7 @@ import path from 'path';
  */
 export async function generateSshKeyIfNeeded(path: string): Promise<void> {
   if (!existsSync(path)) {
-    console.log('generating ssh key');
-    const command = `ssh-keygen -t rsa -b 4096 -f ${path}`;
+    const command = `ssh-keygen -t rsa -b 4096 -N "" -C "" -f ${path}`;
     await executeCommand(command);
   }
 }

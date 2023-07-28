@@ -42,5 +42,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
-#ca cert
+# old ca cert location when building locally (it was getting copyed in the build to the wrong location)
 src/server/certs
+# new ca cert location when building locally so we can make git ignore it but not the docker
+*.cer

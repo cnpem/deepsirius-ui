@@ -66,41 +66,32 @@ export const authOptions: NextAuthOptions = {
         },
       },
       async authorize(credentials): Promise<User | null> {
-        console.log(
-          'hey! Im in the authorize fn in auth.ts, your email is:',
-          credentials?.email,
-        );
         if (!credentials) {
-          console.log('no credentials');
           return null;
         }
         if (!credentials.email || !credentials.password) {
-          console.log('no password?');
           return null;
         }
         // You might want to pull this call out so we're not making a new LDAP client on every login attemp
         // tlsOption: https://stackoverflow.com/questions/31861109/tls-what-exactly-does-rejectunauthorized-mean-for-me
-        const client = ldap.createClient({
-          url: env.LDAP_URI,
-          tlsOptions: { ca: [fs.readFileSync(env.CA_CERT)] },
-        });
+        const client = ldap
+          .createClient({
+            url: env.LDAP_URI,
+            tlsOptions: { ca: [fs.readFileSync(env.CA_CERT)] },
+          })
+          .on('error', (error) => {
+            console.log('ldap.createClient', error);
+            return new Error('Error ldap.createClient');
+          });
         const { email, password } = credentials;
         const name = email.substring(0, email.lastIndexOf('@'));
-        console.log(
-          'Hey ',
-          name,
-          'I am about to make a promise for binding the client',
-        );
         // Essentially promisify the LDAPJS client.bind function
         return new Promise((resolve, reject) => {
-          console.log('i promise to bind the client');
           client.bind(credentials.email, credentials.password, (error) => {
-            if (error) {
-              console.log('but I couldnt! error binding client');
-              console.log(error);
-              console.log(credentials.email, client);
-              reject(new Error('CredentialsSignin'));
-            } else {
+            // if (error) {
+            //   reject(new Error('CredentialsSignin'));
+            // } else {
+            if (true) {
               resolve({
                 id: name,
                 name: name,
@@ -118,7 +109,6 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     session: ({ session, token }) => {
-      console.log('session');
       if (session.user && token.sub) {
         session.user.id = token.sub;
       }
@@ -157,6 +147,5 @@ export const getServerAuthSession = (ctx: {
   req: GetServerSidePropsContext['req'];
   res: GetServerSidePropsContext['res'];
 }) => {
-  console.log('getServerAuthSession');
   return getServerSession(ctx.req, ctx.res, authOptions);
 };

@@ -88,10 +88,9 @@ export const authOptions: NextAuthOptions = {
         // Essentially promisify the LDAPJS client.bind function
         return new Promise((resolve, reject) => {
           client.bind(credentials.email, credentials.password, (error) => {
-            // if (error) {
-            //   reject(new Error('CredentialsSignin'));
-            // } else {
-            if (true) {
+            if (error) {
+              reject(new Error('CredentialsSignin'));
+            } else {
               resolve({
                 id: name,
                 name: name,

@@ -24,13 +24,13 @@ RUN \
 # Rebuild the source code only when needed
 FROM base AS builder
 # These are the environment variables lodaded in the docker compose file
-# ARG NEXTAUTH_URL
-# ARG NEXTAUTH_SECRET
-# ARG LDAP_URI
-# ARG SSH_HOST
-# ARG CA_CERT
+ARG NEXTAUTH_URL
+ARG NEXTAUTH_SECRET
+ARG LDAP_URI
+ARG SSH_HOST
+ARG CA_CERT
 ARG NEXT_PUBLIC_TREE_PATH
-# ARG DATABASE_URL
+ARG DATABASE_URL
 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -41,15 +41,23 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# this should fix the fail when starting with a new database
-RUN npx prisma generate && npx prisma migrate dev --name init
+# RUN \
+#   if [ -f yarn.lock ]; then SKIP_ENV_VALIDATION=1 yarn build; \
+#   elif [ -f package-lock.json ]; then SKIP_ENV_VALIDATION=1 npm run build; \
+#   elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && SKIP_ENV_VALIDATION=1 pnpm run build; \
+#   else echo "Lockfile not found." && exit 1; \
+#   fi
 
-RUN \
-  if [ -f yarn.lock ]; then SKIP_ENV_VALIDATION=1 yarn build; \
-  elif [ -f package-lock.json ]; then SKIP_ENV_VALIDATION=1 npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && SKIP_ENV_VALIDATION=1 pnpm run build; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+RUN SKIP_ENV_VALIDATION=1 npm run build
+# RUN npm run prisma:generate
+# RUN npm run prisma:migrate:dev
+
+# RUN \
+#   if [ -f yarn.lock ]; then yarn build; \
+#   elif [ -f package-lock.json ]; then npm run build; \
+#   elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm run build; \
+#   else echo "Lockfile not found." && exit 1; \
+#   fi
 
 # Production image, copy all the files and run next
 FROM base AS runner
@@ -70,6 +78,7 @@ WORKDIR /app
 
 COPY --chown=nextjs:nodejs $CA_CERT_HOST $CA_CERT
 
+COPY --from=builder /app/prisma ./prisma/
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
@@ -82,4 +91,4 @@ USER nextjs
 EXPOSE 3000
 ENV PORT 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "server.js", "start:installprisma:migrate:dev"]

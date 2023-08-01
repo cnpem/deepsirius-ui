@@ -7,8 +7,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "prepare": "husky install",
-    "start:migrate:dev": "prisma migrate dev --preview-feature && next start"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.1.0",

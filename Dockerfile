@@ -8,8 +8,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install Prisma Client - remove if not using Prisma
-
 COPY prisma ./
+
 
 # Install dependencies based on the preferred package manager
 COPY --link package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
@@ -42,30 +42,44 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# RUN yarn build
+# RUN \
+#   if [ -f yarn.lock ]; then SKIP_ENV_VALIDATION=1 yarn build; \
+#   elif [ -f package-lock.json ]; then SKIP_ENV_VALIDATION=1 npm run build; \
+#   elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && SKIP_ENV_VALIDATION=1 pnpm run build; \
+#   else echo "Lockfile not found." && exit 1; \
+#   fi
 
-# If using npm comment out above and use below instead
-# RUN npm run build
-RUN \
-  if [ -f yarn.lock ]; then SKIP_ENV_VALIDATION=1 yarn build; \
-  elif [ -f package-lock.json ]; then SKIP_ENV_VALIDATION=1 npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && SKIP_ENV_VALIDATION=1 pnpm run build; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+RUN SKIP_ENV_VALIDATION=1 npm run build
+# RUN npm run prisma:generate
+# RUN npm run prisma:migrate:dev
+
+# RUN \
+#   if [ -f yarn.lock ]; then yarn build; \
+#   elif [ -f package-lock.json ]; then npm run build; \
+#   elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm run build; \
+#   else echo "Lockfile not found." && exit 1; \
+#   fi
 
 # Production image, copy all the files and run next
 FROM base AS runner
-RUN   apk update && \
-      apk add --no-cache \
-      openssh-keygen
-WORKDIR /app
+
+ARG CA_CERT
+ARG CA_CERT_HOST
 
 ENV NODE_ENV production
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+# Install openssh-keygen for writing the ssh host key in remotejob
+RUN apk update && apk add --no-cache openssh-keygen
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+WORKDIR /app
+
+COPY --chown=nextjs:nodejs $CA_CERT_HOST $CA_CERT
+
+COPY --from=builder /app/prisma ./prisma/
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
@@ -80,4 +94,4 @@ USER nextjs
 EXPOSE 3000
 ENV PORT 3000
 
-CMD ["node", "server.js"]
+CMD ["node", "server.js", "start:installprisma:migrate:dev"]

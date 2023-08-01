@@ -3,18 +3,36 @@ services:
   app:
     platform: 'linux/amd64'
     network_mode: 'host'
+    depends_on:
+      db:
+        condition: service_started
     build:
       context: .
       dockerfile: Dockerfile
       args:
+        # build time variables
+        # builder build variables
         NEXT_PUBLIC_TREE_PATH: '${NEXT_PUBLIC_TREE_PATH}'
+        DATABASE_URL: ${DATABASE_URL}
+        CA_CERT: '${CA_CERT}'
+        NEXTAUTH_URL: ${NEXTAUTH_URL}
+        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+        LDAP_URI: ${LDAP_URI}
+        SSH_HOST: ${SSH_HOST}
+        # runner build variables
+        CA_CERT_HOST: '${CA_CERT_HOST}'
+      # secrets:
+      #   - ca-certificate
     working_dir: /app
     volumes:
-      - /home:/mnt
+      - type: bind
+        source: ${DOCKER_HOST_TREE_PATH}
+        target: ${NEXT_PUBLIC_TREE_PATH}
     ports:
       - '3000:3000'
     image: deepsirius-ui
     environment:
+      # run time variables
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - LDAP_URI=${LDAP_URI}
@@ -22,15 +40,18 @@ services:
       - CA_CERT=${CA_CERT}
       - DATABASE_URL=${DATABASE_URL}
       - PRIVATE_KEY_PASSPHRASE=${PRIVATE_KEY_PASSPHRASE}
+      - NEXT_PUBLIC_TREE_PATH=${NEXT_PUBLIC_TREE_PATH}
 
-  postgres:
+  db:
     image: postgres:10.3
     restart: always
     environment:
       - POSTGRES_USER=fofo
       - POSTGRES_PASSWORD=fofinho
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - type: volume
+        source: postgres
+        target: /var/lib/postgresql/data
     ports:
       - '5432:5432'
 

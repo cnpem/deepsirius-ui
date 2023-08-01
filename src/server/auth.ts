@@ -77,10 +77,15 @@ export const authOptions: NextAuthOptions = {
         }
         // You might want to pull this call out so we're not making a new LDAP client on every login attemp
         // tlsOption: https://stackoverflow.com/questions/31861109/tls-what-exactly-does-rejectunauthorized-mean-for-me
-        const client = ldap.createClient({
-          url: env.LDAP_URI,
-          tlsOptions: { ca: [fs.readFileSync(env.CA_CERT)] },
-        });
+        const client = ldap
+          .createClient({
+            url: env.LDAP_URI,
+            tlsOptions: { ca: [fs.readFileSync(env.CA_CERT)] },
+          })
+          .on('error', (error) => {
+            console.log('ldap.createClient', error);
+            return new Error('Error ldap.createClient');
+          });
         const { email, password } = credentials;
         const name = email.substring(0, email.lastIndexOf('@'));
         // Essentially promisify the LDAPJS client.bind function
@@ -161,6 +166,5 @@ export const getServerAuthSession = (ctx: {
   req: GetServerSidePropsContext['req'];
   res: GetServerSidePropsContext['res'];
 }) => {
-  console.log('getServerAuthSession');
   return getServerSession(ctx.req, ctx.res, authOptions);
 };

@@ -33,7 +33,7 @@ import { prisma } from '~/server/db';
 
 type CreateContextOptions = {
   session: Session | null;
-  sshKeyPath: string | undefined;
+  privateKey: string | undefined;
 };
 
 /**
@@ -49,7 +49,7 @@ type CreateContextOptions = {
 const createInnerTRPCContext = (opts: CreateContextOptions) => {
   return {
     session: opts.session,
-    sshKeyPath: opts.sshKeyPath,
+    privateKey: opts.privateKey,
     prisma,
   };
 };
@@ -66,11 +66,11 @@ export const createTRPCContext = async (opts: CreateNextContextOptions) => {
   // Get the session from the server using the getServerSession wrapper function
   const session = await getServerAuthSession({ req, res });
   const token = await getToken({ req });
-  const sshKeyPath = token?.sshKeyPath;
+  const privateKey = token?.privateKey;
 
   return createInnerTRPCContext({
     session,
-    sshKeyPath,
+    privateKey,
   });
 };
 

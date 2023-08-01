@@ -10,10 +10,11 @@ import {
 
 export const remoteJobRouter = createTRPCRouter({
   test: protectedProcedure.mutation(async ({ ctx }) => {
-    const sshKeyPath = ctx.sshKeyPath ?? '';
+    const privateKey = ctx.privateKey ?? '';
     const username = ctx.session.user.name ?? '';
     const jobId = await submitJob(
-      sshKeyPath,
+      privateKey,
+      env.PRIVATE_KEY_PASSPHRASE,
       username,
       env.SSH_HOST,
       sbatchDummyContent,
@@ -42,13 +43,14 @@ export const remoteJobRouter = createTRPCRouter({
         `${input.command}`,
       ].join('\n');
 
-      console.log('data: ', sbatchContent);
+      // console.log('data: ', sbatchContent);
 
-      const sshKeyPath = ctx.sshKeyPath ?? '';
+      const privateKey = ctx.privateKey ?? '';
       const username = ctx.session.user.name ?? '';
 
       const jobId = await submitJob(
-        sshKeyPath,
+        privateKey,
+        env.PRIVATE_KEY_PASSPHRASE,
         username,
         env.SSH_HOST,
         sbatchContent,
@@ -62,11 +64,12 @@ export const remoteJobRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const sshKeyPath = ctx.sshKeyPath ?? '';
+      const privateKey = ctx.privateKey ?? '';
       const username = ctx.session.user.name ?? '';
 
       const jobStatus = await checkJobState(
-        sshKeyPath,
+        privateKey,
+        env.PRIVATE_KEY_PASSPHRASE,
         username,
         env.SSH_HOST,
         input.jobId,
@@ -80,11 +83,12 @@ export const remoteJobRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const sshKeyPath = ctx.sshKeyPath ?? '';
+      const privateKey = ctx.privateKey ?? '';
       const username = ctx.session.user.name ?? '';
 
       const cancelStatus = await cancelJob(
-        sshKeyPath,
+        privateKey,
+        env.PRIVATE_KEY_PASSPHRASE,
         username,
         env.SSH_HOST,
         input.jobId,

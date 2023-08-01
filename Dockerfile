@@ -31,6 +31,7 @@ ARG SSH_HOST
 ARG CA_CERT
 ARG NEXT_PUBLIC_TREE_PATH
 ARG DATABASE_URL
+ARG PRIVATE_KEY_PASSPHRASE
 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -54,6 +55,9 @@ RUN \
 
 # Production image, copy all the files and run next
 FROM base AS runner
+RUN   apk update && \
+      apk add --no-cache \
+      openssh-keygen
 WORKDIR /app
 
 ENV NODE_ENV production
@@ -65,6 +69,8 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
+
+COPY --from=builder /app/src/server/certs/abtlus-AD1-CA.cer ./abtlus-AD1-CA.cer
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

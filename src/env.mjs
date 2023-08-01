@@ -22,6 +22,7 @@ const server = z.object({
   LDAP_URI: z.string(),
   SSH_HOST: z.string(),
   CA_CERT: z.string(),
+  PRIVATE_KEY_PASSPHRASE: z.string().min(1),
 });
 
 /**
@@ -47,6 +48,7 @@ const processEnv = {
   LDAP_URI: process.env.LDAP_URI,
   SSH_HOST: process.env.SSH_HOST,
   CA_CERT: process.env.CA_CERT,
+  PRIVATE_KEY_PASSPHRASE: process.env.PRIVATE_KEY_PASSPHRASE,
 
   NEXT_PUBLIC_TREE_PATH: process.env.NEXT_PUBLIC_TREE_PATH,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,

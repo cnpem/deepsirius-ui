@@ -11,11 +11,14 @@ import {
 } from 'next-auth';
 import { type DefaultJWT } from 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { homedir } from 'os';
 import { env } from '~/env.mjs';
 
 import { prisma } from './db';
-import { copySshKeyToRemoteHost, generateSshKeyIfNeeded } from './remote-job';
+import {
+  copyPublicKeyToRemote,
+  generateKeyPairPromise,
+  removePublicKeyByComment,
+} from './remote-job';
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -39,7 +42,7 @@ declare module 'next-auth' {
 
 declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
-    sshKeyPath?: string;
+    privateKey?: string;
   }
 }
 
@@ -66,16 +69,10 @@ export const authOptions: NextAuthOptions = {
         },
       },
       async authorize(credentials): Promise<User | null> {
-        console.log(
-          'hey! Im in the authorize fn in auth.ts, your email is:',
-          credentials?.email,
-        );
         if (!credentials) {
-          console.log('no credentials');
           return null;
         }
         if (!credentials.email || !credentials.password) {
-          console.log('no password?');
           return null;
         }
         // You might want to pull this call out so we're not making a new LDAP client on every login attemp
@@ -86,19 +83,11 @@ export const authOptions: NextAuthOptions = {
         });
         const { email, password } = credentials;
         const name = email.substring(0, email.lastIndexOf('@'));
-        console.log(
-          'Hey ',
-          name,
-          'I am about to make a promise for binding the client',
-        );
         // Essentially promisify the LDAPJS client.bind function
         return new Promise((resolve, reject) => {
-          console.log('i promise to bind the client');
           client.bind(credentials.email, credentials.password, (error) => {
             if (error) {
-              console.log('but I couldnt! error binding client');
               console.log(error);
-              console.log(credentials.email, client);
               reject(new Error('CredentialsSignin'));
             } else {
               resolve({
@@ -118,7 +107,6 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     session: ({ session, token }) => {
-      console.log('session');
       if (session.user && token.sub) {
         session.user.id = token.sub;
       }
@@ -126,13 +114,29 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user && user.name && user.password) {
-        // TODO: This is a hacky way to generate a key path. We should probably use a temp directory
-        const keyPath = `${homedir()}/.ssh/remotejob_rsa`;
-        await generateSshKeyIfNeeded(keyPath);
-        copySshKeyToRemoteHost(keyPath, user.name, env.SSH_HOST, user.password);
+        const comment = `${user.name}@deepsirius`;
+        const { name: username, password } = user;
+        // clean up old public key
+        await removePublicKeyByComment(
+          username,
+          env.SSH_HOST,
+          password,
+          comment,
+        );
+        const pair = await generateKeyPairPromise({
+          comment: comment,
+          passphrase: env.PRIVATE_KEY_PASSPHRASE,
+        });
+        // copy new public key
+        await copyPublicKeyToRemote(
+          pair.pubKey,
+          username,
+          env.SSH_HOST,
+          password,
+        );
+        token.privateKey = pair.key;
         token.email = user.email;
         token.name = user.name;
-        token.sshKeyPath = keyPath;
       }
       return token;
     },

@@ -1,97 +1,10 @@
 import { exec } from 'child_process';
-import { existsSync } from 'fs';
 import fs from 'fs';
 import { type Config, NodeSSH } from 'node-ssh';
-import os from 'os';
+import os, { homedir } from 'os';
 import path from 'path';
-
-/**
- * Generate an SSH key if it does not exist at the given path
- * @param path Path to the SSH key
- */
-export async function generateSshKeyIfNeeded(path: string): Promise<void> {
-  if (!existsSync(path)) {
-    console.log('generating ssh key');
-    const command = `ssh-keygen -t rsa -b 4096 -f ${path}`;
-    await executeCommand(command);
-  }
-}
-
-/**
- * Copy SSH key to remote host
- * @param keyPath Path to the SSH key
- * @param username Username on the remote host
- * @param host Hostname or IP address of the remote host
- * @param password Password to use for the SSH connection
- */
-export function copySshKeyToRemoteHost(
-  keyPath: string,
-  username: string,
-  host: string,
-  password: string,
-): void {
-  const sshOptions: Config = {
-    host,
-    port: 22,
-    username,
-    privateKeyPath: keyPath,
-    tryKeyboard: true,
-    algorithms: {
-      kex: [
-        'diffie-hellman-group1-sha1',
-        'diffie-hellman-group14-sha1',
-        'diffie-hellman-group-exchange-sha1',
-        'diffie-hellman-group-exchange-sha256',
-      ],
-    },
-  };
-
-  const conn = new NodeSSH();
-  conn
-    .connect(sshOptions)
-    .then(() => {
-      console.log('connected');
-      return;
-    })
-    .catch((err) => {
-      console.log(err);
-      sshOptions.privateKeyPath = undefined;
-      sshOptions.password = password;
-      conn
-        .connect(sshOptions)
-        .then(() => {
-          conn
-            .putFile(`${keyPath}.pub`, '.remotejob')
-            .then(() => {
-              console.log('copied key');
-              conn
-                .execCommand(
-                  `echo $(cat .remotejob) >> .ssh/authorized_keys && rm .remotejob`,
-                )
-                .then(() => {
-                  console.log('added key to authorized_keys');
-                  conn.dispose();
-                  return;
-                })
-                .catch((err) => {
-                  console.log(err);
-                  conn.dispose();
-                  return;
-                });
-            })
-            .catch((err) => {
-              console.log(err);
-              conn.dispose();
-              return;
-            });
-        })
-        .catch((err) => {
-          console.log(err);
-          conn.dispose();
-          return;
-        });
-    });
-}
+import { Client } from 'ssh2';
+import keygen from 'ssh-keygen-lite';
 
 /**
  * Connect to remote host using SSH key and run a command
@@ -102,26 +15,20 @@ export function copySshKeyToRemoteHost(
  * @returns Output of the command
  */
 export function sshConnectAndRunCommand(
-  { keyPath, password }: { keyPath?: string; password?: string },
+  { privateKey, password }: { privateKey?: string; password?: string },
   username: string,
   host: string,
   command: string,
+  passphrase?: string,
 ): Promise<string> {
   const sshOptions: Config = {
+    debug: console.log,
     host,
     port: 22,
     username,
-    privateKeyPath: keyPath ? keyPath : undefined,
+    privateKey: privateKey ? privateKey : undefined,
     password: password ? password : undefined,
-    tryKeyboard: true,
-    algorithms: {
-      kex: [
-        'diffie-hellman-group1-sha1',
-        'diffie-hellman-group14-sha1',
-        'diffie-hellman-group-exchange-sha1',
-        'diffie-hellman-group-exchange-sha256',
-      ],
-    },
+    passphrase: passphrase ? passphrase : undefined,
   };
 
   const conn = new NodeSSH();
@@ -156,7 +63,8 @@ async function executeCommand(command: string): Promise<string> {
 
 // Function to listen to job state
 export function checkJobState(
-  keyPath: string,
+  privateKey: string,
+  passphrase: string,
   username: string,
   host: string,
   jobId: string,
@@ -166,12 +74,13 @@ export function checkJobState(
   return new Promise<string | undefined>((resolve, reject) => {
     sshConnectAndRunCommand(
       {
-        keyPath: keyPath,
+        privateKey: privateKey,
         password: undefined,
       },
       username,
       host,
       command,
+      passphrase,
     )
       .then((output) => {
         const lines = output.trim().split('\n');
@@ -188,7 +97,8 @@ export function checkJobState(
 
 // Function to cancel a Slurm job
 export function cancelJob(
-  keyPath: string,
+  privateKey: string,
+  passphrase: string,
   username: string,
   host: string,
   jobId: string,
@@ -197,12 +107,13 @@ export function cancelJob(
     const command = `scancel ${jobId}`;
     sshConnectAndRunCommand(
       {
-        keyPath: keyPath,
+        privateKey: privateKey,
         password: undefined,
       },
       username,
       host,
       command,
+      passphrase,
     )
       .then(() => {
         // console.log({ jobId: jobId, status: 'CANCELLED' });
@@ -225,7 +136,8 @@ function createTempScript(sbatchContent: string) {
 
 // Function to submit an sbatch job with a temporary script file
 export function submitJob(
-  keyPath: string,
+  privateKey: string,
+  passphrase: string,
   username: string,
   host: string,
   sbatchContent: string,
@@ -233,19 +145,13 @@ export function submitJob(
   return new Promise((resolve) => {
     const { tempDir, scriptPath } = createTempScript(sbatchContent);
     const sshOptions: Config = {
+      debug: console.log,
       host,
       port: 22,
       username,
-      privateKeyPath: keyPath,
-      tryKeyboard: true,
-      algorithms: {
-        kex: [
-          'diffie-hellman-group1-sha1',
-          'diffie-hellman-group14-sha1',
-          'diffie-hellman-group-exchange-sha1',
-          'diffie-hellman-group-exchange-sha256',
-        ],
-      },
+      privateKey: privateKey,
+      // privateKeyPath: path.join(__dirname, 'foo_rsa'),
+      passphrase: passphrase,
     };
 
     const deepsirius_script = 'deepSirius_script.sbatch';
@@ -300,3 +206,218 @@ export const sbatchDummyContent = `#!/bin/bash
 echo "Hello, world!"
 sleep 10
 echo "Job completed."`;
+
+export function generateKeyPairPromise({
+  comment,
+  passphrase,
+}: {
+  comment: string;
+  passphrase: string;
+}) {
+  return keygen({
+    // sshKeygenPath: 'ssh-keygen',
+    location: path.join(homedir(), '.ssh', `${comment}_rsa`),
+    type: 'rsa',
+    read: true,
+    force: true,
+    destroy: false,
+    comment: comment,
+    password: passphrase,
+    size: '2048',
+    format: 'PEM',
+  });
+}
+
+export interface ErrnoException extends Error {
+  errno?: number;
+  code?: number | string;
+  path?: string;
+  syscall?: string;
+  stack?: string;
+}
+
+type SFTPCallback = ErrnoException | null | undefined;
+
+export function copyPublicKeyToRemote(
+  publicKey: string,
+  username: string,
+  host: string,
+  password: string,
+) {
+  const conn = new Client();
+  const sshOptions: Config = {
+    host,
+    port: 22,
+    username,
+    password,
+    tryKeyboard: true,
+    algorithms: {
+      kex: [
+        'diffie-hellman-group1-sha1',
+        'diffie-hellman-group14-sha1',
+        'diffie-hellman-group-exchange-sha1',
+        'diffie-hellman-group-exchange-sha256',
+      ],
+    },
+  };
+
+  return new Promise((resolve, reject) => {
+    conn.on('ready', () => {
+      conn.sftp((err, sftp) => {
+        if (err) {
+          console.error('Error creating SFTP connection:', err);
+          conn.end();
+          return;
+        }
+
+        // Create the .ssh directory if it doesn't exist
+        const remoteSshDir = '.ssh';
+        sftp.mkdir(remoteSshDir, { mode: 0o700 }, (mkdirErr: SFTPCallback) => {
+          if (mkdirErr && mkdirErr.code !== 4) {
+            // Error code 4 means the directory already exists, ignore in that case
+            console.error('Error creating .ssh directory:', mkdirErr);
+            conn.end();
+            return;
+          }
+        });
+
+        const remoteFilePath = `${remoteSshDir}/authorized_keys`;
+
+        // Read the existing content of authorized_keys (if it exists)
+        sftp.readFile(
+          remoteFilePath,
+          'utf-8',
+          (readErr: SFTPCallback, existingKeys) => {
+            if (readErr && readErr.code !== 2) {
+              // Error code 2 means the file does not exist, ignore in that case
+              console.error('Error reading existing authorized_keys:', readErr);
+              conn.end();
+              return;
+            }
+
+            // Check if the public key already exists in the file
+            if (existingKeys && existingKeys.includes(publicKey)) {
+              console.log(
+                'Public key already exists in authorized_keys. Skipping...',
+              );
+              conn.end();
+              return;
+            }
+
+            // Append the new public key to the existing content (if any)
+            const updatedKeys = existingKeys
+              ? existingKeys.toString() + '\n' + publicKey
+              : publicKey;
+
+            // Write the updated content back to the file
+            sftp.writeFile(remoteFilePath, updatedKeys, (writeErr) => {
+              if (writeErr) {
+                console.error(
+                  'Error writing public key to remote host:',
+                  writeErr,
+                );
+              } else {
+                console.log('Public key copied to remote host successfully!');
+              }
+
+              conn.end();
+              resolve('success');
+            });
+          },
+        );
+      });
+    });
+
+    conn.on('error', (err) => {
+      console.error('SSH connection error:', err);
+      reject(err);
+    });
+
+    conn.connect(sshOptions);
+  });
+}
+
+export function removePublicKeyByComment(
+  username: string,
+  host: string,
+  password: string,
+  comment: string,
+) {
+  const conn = new Client();
+  const sshOptions: Config = {
+    host,
+    port: 22,
+    username,
+    password,
+    tryKeyboard: true,
+    algorithms: {
+      kex: [
+        'diffie-hellman-group1-sha1',
+        'diffie-hellman-group14-sha1',
+        'diffie-hellman-group-exchange-sha1',
+        'diffie-hellman-group-exchange-sha256',
+      ],
+    },
+  };
+  return new Promise((resolve, reject) => {
+    conn.on('ready', () => {
+      conn.sftp((err, sftp) => {
+        if (err) {
+          console.error('Error creating SFTP connection:', err);
+          conn.end();
+          return;
+        }
+
+        const remoteSshDir = '.ssh';
+        const remoteFilePath = `${remoteSshDir}/authorized_keys`;
+
+        // Read the existing content of authorized_keys (if it exists)
+        sftp.readFile(
+          remoteFilePath,
+          'utf-8',
+          (readErr: SFTPCallback, existingKeys) => {
+            if (readErr && readErr.code !== 2) {
+              // Error code 2 means the file does not exist, ignore in that case
+              console.error('Error reading existing authorized_keys:', readErr);
+              conn.end();
+              return;
+            }
+
+            // Filter out the keys with the desired comment
+            const updatedKeys = existingKeys
+              ? existingKeys
+                  .toString()
+                  .split('\n')
+                  .filter((keyLine) => !keyLine.includes(` ${comment}`))
+                  .join('\n')
+              : '';
+
+            // Write the updated content back to the file
+            sftp.writeFile(remoteFilePath, updatedKeys, (writeErr) => {
+              if (writeErr) {
+                console.error(
+                  'Error removing public key from authorized_keys:',
+                  writeErr,
+                );
+              } else {
+                console.log(
+                  'Public key removed from authorized_keys successfully!',
+                );
+              }
+
+              conn.end();
+              resolve('success');
+            });
+          },
+        );
+      });
+    });
+
+    conn.on('error', (err) => {
+      console.error('SSH connection error:', err);
+      reject(err);
+    });
+
+    conn.connect(sshOptions);
+  });
+}

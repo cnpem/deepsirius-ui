@@ -10,7 +10,7 @@ services:
         NEXT_PUBLIC_TREE_PATH: '${NEXT_PUBLIC_TREE_PATH}'
     working_dir: /app
     volumes:
-      - /mnt/work/ibira:/mnt
+      - /home:/mnt
     ports:
       - '3000:3000'
     image: deepsirius-ui
@@ -21,6 +21,7 @@ services:
       - SSH_HOST=${SSH_HOST}
       - CA_CERT=${CA_CERT}
       - DATABASE_URL=${DATABASE_URL}
+      - PRIVATE_KEY_PASSPHRASE=${PRIVATE_KEY_PASSPHRASE}
 
   postgres:
     image: postgres:10.3

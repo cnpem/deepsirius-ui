@@ -441,12 +441,15 @@ export const useStoreNodes = () => {
   // flow callbacks
   const onNodeAdd: OnNodeAdd = (nodeType: AllowedNodeTypes) => {
     console.log('useStoreNodes: node add', nodeType);
+    // get initial x value of position from the node type index in the AllowedNodeTypesList
+    const initialX =
+      AllowedNodeTypesList.findIndex((type) => type === nodeType) * 500;
     if (!workspacePath) return;
     createNode.mutate({
       workspacePath: workspacePath,
       type: nodeType,
       componentId: nanoid(),
-      position: { x: 0, y: 0 },
+      position: { x: initialX, y: 0 },
       status: 'inactive',
       xState: '',
     });

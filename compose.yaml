@@ -5,7 +5,7 @@ services:
     network_mode: 'host'
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
     build:
       context: .
       dockerfile: Dockerfile
@@ -43,7 +43,7 @@ services:
       - NEXT_PUBLIC_TREE_PATH=${NEXT_PUBLIC_TREE_PATH}
 
   db:
-    image: postgres:10.3
+    image: postgres:15.0
     restart: always
     environment:
       - POSTGRES_USER=fofo
@@ -54,6 +54,11 @@ services:
         target: /var/lib/postgresql/data
     ports:
       - '5432:5432'
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "fofo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres:

@@ -7,7 +7,8 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "start:migrate:prod": "prisma migrate deploy && node server.js"    
   },
   "dependencies": {
     "@hookform/resolvers": "^3.1.0",

@@ -51,3 +51,7 @@ We also use [tRPC](https://trpc.io) to create a type-safe API layer between the 
 For developing state machines in components that needed special client-side logic, we use [XState](https://xstate.js.org/), specifically the [React Hooks](https://xstate.js.org/docs/packages/xstate-react/) package.
 
 For creating the workflow view of the client components, we use [React Flow](https://reactflow.dev/), which is a React library for creating flowcharts. The components are created as nodes in the flowchart, and the connections between them are the dependencies between the components. The state of the components is also reflected in the flowchart, so that the user can see the status of the components in the workflow view and are managed by a zustand store with hooks that updates the state of the components in the flowchart and when necessary, updates the database with the changes.
+
+## License
+
+This project is licensed under the terms of the GPL license version 3 or later.

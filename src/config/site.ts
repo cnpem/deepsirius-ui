@@ -1,4 +1,4 @@
-import { type NavItem } from "~/types/nav";
+import { type NavItem } from '~/types/nav';
 
 interface SiteConfig {
   name: string;
@@ -11,24 +11,24 @@ interface SiteConfig {
 }
 
 export const siteConfig: SiteConfig = {
-  name: "DeepSirius",
-  description: "Deep Learning UI",
+  name: 'DeepSirius',
+  description: 'Deep Learning UI',
   mainNav: [
     {
-      title: "Workboard",
-      href: "/workboard",
+      title: 'Workboard',
+      href: '/workboard',
     },
     {
-      title: "First Steps",
-      href: "/first-steps",
+      title: 'Quick Start',
+      href: 'https://deepsirius-ui-docs.vercel.app/',
     },
     {
-      title: "Docs",
-      href: "/docs",
+      title: 'User Guide',
+      href: 'https://deepsirius-ui-docs.vercel.app/user',
     },
   ],
   links: {
-    gitlab: "https://gitlab.cnpem.br/GCC/segmentation/sscDeepsirius",
-    docs: "https://gitlab.cnpem.br/GCC/segmentation/sscDeepsirius",
+    gitlab: 'https://gitlab.cnpem.br/GCC/segmentation/sscDeepsirius',
+    docs: 'https://gitlab.cnpem.br/GCC/segmentation/sscDeepsirius',
   },
 };

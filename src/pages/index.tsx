@@ -51,22 +51,24 @@ const Home: NextPage = () => {
           </h1>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
+            <a
               className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="/first-steps"
-              target="_self"
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://deepsirius-ui-docs.vercel.app/"
             >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
+              <h3 className="text-2xl font-bold">Quick Start →</h3>
               <div className="text-lg">Just the basics.</div>
-            </Link>
-            <Link
+            </a>
+            <a
               className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="/docs"
-              target="_self"
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://deepsirius-ui-docs.vercel.app/user"
             >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
+              <h3 className="text-2xl font-bold">User Guide →</h3>
               <div className="text-lg">Learn more about DeepSirius.</div>
-            </Link>
+            </a>
           </div>
           <div className="flex flex-col items-center gap-2">
             <p className="text-2xl text-white">

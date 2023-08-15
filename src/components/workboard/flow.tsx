@@ -55,7 +55,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
 
   //TODO: would be nice to change the height for full screen mode to h-[930px]
   return (
-    <div className="p-2 h-[799px]">
+    <div className="p-2 h-[calc(100vh-65px)]">
       <ReactFlow
         nodes={nodes}
         edges={edges}

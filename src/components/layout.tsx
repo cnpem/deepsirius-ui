@@ -1,5 +1,4 @@
-import { SiteHeader } from "~/components/site-header";
-import { Footer } from "./footer";
+import { SiteHeader } from '~/components/site-header';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,7 +9,6 @@ export function Layout({ children }: LayoutProps) {
     <>
       <SiteHeader />
       <main>{children}</main>
-      <Footer />
     </>
   );
 }

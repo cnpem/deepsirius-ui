@@ -53,6 +53,7 @@ export type NodeData = {
   registryId: string; // this is the id of the node in the database
   status: Status; // this is just a state label without spaces for controlling the flow
   xState?: string; // this is a long json
+  remoteFsDataPath?: string; // this is the path to the stored data related to the node component in the remote filesystem and should be deleted when the node is deleted
 };
 
 type RFState = {
@@ -420,6 +421,7 @@ export const useStoreNodes = () => {
           registryId: data.id,
           status: data.status as Status,
           xState: data.xState,
+          remoteFsDataPath: 'testDir/',
         },
       };
       // now that the node is created in the database, we can add it to the store with an always defined registryId
@@ -429,6 +431,7 @@ export const useStoreNodes = () => {
   const updateNodePos = api.workspace.updateNodePos.useMutation();
   const updateNodeData = api.workspace.updateNodeData.useMutation();
   const deleteNode = api.workspace.deleteNode.useMutation();
+  const { mutate: deleteRemoteFiles } = api.remotefiles.remove.useMutation();
   // store
   const { nodes, workspacePath } = useStore(
     (state) => ({
@@ -478,6 +481,16 @@ export const useStoreNodes = () => {
     }
     console.log('useStoreNodes: node delete', nodesToDelete);
     nodesToDelete.map((node) => {
+      // delete node from the remote fs
+      // If the node has a remote file path, delete it
+      // (not all nodes will have a remote file path)
+      if (workspacePath && typeof node.data.remoteFsDataPath === 'string') {
+        deleteRemoteFiles({
+          path: workspacePath + '/' + node.data.remoteFsDataPath,
+        });
+      }
+
+      // delete node from db
       deleteNode.mutate({
         registryId: node.data.registryId,
       });

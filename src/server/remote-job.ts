@@ -343,6 +343,7 @@ export function removePublicKeyByComment(
   password: string,
   comment: string,
 ) {
+  console.log('removePublicKeyByComment');
   const conn = new Client();
   const sshOptions: Config = {
     host,
@@ -361,8 +362,10 @@ export function removePublicKeyByComment(
   };
   return new Promise((resolve, reject) => {
     conn.on('ready', () => {
+      console.log('ready');
       conn.sftp((err, sftp) => {
         if (err) {
+          // this is problematic when we try to connect to localhost in the development environment
           console.error('Error creating SFTP connection:', err);
           conn.end();
           return;
@@ -421,3 +424,66 @@ export function removePublicKeyByComment(
     conn.connect(sshOptions);
   });
 }
+
+// Function for removing a file or directory from the remote host using sftp
+export function removeRemoteFiles(
+  privateKey: string,
+  passphrase: string,
+  username: string,
+  host: string,
+  path: string,
+): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    const sshOptions: Config = {
+      debug: console.log,
+      host,
+      port: 22,
+      username,
+      privateKey: privateKey,
+      passphrase: passphrase,
+    };
+    console.log('connected and trying to remove', path);
+    const conn = new NodeSSH();
+    conn
+      .connect(sshOptions)
+      .then(() => {
+        console.log('connected and trying to remove', path);
+        executeCommand(`rm -rf ${path}`)
+          .then(() => {
+            resolve('success');
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+}
+
+/* 
+    const conn = new Client();
+    conn.connect(sshOptions);
+    console.log('ready');
+    conn.sftp((err, sftp) => {
+      if (err) {
+        console.error('Error creating SFTP connection', err);
+        conn.end();
+        return;
+      }
+      console.log('sftp');
+      sftp.unlink(path, (err) => {
+        if (err) {
+          console.error('Error removing files', err);
+          conn.end();
+          return;
+        }
+        console.log('Files removed');
+        conn.end();
+        resolve('success');
+      });
+    }
+    );
+  });
+} */

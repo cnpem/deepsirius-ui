@@ -32,8 +32,6 @@ RUN SKIP_ENV_VALIDATION=1 && npm ci
 
 # Installing open-ssh keygen
 RUN apk update && apk add --no-cache openssh-keygen
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
 
 # Next.js collects completely anonymous telemetry data about general usage. Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line to disable telemetry at run time

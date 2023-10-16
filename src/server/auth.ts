@@ -20,6 +20,9 @@ import {
   removePublicKeyByComment,
 } from './remote-job';
 
+// TODO: Auth is breaking when the user's credentials are ok but the service can't ssh into SSH_HOST.
+// This will happen when the user doesn't have a scheduled proposal for the day, so its group is not allowed to ssh into SSH_HOST.
+
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
  * object and keep type safety.
@@ -72,27 +75,45 @@ export const authOptions: NextAuthOptions = {
         if (!credentials) {
           return null;
         }
-        if (!credentials.email || !credentials.password) {
+        let certificate: Buffer;
+        try {
+          certificate = fs.readFileSync(env.CA_CERT);
+        } catch (err) {
+          console.log('Error: CA_CERT not found');
           return null;
         }
+        const { email, password } = credentials;
+        const name = email.substring(0, email.lastIndexOf('@'));
+        // // bypass certificate validation if LDAP_URI is not set
+        // if (!env.LDAP_URI) {
+        //   return new Promise((resolve) => {
+        //     const user = {
+        //       id: name,
+        //       name: name,
+        //       email: email,
+        //       password: password,
+        //     } as User;
+        //     // for debugging, logs id name and email of the user
+        //     console.log('LDAP_URI not set, bypassing LDAP authentication with credentials:', {id: user.id, name: user.name, email: user.email});
+        //     resolve(user);
+        //   });
+        // }
         // You might want to pull this call out so we're not making a new LDAP client on every login attemp
         // tlsOption: https://stackoverflow.com/questions/31861109/tls-what-exactly-does-rejectunauthorized-mean-for-me
         const client = ldap
           .createClient({
             url: env.LDAP_URI,
-            tlsOptions: { ca: [fs.readFileSync(env.CA_CERT)] },
+            tlsOptions: { ca: [certificate] },
           })
           .on('error', (error) => {
-            console.log('ldap.createClient', error);
+            console.log('ldap.createClient error', error);
             return new Error('Error ldap.createClient');
           });
-        const { email, password } = credentials;
-        const name = email.substring(0, email.lastIndexOf('@'));
         // Essentially promisify the LDAPJS client.bind function
         return new Promise((resolve, reject) => {
           client.bind(credentials.email, credentials.password, (error) => {
             if (error) {
-              console.log(error);
+              console.log('client.bind error:', error);
               reject(new Error('CredentialsSignin'));
             } else {
               resolve({

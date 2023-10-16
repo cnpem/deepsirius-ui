@@ -461,29 +461,3 @@ export function removeRemoteFiles(
       });
   });
 }
-
-/* 
-    const conn = new Client();
-    conn.connect(sshOptions);
-    console.log('ready');
-    conn.sftp((err, sftp) => {
-      if (err) {
-        console.error('Error creating SFTP connection', err);
-        conn.end();
-        return;
-      }
-      console.log('sftp');
-      sftp.unlink(path, (err) => {
-        if (err) {
-          console.error('Error removing files', err);
-          conn.end();
-          return;
-        }
-        console.log('Files removed');
-        conn.end();
-        resolve('success');
-      });
-    }
-    );
-  });
-} */

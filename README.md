@@ -52,6 +52,18 @@ For developing state machines in components that needed special client-side logi
 
 For creating the workflow view of the client components, we use [React Flow](https://reactflow.dev/), which is a React library for creating flowcharts. The components are created as nodes in the flowchart, and the connections between them are the dependencies between the components. The state of the components is also reflected in the flowchart, so that the user can see the status of the components in the workflow view and are managed by a zustand store with hooks that updates the state of the components in the flowchart and when necessary, updates the database with the changes.
 
+### Setting up a development enviroment and services
+
+We developed a compose.dev.yaml file that sets up a development environment with all the services needed to run the interface. The compose file is also responsible for setting up the database and the filesystem mount for the tree view.
+
+To run slurm jobs, the app service need to be able to connect via ssh to a slurm management node with the same credentials of the ldap client.
+
+To start the development environment, you should have docker and docker compose installed on your machine. You should fill the .env file with the appropriate variables for the docker compose cli. There is a .env.example file that you can use as a template.
+
+```shell
+   docker compose --file compose.dev.yaml --env-file .dev.env up --build
+```
+
 ## License
 
 This project is licensed under the terms of the GPL license version 3 or later.

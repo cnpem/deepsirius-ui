@@ -2,6 +2,7 @@ import { useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
+import { set } from 'zod';
 import {
   Accordion,
   AccordionContent,
@@ -10,7 +11,12 @@ import {
 } from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
 import { toast } from '~/components/ui/use-toast';
-import { type NodeData, type Status, useStoreNodes } from '~/hooks/use-store';
+import {
+  type NodeData,
+  type NodeStatus,
+  defineStatusFromXState,
+  useStoreNodes,
+} from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
 import {
@@ -49,7 +55,7 @@ const datasetMachine = createMachine({
       | { type: 'retry'; data: { formData: FormType } }
       | { type: 'finetune'; data: { formData: FormType } },
   },
-  initial: 'inactive',
+  initial: 'active',
   context: {
     jobId: '',
     jobStatus: '',
@@ -57,18 +63,15 @@ const datasetMachine = createMachine({
     data: [],
   },
   states: {
-    inactive: {
-      on: {
-        activate: 'active',
-      },
-    },
     active: {
       on: {
         start: 'busy',
       },
+      tags: ['active'],
     },
     busy: {
       initial: 'pending',
+      tags: ['busy'],
       states: {
         pending: {
           invoke: {
@@ -123,6 +126,7 @@ const datasetMachine = createMachine({
       },
     },
     error: {
+      tags: ['error'],
       on: {
         retry: {
           target: 'busy',
@@ -131,6 +135,7 @@ const datasetMachine = createMachine({
       },
     },
     success: {
+      tags: ['success'],
       on: {
         finetune: {
           target: 'busy',
@@ -141,26 +146,23 @@ const datasetMachine = createMachine({
   },
   predictableActionArguments: true,
 });
+export type DatasetXState = StateFrom<typeof datasetMachine>;
 
 export function DatasetNode({ id, data }: NodeProps<NodeData>) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
   const { onUpdateNodeData } = useStoreNodes();
-  const [status, setStatus] = useState<Status>(data.status);
+  const [nodeStatus, setNodeStatus] = useState<NodeStatus>(data.status);
 
-  const thisNodeNachine = datasetMachine; // hack for writing the same functions for all nodes (TODO: there's a better way to do this)
   const prevXState = State.create(
     data.xState
-      ? (JSON.parse(data.xState) as StateFrom<typeof thisNodeNachine>)
-      : thisNodeNachine.initialState,
+      ? (JSON.parse(data.xState) as DatasetXState)
+      : datasetMachine.initialState,
   );
-  const defineStatus = (state: StateFrom<typeof thisNodeNachine>) => {
-    return typeof state.value === 'object' ? 'busy' : (state.value as Status);
-  };
 
   const actor = useInterpret(
-    thisNodeNachine,
+    datasetMachine,
     // options
     {
       state: prevXState,
@@ -189,11 +191,11 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
                 : '';
             console.log('data submit: ', formData);
             const jobInput = {
-              jobName: 'deepsirius-inference',
-              output: 'output-do-pai-custom.txt',
-              error: 'error-dos-outros-custom.txt',
+              jobName: 'deepsirius-dataset',
+              output: 'deepsirius-dataset-output.txt',
+              error: 'deepsirius-dataset-error.txt',
               ntasks: 1,
-              partition: 'dev-gcd',
+              partition: 'proc2',
               command:
                 'echo "' +
                 JSON.stringify({ ...formData, ...data }) +
@@ -221,20 +223,16 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
     },
     // observer
     (state) => {
-      // subscribes to state changes and check if there is a status change to update the node data
-      if (defineStatus(state) !== status) {
-        console.log(
-          'State Machine: status changed: ',
-          status,
-          ' => ',
-          defineStatus(state),
-        );
-        setStatus(defineStatus(state));
+      const newStatus = [...state.tags][0] as NodeStatus;
+      if (newStatus !== nodeStatus) {
+        // update the local state
+        setNodeStatus(newStatus);
+        // update the node data in the store
         onUpdateNodeData({
           id: id, // this is the component id from the react-flow
           data: {
             ...data,
-            status: defineStatus(state),
+            status: newStatus,
             xState: JSON.stringify(state),
           },
         });
@@ -242,7 +240,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
     },
   );
 
-  const selector = (state: StateFrom<typeof thisNodeNachine>) => {
+  const selector = (state: DatasetXState) => {
     return {
       jobId: state.context.jobId,
       jobStatus: state.context.jobStatus,
@@ -258,7 +256,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
 
   return (
     <Card
-      data-state={status}
+      data-state={nodeStatus}
       className="w-[455px] data-[state=active]:bg-green-100 data-[state=busy]:bg-yellow-100
     data-[state=error]:bg-red-100 data-[state=inactive]:bg-gray-100
     data-[state=success]:bg-blue-100 data-[state=active]:dark:bg-teal-800
@@ -267,9 +265,9 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
     >
       <CardHeader>
         <CardTitle>{datasetName}</CardTitle>
-        <CardDescription>{status}</CardDescription>
+        <CardDescription>{nodeStatus}</CardDescription>
       </CardHeader>
-      {status === 'active' && (
+      {nodeStatus === 'active' && (
         <CardContent>
           <Accordion type="single" collapsible>
             <AccordionItem value="item-1">
@@ -308,7 +306,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </Accordion>
         </CardContent>
       )}
-      {status === 'busy' && (
+      {nodeStatus === 'busy' && (
         <>
           <CardContent>
             <div className="flex flex-col">
@@ -334,7 +332,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </CardFooter>
         </>
       )}
-      {status === 'error' && (
+      {nodeStatus === 'error' && (
         <CardContent>
           <div className="flex flex-col">
             <p className="mb-2 text-3xl font-extrabold text-center">{jobId}</p>
@@ -371,7 +369,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </Accordion>
         </CardContent>
       )}
-      {status === 'success' && (
+      {nodeStatus === 'success' && (
         <CardContent>
           <div className="flex flex-col">
             <p className="mb-2 text-3xl font-extrabold text-center">{jobId}</p>
@@ -384,7 +382,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
           </div>
         </CardContent>
       )}
-      {status === 'inactive' && (
+      {nodeStatus === 'inactive' && (
         <CardFooter className="flex justify-start">
           <Button onClick={() => actor.send('activate')}>activate</Button>
         </CardFooter>

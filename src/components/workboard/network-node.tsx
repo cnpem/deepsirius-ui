@@ -25,7 +25,7 @@ import {
 } from '~/components/workboard/node-component-forms/network-form';
 import {
   type NodeData,
-  type Status,
+  type NodeStatus,
   useStoreActions,
   useStoreNodes,
 } from '~/hooks/use-store';
@@ -37,7 +37,6 @@ interface JobEvent {
 }
 
 const networkMachine = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QDswBcDuB7ATgawDoBLZAQwGM0iA3MAYgqutLTAG0AGAXUVAAcssIlSzJeIAB6IAjADYAzAQCcKlbOkAOeUoBMOgOwAaEAE9EG6QQCsHWxyVX1sjUo76Avu+OpMuQoxp6WDRSHDQAAjQcUhISKE4eJBABIRExJKkEABY3AiydTXzpLKz9RyzjMwQLazt7RzkXN09vdGx8AiiY5DiCPjBkCDi6CFEwYmRqLDxx2ABXACMAW2EAKSwFhPEU4SJRcUydJX0CA1klLPkreQ1bOVlKmX1NAmkrOWk9DWf7WRaQHztQhdWLIKB9AZDMF0MA4HC4PoAGxYADNcEsCPNlmsNlskjs0gdEEcTmcLlcbndZA9TDIsi95BwrHomUpbhx5Dp-oC-J1oqDwTg5sgetDRqgJlMZgQeR0QaLBcKFQgSFNyCw9sgEnj+IJdvsMjJORwCLJ7PlZDpmTobvJHghpPpZCcrPoOcbiqVndy2rz5b0hSLhuLxqrpuNZcD+QqCIHlWH1WltdJErrUpqiQgyoppPIFHn3ozZFkrPaPiarBpi9cOLdqZafb45dGA0rg2NJeGZb7m91W0GwSrJlhE5rtTpU8k9YTDVnrq88-IC7mONWy7JKwRa8WNDp1LdGo2gXy+2DY22xR2w9LIyeBeeB1Ah2qNaJtfJJwSM7OstSCJybhtGw3RtGkqjkJdai0fQyiUaR7E5I8-RbM842GdVkHIMBER1Kd0wNUBMmuUlPXeeCNEufQlDLYjrCsZkKXrfQNCsJDe3vWF4RwOgcHQHATFwr8CMkRAlAUAgNCrK49z0K5mTLK0TTNHQEOKPQFA0NjCHmcgsNgWA6BREh0GFdhuG2adv0IxBLXteRLi3Owl0ZJQKV-LTOmFXp+kGdsJWvWZFhWNB1k2cz8Us4TMnOCs2Vcy5jl-Xd7WYjQF1uVwNwo7R5A8tAvLPHyoSgGE4QRPhkTQNEcAxLFgtCwTIvSayEBi6w4vs7R9CSnR7SySTTjg84XHOJcdCrPKCsVR8RivYcbx7YEpofeNh1HN9uEa-DmpEh0lyU80ZOtW0y1rSwfguX84OkFRJpjNDL38+aI0Wzz7ovJ8E1fLVNpTCztszaRilkPJK05fR5H0K15CB+1nArKHXOKd4VErO7+wVWanqlF6myW97H2fEdvvHT8msB4HQa0AxIeh2HaSzcat0Rs0Ot-P4vABV78oJzGQ07Ba8bejG4iJ9afq4NgP3+-UdsyFilFNEsLEuakslcaQUo5PILhYqwxJ0fIjnR1CProDCsJw8K01lzNXIrPMShu51XBKOHciselnkhylay5Tnbx53pONwHi+IE628Nt2dc1dU5a06-rNAKCoGeNaxJNdN5Y9c1juSwCA4HESMZZnFqAFpvleI5ORJGCrWce1y6sZRVF1z42XsDhpA8kgAloUurN2-J7V3Ry7AcJwmg8APXv7sBB6i4kWLyAo9becbXLA8wdHH2xJ8aVwZ9aIX-TBRe5cQcvtGr1y9GOevHA0MsINeDgU9-GwOByLI8pQ8EipxAvpmNK3xVwwXfnobqtd1yuQINmG6iVtDfD-qeaaCpgGzhsIrCGzELiuFcDJMsENLC-g3o4JkN1LioI4mVHAmCWrkRbv1feeCWJ2gZnIXIoESx5lsN1caHkdJ6XgBFAGMdLQg1dBYFw7xKLUlOloU48ELhlCrN-f2J9jxB3PmI6OLUrhZFeLoakqVHQ5GfgzG0ihawsX6mRJ2S4TYAMhEAvRZdh7v2MXuZ0klzG1hSuJCGYlmJA2uHIPOWi-TLQelABhu1XA2P1pnJ0FFdBGAZgePILCOTHA3IbZxBAQ70PcUPTIxRmISXfrYsoVExKpyqM6Uk98YbHBUlDPOnggA */
   id: 'network',
   schema: {
     context: {} as {
@@ -53,7 +52,7 @@ const networkMachine = createMachine({
       | { type: 'retry'; data: { formData: NetworkFormType } }
       | { type: 'finetune'; data: { formData: NetworkFormType } },
   },
-  initial: 'inactive',
+  initial: 'active',
   context: {
     jobId: '',
     jobStatus: '',
@@ -61,19 +60,15 @@ const networkMachine = createMachine({
     networkType: 'unet2d',
   },
   states: {
-    inactive: {
-      on: {
-        activate: 'active',
-      },
-    },
-
     active: {
       on: {
         'start training': 'training',
       },
+      tags: ['active'],
     },
     training: {
       initial: 'pending',
+      tags: ['busy'],
       states: {
         pending: {
           invoke: {
@@ -125,6 +120,7 @@ const networkMachine = createMachine({
           },
         },
         error: {
+          tags: ['error'],
           on: {
             retry: {
               target: 'pending',
@@ -135,6 +131,7 @@ const networkMachine = createMachine({
       },
     },
     success: {
+      tags: ['success'],
       on: {
         finetune: {
           target: 'tuning',
@@ -144,6 +141,7 @@ const networkMachine = createMachine({
     },
     tuning: {
       initial: 'pending',
+      tags: ['busy'],
       states: {
         pending: {
           invoke: {
@@ -195,6 +193,7 @@ const networkMachine = createMachine({
           },
         },
         error: {
+          tags: ['error'],
           on: {
             retry: {
               target: 'pending',
@@ -207,6 +206,7 @@ const networkMachine = createMachine({
   },
   predictableActionArguments: true,
 });
+export type NetworkXState = StateFrom<typeof networkMachine>;
 
 export function NetworkNode({ id, data }: NodeProps<NodeData>) {
   const createJob = api.remotejob.create.useMutation();
@@ -214,7 +214,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
   const cancelJob = api.remotejob.cancel.useMutation();
   const { checkConnectedSource } = useStoreActions();
   const { onUpdateNodeData } = useStoreNodes();
-  const [status, setStatus] = useState<Status>(data.status);
+  const [nodeStatus, setNodeStatus] = useState<NodeStatus>(data.status);
 
   // handle node activation if theres a source node connected to it
   const handleActivation = () => {
@@ -227,47 +227,14 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
     }
   };
 
-  const thisNodeNachine = networkMachine; // hack for writing the same functions for all nodes (TODO: there's a better way to do this)
   const prevXState = State.create(
     data.xState
-      ? (JSON.parse(data.xState) as StateFrom<typeof thisNodeNachine>)
-      : thisNodeNachine.initialState,
+      ? (JSON.parse(data.xState) as NetworkXState)
+      : networkMachine.initialState,
   );
-  // TODO: this should be simplified
-  const defineStatus = (state: StateFrom<typeof thisNodeNachine>) => {
-    // possible object states
-    if (typeof state.value === 'object') {
-      const checkError = (s: StateFrom<typeof thisNodeNachine>) => {
-        const errorStates = [{ training: 'error' }, { tuning: 'error' }];
-        return errorStates.some((es) => s.matches(es));
-      };
-
-      const checkBusy = (s: StateFrom<typeof thisNodeNachine>) => {
-        const busyStates = [
-          { training: 'pending' },
-          { training: 'running' },
-          { tuning: 'pending' },
-          { tuning: 'running' },
-        ];
-        return busyStates.some((bs) => s.matches(bs));
-      };
-
-      if (checkBusy(state)) {
-        return 'busy' as Status;
-      } else if (checkError(state)) {
-        return 'error' as Status;
-      } else {
-        throw new Error('Unknown state');
-      }
-    }
-    // possible string states
-    else {
-      return state.value as Status;
-    }
-  };
 
   const actor = useInterpret(
-    thisNodeNachine,
+    networkMachine,
     {
       state: prevXState,
       guards: {
@@ -295,10 +262,10 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
                 : '';
             const jobInput = {
               jobName: 'deepsirius-network',
-              output: 'output-do-pai-custom.txt',
-              error: 'error-dos-outros-custom.txt',
+              output: 'deepsirius-network-output.txt',
+              error: 'deepsirius-network-error.txt',
               ntasks: 1,
-              partition: 'dev-gcd',
+              partition: 'proc2',
               command:
                 'echo "' +
                 JSON.stringify({ ...formData, ...data }) +
@@ -327,14 +294,16 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
     },
     // observer
     (state) => {
-      // subscribes to state changes and check if there is a status change to update the node data
-      if (defineStatus(state) !== status) {
-        setStatus(defineStatus(state));
+      const newStatus = [...state.tags][0] as NodeStatus;
+      if (newStatus !== nodeStatus) {
+        // update the local state
+        setNodeStatus(newStatus);
+        // update the node data in the store
         onUpdateNodeData({
           id: id, // this is the component id from the react-flow
           data: {
             ...data,
-            status: defineStatus(state),
+            status: newStatus,
             xState: JSON.stringify(state),
           },
         });
@@ -342,7 +311,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
     },
   );
 
-  const selector = (state: StateFrom<typeof thisNodeNachine>) => {
+  const selector = (state: NetworkXState) => {
     return {
       stateValue: state.value,
       isTrainingError: state.matches({ training: 'error' }),
@@ -366,12 +335,12 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
 
   return (
     <>
-      {status === 'inactive' && (
+      {nodeStatus === 'inactive' && (
         <Card className="w-[380px] bg-gray-100 dark:bg-muted">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
             <CardTitle>{networkLabel}</CardTitle>
-            <CardDescription>{status}</CardDescription>
+            <CardDescription>{nodeStatus}</CardDescription>
           </CardHeader>
           <CardFooter className="flex justify-start">
             <Button onClick={handleActivation}>activate</Button>
@@ -379,12 +348,12 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {status === 'active' && (
+      {nodeStatus === 'active' && (
         <Card className="w-[380px] bg-green-100 dark:bg-teal-800">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
             <CardTitle>{networkLabel}</CardTitle>
-            <CardDescription>{status}</CardDescription>
+            <CardDescription>{nodeStatus}</CardDescription>
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible>
@@ -420,7 +389,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {status === 'busy' && (
+      {nodeStatus === 'busy' && (
         <Card className="w-[380px] bg-yellow-100 dark:bg-amber-700">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
@@ -456,7 +425,7 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {status === 'error' && (
+      {nodeStatus === 'error' && (
         <Card className="w-[380px] bg-red-100 dark:bg-rose-700">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
@@ -529,12 +498,12 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
           <Handle type="source" position={Position.Right} />
         </Card>
       )}
-      {status === 'success' && (
+      {nodeStatus === 'success' && (
         <Card className="w-[380px] bg-blue-100 dark:bg-cyan-700">
           <Handle type="target" position={Position.Left} />
           <CardHeader>
             <CardTitle>{networkLabel}</CardTitle>
-            <CardDescription>{status}</CardDescription>
+            <CardDescription>{nodeStatus}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col">

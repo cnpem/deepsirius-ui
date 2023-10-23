@@ -16,6 +16,8 @@ import { api } from '~/utils/api';
 import { FsTree } from '../fs-treeview';
 import { ScrollArea } from '../ui/scroll-area';
 
+// TODO: List the user's workspaces doesnt show all the workspaces if the list is longer than the scroll area
+
 /**
  *
  * @returns buttons for selecting a workspace session from the user's available workspaces from the db

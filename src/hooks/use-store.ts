@@ -15,6 +15,7 @@ import {
   type XYPosition,
   applyEdgeChanges,
   applyNodeChanges,
+  useReactFlow,
 } from 'reactflow';
 import {
   type StateCreator,
@@ -23,9 +24,18 @@ import {
 } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
-import { DatasetNode } from '~/components/workboard/dataset-node';
-import { InferenceNode } from '~/components/workboard/inference-node';
-import { NetworkNode } from '~/components/workboard/network-node';
+import {
+  DatasetNode,
+  type DatasetXState,
+} from '~/components/workboard/dataset-node';
+import {
+  InferenceNode,
+  type InferenceXState,
+} from '~/components/workboard/inference-node';
+import {
+  NetworkNode,
+  type NetworkXState,
+} from '~/components/workboard/network-node';
 import { PlusOneNode } from '~/components/workboard/plusone-node';
 import { api } from '~/utils/api';
 
@@ -47,11 +57,11 @@ const validConnectionPairs = [
   ['network', 'inference'],
 ];
 
-export type Status = 'success' | 'error' | 'active' | 'busy' | 'inactive';
+export type NodeStatus = 'success' | 'error' | 'active' | 'busy' | 'inactive';
 
 export type NodeData = {
   registryId: string; // this is the id of the node in the database
-  status: Status; // this is just a state label without spaces for controlling the flow
+  status: NodeStatus; // this is just a state label without spaces for controlling the flow
   xState?: string; // this is a long json
   remoteFsDataPath?: string; // this is the path to the stored data related to the node component in the remote filesystem and should be deleted when the node is deleted
 };
@@ -296,7 +306,7 @@ export const useInitStoreQuery = ({
             position: JSON.parse(node.position) as XYPosition,
             data: {
               registryId: node.id,
-              status: node.status as Status,
+              status: node.status as NodeStatus,
               xState: node.xState,
             },
           } as Node<NodeData>;
@@ -409,23 +419,32 @@ export type UpdateNodeDataHandler = ({
   data: NodeData;
 }) => void;
 export const useStoreNodes = () => {
+  // const { fitView } = useReactFlow();
   // db interactions
   const createNode = api.workspace.createNewNode.useMutation({
     onSuccess: (data) => {
-      console.log('useStoreNodes: new node created!');
+      console.log('useCreateNode: new node created!');
       const newNode: Node<NodeData> = {
         id: data.componentId,
         type: data.type,
         position: JSON.parse(data.position) as XYPosition,
         data: {
           registryId: data.id,
-          status: data.status as Status,
+          status: data.status as NodeStatus,
           xState: data.xState,
           remoteFsDataPath: 'testDir/',
         },
       };
       // now that the node is created in the database, we can add it to the store with an always defined registryId
       addNode(newNode);
+
+      // updating the viewport to fit the new node
+      console.log('useCreateNode: trying to fit view imediately');
+      // fitView();
+      setTimeout(() => {
+        console.log('useCreateNode: trying to fit view in 3s');
+        // fitView();
+      }, 3000);
     },
   });
   const updateNodePos = api.workspace.updateNodePos.useMutation();
@@ -441,18 +460,22 @@ export const useStoreNodes = () => {
     shallow,
   );
   const { onUpdateNode, addNode } = useStoreActions();
+
+  const nodesMaxX = Math.max(...nodes.map((node) => node.position.x));
+  const nodesMinX = Math.min(...nodes.map((node) => node.position.x));
+  const nodesMinY = Math.min(...nodes.map((node) => node.position.y));
+  const initialPostition: XYPosition = {
+    x: (nodesMinX + (nodesMaxX - nodesMinX) / 2) | 0,
+    y: (nodesMinY - 200) | 0,
+  };
+
   // flow callbacks
-  const onNodeAdd: OnNodeAdd = (nodeType: AllowedNodeTypes) => {
-    console.log('useStoreNodes: node add', nodeType);
-    // get initial x value of position from the node type index in the AllowedNodeTypesList
-    const initialX =
-      AllowedNodeTypesList.findIndex((type) => type === nodeType) * 500;
-    if (!workspacePath) return;
+  const onNodeAdd = (nodeType: AllowedNodeTypes) => {
     createNode.mutate({
-      workspacePath: workspacePath,
+      workspacePath: workspacePath || '',
       type: nodeType,
       componentId: nanoid(),
-      position: { x: initialX, y: 0 },
+      position: initialPostition,
       status: 'inactive',
       xState: '',
     });

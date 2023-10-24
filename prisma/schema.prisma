@@ -50,14 +50,14 @@ model Session {
 }
 
 model User {
-    id            String      @id @default(cuid())
-    name          String?
-    email         String?     @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    Workspaces    Workspace[]
+    id              String           @id @default(cuid())
+    name            String?
+    email           String?          @unique
+    emailVerified   DateTime?
+    image           String?
+    accounts        Account[]
+    sessions        Session[]
+    WorkspaceStates WorkspaceState[]
 }
 
 model VerificationToken {
@@ -68,40 +68,14 @@ model VerificationToken {
     @@unique([identifier, token])
 }
 
-model NodeRegistry {
-    id          String @id @default(cuid())
-    componentId String
-    type        String
-    position    String
-    status      String
-    xState      String
+model WorkspaceState {
+    id        String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    path      String   @unique
+    state     String
+    userId    String
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    workspacePath String
-    workspace     Workspace @relation(fields: [workspacePath], references: [path])
-
-    @@index([workspacePath])
-}
-
-model EdgeRegistry {
-    id          String @id @default(cuid())
-    source      String
-    target      String
-    componentId String
-
-    workspacePath String
-    workspace     Workspace @relation(fields: [workspacePath], references: [path])
-
-    @@index([workspacePath])
-}
-
-model Workspace {
-    id        String         @id @default(cuid())
-    createdAt DateTime       @default(now())
-    updatedAt DateTime       @updatedAt
-    path      String         @unique
-    nodes     NodeRegistry[]
-    edges     EdgeRegistry[]
-    users     User[]
-
-    @@index([path])
+    @@index([userId, path])
 }

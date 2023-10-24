@@ -12,21 +12,21 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { useStoreActions, useStoreWorkspacePath } from '~/hooks/use-store';
+import { useStore, useStoreActions } from '~/hooks/use-store';
 
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 export function AvatarDrop() {
   const { data: sessionData } = useSession();
 
-  const { workspacePath } = useStoreWorkspacePath();
+  const { workspacePath } = useStore();
   const { resetStore } = useStoreActions();
 
   const logOut = useCallback(async () => {
+    resetStore();
     await signOut({ callbackUrl: '/' }).then(() => {
       // TODO: Make it a toast
       console.log('Successfully signed out');
-      resetStore();
     });
   }, [resetStore]);
 

@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useState } from 'react';
+import { type Edge, type Node } from 'reactflow';
 import { Button } from '~/components/ui/button';
 import {
   Dialog,
@@ -10,7 +11,7 @@ import {
 } from '~/components/ui/dialog';
 import { toast } from '~/components/ui/use-toast';
 import { env } from '~/env.mjs';
-import { useStoreActions, useWorkspaceSession } from '~/hooks/use-store';
+import { type NodeData, useStoreActions } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
 import { FsTree } from '../fs-treeview';
@@ -25,13 +26,34 @@ import { ScrollArea } from '../ui/scroll-area';
 function ChooseUserWorkspaces() {
   // db interactions via tRPC
   // getting the workspaces for the user
-  const { isLoading, isError, data, error } =
-    api.workspace.getUserWorkspaces.useQuery();
-  const { setWorkspacePath } = useWorkspaceSession();
+  const {
+    data: userWorkspaces,
+    isError,
+    isLoading,
+    error,
+  } = api.workspaceState.getUserWorkspaces.useQuery();
+  const { setWorkspacePath, initNodes, initEdges, updateStateSnapshot } =
+    useStoreActions();
 
-  const handleSelectWorkspace = (workspacePath: string) => {
-    // store.setWorkspacePath(workspacePath);
-    setWorkspacePath(workspacePath);
+  type WorkspaceSelectProps = {
+    path: string;
+    state: string;
+  };
+  const handleSelectWorkspace = (props: WorkspaceSelectProps) => {
+    if (props.state) {
+      console.log('init nodes and edges from db');
+      const stateSnapshot = JSON.parse(props.state) as {
+        nodes: Node<NodeData>[];
+        edges: Edge[];
+      };
+      // init nodes and edges from db
+      initNodes(stateSnapshot.nodes);
+      initEdges(stateSnapshot.edges);
+      // write the state snapshot
+      updateStateSnapshot();
+    }
+    // sets the workspace path to the store which will trigger the workspace to be loaded
+    setWorkspacePath(props.path);
   };
 
   if (isLoading) {
@@ -41,10 +63,10 @@ function ChooseUserWorkspaces() {
     console.log('error', error);
     return <></>;
   }
-  if (data) {
+  if (userWorkspaces) {
     return (
       <>
-        {data.length > 0 && (
+        {userWorkspaces.length > 0 && (
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -58,11 +80,16 @@ function ChooseUserWorkspaces() {
         )}
         <ScrollArea className="h-[200px] w-[780px] p-4">
           <div className="flex flex-col gap-1">
-            {data.map((workspace) => (
+            {userWorkspaces.map((workspace) => (
               <Button
                 key={workspace.path}
                 variant="outline"
-                onClick={() => void handleSelectWorkspace(workspace.path)}
+                onClick={() =>
+                  void handleSelectWorkspace({
+                    path: workspace.path,
+                    state: workspace.state,
+                  })
+                }
               >
                 {workspace.path}
               </Button>
@@ -72,6 +99,7 @@ function ChooseUserWorkspaces() {
       </>
     );
   }
+  // if we get here, theres a problem with the db
   return <p>Something went wrong</p>;
 }
 
@@ -81,32 +109,21 @@ function ChooseUserWorkspaces() {
  * @returns the WorkspaceSelectDialog component for selecting or creating a workspace session
  */
 export default function WorkspaceSelectDialog({ open }: { open: boolean }) {
-  const { mutate } = api.workspace.createWorkspace.useMutation({
-    onSuccess: (data) => {
-      console.log('updateWorkspace.onSuccess', data);
-      store.setWorkspacePath(data.path);
-    },
-    onError: (e) => {
-      const errorMessage = e.data?.zodError?.fieldErrors.content;
-      if (errorMessage && errorMessage[0]) {
-        toast({
-          variant: 'destructive',
-          title: 'Failed to create!',
-          description: errorMessage[0],
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Failed to create!',
-          description: 'Something went wrong. Please try again.',
-        });
-      }
-    },
-  });
+  const { setWorkspacePath } = useStoreActions();
+  const { mutate: createWorkspaceMutation } =
+    api.workspaceState.createWorkspace.useMutation({
+      onSuccess: () => {
+        console.log('createWorkspace.onSuccess');
+      },
+      onError: (error) => {
+        console.log('createWorkspace.onError', error);
+        setWorkspacePath('');
+      },
+    });
 
-  const store = useStoreActions();
   const handleNewWorkspace = (path: string) => {
-    mutate({ path: path });
+    createWorkspaceMutation({ path: path });
+    setWorkspacePath(path);
   };
 
   return (

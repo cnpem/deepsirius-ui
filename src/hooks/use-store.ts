@@ -12,10 +12,8 @@ import {
   type OnEdgesDelete,
   type OnNodesChange,
   type OnNodesDelete,
-  type XYPosition,
   applyEdgeChanges,
   applyNodeChanges,
-  useReactFlow,
 } from 'reactflow';
 import {
   type StateCreator,
@@ -23,21 +21,10 @@ import {
   create,
 } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { shallow } from 'zustand/shallow';
-import {
-  DatasetNode,
-  type DatasetXState,
-} from '~/components/workboard/dataset-node';
-import {
-  InferenceNode,
-  type InferenceXState,
-} from '~/components/workboard/inference-node';
-import {
-  NetworkNode,
-  type NetworkXState,
-} from '~/components/workboard/network-node';
+import { DatasetNode } from '~/components/workboard/dataset-node';
+import { InferenceNode } from '~/components/workboard/inference-node';
+import { NetworkNode } from '~/components/workboard/network-node';
 import { PlusOneNode } from '~/components/workboard/plusone-node';
-import { api } from '~/utils/api';
 
 export const nodeTypes: NodeTypes = {
   dataset: DatasetNode,
@@ -70,23 +57,26 @@ type RFState = {
   nodes: Node<NodeData>[];
   edges: Edge[];
   workspacePath?: string;
-  enableQuery: boolean;
+  stateSnapshot: string;
 };
 
 type RFActions = {
   resetStore: () => void;
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
+  onConnect: OnConnect;
+  onNodesDelete: OnNodesDelete;
+  onEdgesDelete: OnEdgesDelete;
+  onNodeDragStop: NodeDragHandler;
   isValidConnection: (edge: Edge | Connection) => boolean;
   checkConnectedSource: (targetId: string) => boolean;
-  setEnableQuery: (enableQuery: boolean) => void;
   setWorkspacePath: (workspacePath: string) => void;
   onUpdateNode: ({ id, data }: { id: string; data: NodeData }) => void;
   initNodes: (nodes: Node<NodeData>[]) => void;
   initEdges: (edges: Edge[]) => void;
   addNode: (node: Node<NodeData>) => void;
   addEdge: (edge: Edge) => void;
-  onInit: () => void;
+  updateStateSnapshot: () => void;
 };
 
 export type RFStore = RFState & {
@@ -124,26 +114,25 @@ const initialState: RFState = {
   nodes: [],
   edges: [],
   workspacePath: undefined,
-  enableQuery: true,
+  stateSnapshot: '',
 };
 
 // this is our useStore hook that we can use in our components to get parts of the store and call actions
-const useStore = create<RFStore>()(
+export const useStore = create<RFStore>()(
   persist(
     logger(
       (set, get) => ({
         ...initialState,
         actions: {
-          setEnableQuery: (enableQuery: boolean) => {
-            set({ enableQuery });
+          updateStateSnapshot: () => {
+            const dbState = {
+              nodes: get().nodes,
+              edges: get().edges,
+            };
+            set({ stateSnapshot: JSON.stringify(dbState) });
           },
           resetStore: () => {
             set(initialState);
-          },
-          onInit: () => {
-            if (get().enableQuery) {
-              set({ enableQuery: false });
-            }
           },
           initNodes: (nodes: Node<NodeData>[]) => {
             set({
@@ -159,11 +148,13 @@ const useStore = create<RFStore>()(
             set({
               nodes: [...get().nodes, node],
             });
+            get().actions.updateStateSnapshot();
           },
           addEdge: (edge: Edge) => {
             set({
               edges: [...get().edges, edge],
             });
+            get().actions.updateStateSnapshot();
           },
           onNodesChange: (changes: NodeChange[]) => {
             set({
@@ -181,7 +172,7 @@ const useStore = create<RFStore>()(
             // return without making the connection if a connection already exists
             if (get().edges.find((edge) => edge.target === params.target)) {
               console.log(
-                'Store.OnConnect: There is already a source connected to the target',
+                'Store.isValidConnection: There is already a source connected to the target',
               );
               return false;
             }
@@ -200,14 +191,14 @@ const useStore = create<RFStore>()(
               });
               return false;
             }
-            // check source status
-            if (sourceNode.data.status !== 'success') {
-              console.log(
-                'Store.OnConnect: Source node is not ready. Source status:',
-                sourceNode.data.status,
-              );
-              return false;
-            }
+            // // check source status
+            // if (sourceNode.data.status !== 'success') {
+            //   console.log(
+            //     'Store.OnConnect: Source node is not ready. Source status:',
+            //     sourceNode.data.status,
+            //   );
+            //   return false;
+            // }
             // check connection pairs and connect if valid
             if (
               validConnectionPairs.some(
@@ -226,9 +217,22 @@ const useStore = create<RFStore>()(
               return false;
             }
           },
-          // onConnect: (params: Edge | Connection) => {
-          //   return;
-          // },
+          onConnect: (params: Connection) => {
+            if (!get().workspacePath || !params.source || !params.target) {
+              return;
+            }
+            console.log('Store.OnConnect: Trying to connect', params);
+            if (get().actions.isValidConnection(params)) {
+              console.log('Store.OnConnect: Valid connection');
+              get().actions.addEdge({
+                id: nanoid(), // testing using the same id for tb and storeand creating it here
+                source: params.source,
+                target: params.target,
+              });
+            } else {
+              console.log('Store.OnConnect: Invalid connection');
+            }
+          },
           checkConnectedSource: (targetId: string) => {
             const edge = get().edges.find((edge) => edge.target === targetId);
             if (!edge) {
@@ -256,16 +260,62 @@ const useStore = create<RFStore>()(
               return false;
             }
           },
+          onNodeDragStop: () => {
+            get().actions.updateStateSnapshot();
+          },
+          onNodesDelete: (nodesToDelete: Node<NodeData>[] | undefined) => {
+            if (!nodesToDelete) {
+              return;
+            }
+            console.log('Store.onNodesDelete: node delete', nodesToDelete);
+            // delete nodes from the nodes array
+            const nodes = get().nodes.filter(
+              (node) => !nodesToDelete.find((n) => n.id === node.id),
+            );
+            set({
+              nodes,
+            });
+            // delete edges from the edges array
+            const edges = get().edges.filter(
+              (edge) =>
+                !nodesToDelete.find(
+                  (node) => node.id === edge.source || node.id === edge.target,
+                ),
+            );
+            set({
+              edges,
+            });
+            get().actions.updateStateSnapshot();
+          },
+          onEdgesDelete: (edgesToDelete: Edge[] | undefined) => {
+            if (!edgesToDelete) {
+              return;
+            }
+            console.log('Store.onEdgesDelete: edge delete', edgesToDelete);
+            // delete edges from the edges array
+            const edges = get().edges.filter(
+              (edge) => !edgesToDelete.find((e) => e.id === edge.id),
+            );
+            set({
+              edges,
+            });
+            get().actions.updateStateSnapshot();
+          },
           onUpdateNode: ({ id, data }: { id: string; data: NodeData }) => {
             const nodes = get().nodes;
             const node = nodes.find((node) => node.id === id);
             if (node) {
               node.data = { ...node.data, ...data } as NodeData;
-              set({ nodes });
+              set({
+                nodes,
+              });
+              get().actions.updateStateSnapshot();
             }
           },
           setWorkspacePath: (workspacePath: string) => {
-            set({ workspacePath: workspacePath });
+            set({
+              workspacePath: workspacePath,
+            });
           },
         },
       }),
@@ -279,252 +329,4 @@ const useStore = create<RFStore>()(
   ),
 );
 
-export const useStoreWorkspacePath = () =>
-  useStore((state) => ({ workspacePath: state.workspacePath }), shallow);
-export const useStoreEnableQuery = () =>
-  useStore((state) => ({ enableQuery: state.enableQuery }), shallow);
 export const useStoreActions = () => useStore((state) => state.actions);
-// returns the query state and update the store state data when the query is done
-// should be called in the compnent that renders the data from the query
-export const useInitStoreQuery = ({
-  workspacePath,
-}: {
-  workspacePath: string;
-}) => {
-  const { enableQuery } = useStoreEnableQuery();
-  const { initNodes, initEdges } = useStoreActions();
-  const nodesQuery = api.workspace.getWorkspaceNodes.useQuery(
-    { workspacePath: workspacePath },
-    {
-      enabled: enableQuery && !!workspacePath,
-      onSuccess: (data) => {
-        console.log('Store: onSuccess: query node data', data);
-        const Nodes: Node<NodeData>[] = data.map((node) => {
-          return {
-            id: node.componentId,
-            type: node.type,
-            position: JSON.parse(node.position) as XYPosition,
-            data: {
-              registryId: node.id,
-              status: node.status as NodeStatus,
-              xState: node.xState,
-            },
-          } as Node<NodeData>;
-        });
-        initNodes(Nodes);
-      },
-    },
-  );
-  const edgesQuery = api.workspace.getWorkspaceEdges.useQuery(
-    { workspacePath: workspacePath },
-    {
-      enabled: enableQuery && !!workspacePath,
-      onSuccess: (data) => {
-        console.log('Store: onSuccess: query edge data', data);
-        const Edges: Edge[] = data.map((edge) => {
-          return {
-            id: edge.id, // testing using the same id for tb and store
-            source: edge.source,
-            target: edge.target,
-          };
-        });
-        initEdges(Edges);
-      },
-    },
-  );
-
-  return {
-    enableQuery,
-    nodesQuery,
-    edgesQuery,
-  };
-};
-
-// hook for creating a session on the store and loading the database and leaving the session on unmount and reseting the store
-export const useWorkspaceSession = () => {
-  // store action
-  const { setWorkspacePath, resetStore } = useStoreActions();
-  const { workspacePath } = useStoreWorkspacePath();
-
-  // returning the actions triggered by setPath
-  return {
-    workspacePath,
-    setWorkspacePath,
-    resetStore,
-  };
-};
-
-export const useStoreEdges = () => {
-  // store actions
-  const { edges } = useStore((state) => ({ edges: state.edges }), shallow);
-  const { addEdge, isValidConnection } = useStoreActions();
-  const { workspacePath } = useStoreWorkspacePath();
-  // db interactions
-  const createEdge = api.workspace.createEdge.useMutation({
-    onSuccess: (data) => {
-      console.log('useStoreEdges: create edge success', data);
-      // if success, update the store
-      const NewEdge: Edge = {
-        id: data.id, // testing using the same id for tb and store
-        source: data.source,
-        target: data.target,
-      };
-      addEdge(NewEdge);
-    },
-    onError: (e) => {
-      console.log('useStoreEdges: create edge error', e);
-    },
-  });
-  const deleteEdge = api.workspace.deleteEdge.useMutation();
-
-  // flow callbacks
-  const onEdgesDelete: OnEdgesDelete = (edges: Edge[]) => {
-    edges.map((edge) => {
-      console.log('useStoreEdges: edge delete', edge);
-      deleteEdge.mutate({
-        registryId: edge.id,
-      });
-    });
-  };
-
-  const onEdgesConnect: OnConnect = (params: Connection) => {
-    if (!workspacePath || !params.source || !params.target) return;
-    console.log('useStoreEdges: edge connect', params);
-    if (isValidConnection(params)) {
-      console.log('useStoreEdges: edge connect: valid connection');
-      createEdge.mutate({
-        workspacePath: workspacePath,
-        componentId: nanoid(), // testing using the same id for tb and storeand creating it here
-        sourceId: params.source,
-        targetId: params.target,
-      });
-    } else {
-      console.log('useStoreEdges: edge connect: invalid connection');
-    }
-  };
-
-  return {
-    edges,
-    onEdgesDelete,
-    onEdgesConnect,
-  };
-};
-
-export type OnNodeAdd = (nodeType: AllowedNodeTypes) => void;
-export type UpdateNodeDataHandler = ({
-  id,
-  data,
-}: {
-  id: string;
-  data: NodeData;
-}) => void;
-export const useStoreNodes = () => {
-  // const { fitView } = useReactFlow();
-  // db interactions
-  const createNode = api.workspace.createNewNode.useMutation({
-    onSuccess: (data) => {
-      console.log('useCreateNode: new node created!');
-      const newNode: Node<NodeData> = {
-        id: data.componentId,
-        type: data.type,
-        position: JSON.parse(data.position) as XYPosition,
-        data: {
-          registryId: data.id,
-          status: data.status as NodeStatus,
-          xState: data.xState,
-          remoteFsDataPath: 'testDir/',
-        },
-      };
-      // now that the node is created in the database, we can add it to the store with an always defined registryId
-      addNode(newNode);
-
-      // updating the viewport to fit the new node
-      console.log('useCreateNode: trying to fit view imediately');
-      // fitView();
-      setTimeout(() => {
-        console.log('useCreateNode: trying to fit view in 3s');
-        // fitView();
-      }, 3000);
-    },
-  });
-  const updateNodePos = api.workspace.updateNodePos.useMutation();
-  const updateNodeData = api.workspace.updateNodeData.useMutation();
-  const deleteNode = api.workspace.deleteNode.useMutation();
-  const { mutate: deleteRemoteFiles } = api.remotefiles.remove.useMutation();
-  // store
-  const { nodes, workspacePath } = useStore(
-    (state) => ({
-      nodes: state.nodes,
-      workspacePath: state.workspacePath,
-    }),
-    shallow,
-  );
-  const { onUpdateNode, addNode } = useStoreActions();
-
-  const nodesMaxX = Math.max(...nodes.map((node) => node.position.x));
-  const nodesMinX = Math.min(...nodes.map((node) => node.position.x));
-  const nodesMinY = Math.min(...nodes.map((node) => node.position.y));
-  const initialPostition: XYPosition = {
-    x: (nodesMinX + (nodesMaxX - nodesMinX) / 2) | 0,
-    y: (nodesMinY - 200) | 0,
-  };
-
-  // flow callbacks
-  const onNodeAdd = (nodeType: AllowedNodeTypes) => {
-    createNode.mutate({
-      workspacePath: workspacePath || '',
-      type: nodeType,
-      componentId: nanoid(),
-      position: initialPostition,
-      status: 'inactive',
-      xState: '',
-    });
-  };
-
-  const onUpdateNodeData: UpdateNodeDataHandler = ({ id, data }) => {
-    console.log('useStoreNodes: Node update:', id, data.status);
-    onUpdateNode({ id, data });
-    updateNodeData.mutate(
-      data as { registryId: string; status: string; xState: string },
-    );
-  };
-  const onNodeDragStop: NodeDragHandler = (_, node: Node<NodeData>) => {
-    console.log('useStoreNodes: node drag stop', node);
-    // how to differentiate a real movement from an involuntary click to activate or something else?
-    updateNodePos.mutate({
-      registryId: node.data.registryId,
-      position: node.position as { x: number; y: number },
-    });
-  };
-  const onNodesDelete: OnNodesDelete = (
-    nodesToDelete: Node<NodeData>[] | undefined,
-  ) => {
-    if (!nodesToDelete) {
-      return;
-    }
-    console.log('useStoreNodes: node delete', nodesToDelete);
-    nodesToDelete.map((node) => {
-      // delete node from the remote fs
-      // If the node has a remote file path, delete it
-      // (not all nodes will have a remote file path)
-      if (workspacePath && typeof node.data.remoteFsDataPath === 'string') {
-        deleteRemoteFiles({
-          path: workspacePath + '/' + node.data.remoteFsDataPath,
-        });
-      }
-
-      // delete node from db
-      deleteNode.mutate({
-        registryId: node.data.registryId,
-      });
-    });
-  };
-
-  return {
-    nodes,
-    onNodeAdd,
-    onUpdateNodeData,
-    onNodeDragStop,
-    onNodesDelete,
-  };
-};

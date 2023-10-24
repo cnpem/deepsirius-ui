@@ -1,23 +1,23 @@
 import { ArrowBigLeft, PlusCircle } from 'lucide-react';
+import { useCallback, useEffect } from 'react';
 import ReactFlow, {
   Background,
   BackgroundVariant,
   Controls,
+  type Edge,
   MiniMap,
+  type Node,
   Panel,
 } from 'reactflow';
-import { type Node } from 'reactflow';
 import 'reactflow/dist/style.css';
 import CustomConnectionLine from '~/components/workboard/connection-line';
 import {
   type NodeData,
   nodeTypes,
-  useInitStoreQuery,
+  useStore,
   useStoreActions,
-  useStoreEdges,
-  useStoreNodes,
-  useStoreWorkspacePath,
 } from '~/hooks/use-store';
+import { api } from '~/utils/api';
 
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { PlusOneNode } from './plusone-node';
@@ -31,10 +31,53 @@ import WorkspaceSelectDialog from './workspace-select-dialog';
  * @returns
  */
 function Geppetto({ workspacePath }: { workspacePath: string }) {
-  useInitStoreQuery({ workspacePath });
-  const { onNodesChange, onEdgesChange, onInit } = useStoreActions();
-  const { nodes, onNodeDragStop, onNodesDelete } = useStoreNodes();
-  const { edges, onEdgesConnect, onEdgesDelete } = useStoreEdges();
+  const {
+    onConnect,
+    onNodeDragStop,
+    onNodesDelete,
+    onEdgesDelete,
+    onNodesChange,
+  } = useStoreActions();
+  const { nodes, edges, stateSnapshot } = useStore();
+  const { mutate: updateDbState } =
+    api.workspaceState.updateWorkspace.useMutation({
+      onSuccess: () => {
+        console.log('dbstate updated successfully');
+      },
+      onError: (error) => {
+        console.log('dbstate update error', error);
+      },
+    });
+
+  useEffect(() => {
+    updateDbState({
+      path: workspacePath,
+      state: stateSnapshot,
+    });
+  }, [updateDbState, stateSnapshot, workspacePath]);
+
+  // these callbacks will be useful for creating side effects when the nodes and edges change
+  // in this case, there will be other api calls for deleting files and directories in the remote filesystem that should be triggered when a node is deleted
+
+  const handleNodesDelete = useCallback(
+    (nodesToDelete: Node<NodeData>[]) => {
+      console.log('nodes to delete', nodesToDelete);
+      if (nodesToDelete) {
+        onNodesDelete(nodesToDelete);
+      }
+    },
+    [onNodesDelete],
+  );
+
+  const handleEdgesDelete = useCallback(
+    (edgesToDelete: Edge[]) => {
+      console.log('edges to delete', edgesToDelete);
+      if (edgesToDelete) {
+        onEdgesDelete(edgesToDelete);
+      }
+    },
+    [onEdgesDelete],
+  );
 
   const variant = BackgroundVariant.Dots;
 
@@ -60,14 +103,13 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange} // not really being used
-        onConnect={onEdgesConnect}
+        // onEdgesChange={onEdgesChange} // this is not needed because the edges are not editable, only deletable
+        onConnect={onConnect}
         onNodeDragStop={onNodeDragStop}
-        onNodesDelete={onNodesDelete}
-        onEdgesDelete={onEdgesDelete}
+        onNodesDelete={handleNodesDelete}
+        onEdgesDelete={handleEdgesDelete}
         connectionLineComponent={CustomConnectionLine}
         nodeTypes={nodeTypes}
-        onInit={onInit}
         fitView
       >
         <Panel position="top-left" className="flex flex-col gap-2">
@@ -124,7 +166,7 @@ function AlertDemo() {
  * @returns the WorkspaceSelectDialog component if no workspacePath is set in the store or the Geppetto (Workspace Flow component) if it is
  */
 export default function Flow() {
-  const { workspacePath } = useStoreWorkspacePath();
+  const { workspacePath } = useStore();
 
   return (
     <>

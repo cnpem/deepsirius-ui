@@ -3,7 +3,7 @@ import { createTRPCRouter } from '~/server/api/trpc';
 
 import { remoteFilesRouter } from './routers/remote-files';
 import { remoteJobRouter } from './routers/remote-job';
-import { workspaceRouter } from './routers/workspace-router';
+import { workspaceStateRouter } from './routers/workspace-state-router';
 
 /**
  * This is the primary router for your server.
@@ -13,8 +13,8 @@ import { workspaceRouter } from './routers/workspace-router';
 export const appRouter = createTRPCRouter({
   example: exampleRouter,
   remotejob: remoteJobRouter,
-  workspace: workspaceRouter,
   remotefiles: remoteFilesRouter,
+  workspaceState: workspaceStateRouter,
 });
 
 // export type definition of API

@@ -2,7 +2,6 @@ import { useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
-import { set } from 'zod';
 import {
   Accordion,
   AccordionContent,
@@ -14,8 +13,7 @@ import { toast } from '~/components/ui/use-toast';
 import {
   type NodeData,
   type NodeStatus,
-  defineStatusFromXState,
-  useStoreNodes,
+  useStoreActions,
 } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
@@ -152,7 +150,8 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
   const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const { onUpdateNodeData } = useStoreNodes();
+  // const { onUpdateNode } = useStoreNodes();
+  const { onUpdateNode } = useStoreActions();
   const [nodeStatus, setNodeStatus] = useState<NodeStatus>(data.status);
 
   const prevXState = State.create(
@@ -228,7 +227,7 @@ export function DatasetNode({ id, data }: NodeProps<NodeData>) {
         // update the local state
         setNodeStatus(newStatus);
         // update the node data in the store
-        onUpdateNodeData({
+        onUpdateNode({
           id: id, // this is the component id from the react-flow
           data: {
             ...data,

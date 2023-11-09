@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 
-export const workspaceStateRouter = createTRPCRouter({
+export const workspaceDbStateRouter = createTRPCRouter({
   createWorkspace: protectedProcedure
     .input(
       z.object({
@@ -54,7 +54,6 @@ export const workspaceStateRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      console.log('should update this', input);
       const uid = ctx.session.user.id ?? '';
       if (uid === '') {
         throw new Error('User not found');

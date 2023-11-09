@@ -84,8 +84,8 @@ export const authOptions: NextAuthOptions = {
         }
         const { email, password } = credentials;
         const name = email.substring(0, email.lastIndexOf('@'));
-        // // bypass certificate validation if LDAP_URI is not set
-        // if (!env.LDAP_URI) {
+        // // WARNING: BYPASS certificate validation if user e-mail is test@deepsirius
+        // if (email === 'test@deepsirius') {
         //   return new Promise((resolve) => {
         //     const user = {
         //       id: name,
@@ -94,7 +94,7 @@ export const authOptions: NextAuthOptions = {
         //       password: password,
         //     } as User;
         //     // for debugging, logs id name and email of the user
-        //     console.log('LDAP_URI not set, bypassing LDAP authentication with credentials:', {id: user.id, name: user.name, email: user.email});
+        //     console.log('WARNING: bypassing LDAP authentication with test credentials:', {id: user.id, name: user.name, email: user.email});
         //     resolve(user);
         //   });
         // }
@@ -139,6 +139,10 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async jwt({ token, user }) {
+      // // WARNING: BYPASS ssh procedures if user e-mail is test@deepsirius
+      // if (user?.email === 'test@deepsirius') {
+      //   return token;
+      // }
       if (user && user.name && user.password) {
         const comment = `${user.name}@deepsirius`;
         const { name: username, password } = user;

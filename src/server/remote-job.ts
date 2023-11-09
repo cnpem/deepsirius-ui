@@ -69,7 +69,7 @@ export function checkJobState(
   host: string,
   jobId: string,
 ) {
-  const command = `sacct -j ${jobId} --format=State --parsable2`;
+  const command = `sacct -j ${jobId}.batch --format=State --parsable2`;
 
   return new Promise<string | undefined>((resolve, reject) => {
     sshConnectAndRunCommand(
@@ -83,9 +83,9 @@ export function checkJobState(
       passphrase,
     )
       .then((output) => {
+        // The output of the sacct command comes in two lines, the first line is the header and the second is the actual state: i.e. State\nRUNNING, State\nCOMPLETED, etc.
         const lines = output.trim().split('\n');
-        const state = lines[2];
-        // console.log('Job state:', state);
+        const state = lines[1];
         resolve(state);
       })
       .catch((error) => {
@@ -116,7 +116,6 @@ export function cancelJob(
       passphrase,
     )
       .then(() => {
-        // console.log({ jobId: jobId, status: 'CANCELLED' });
         resolve('CANCELLED');
       })
       .catch((error) => {
@@ -425,7 +424,6 @@ export function removePublicKeyByComment(
   });
 }
 
-// Function for removing a file or directory from the remote host using sftp
 export function removeRemoteFiles(
   privateKey: string,
   passphrase: string,
@@ -442,15 +440,48 @@ export function removeRemoteFiles(
       privateKey: privateKey,
       passphrase: passphrase,
     };
-    console.log('connected and trying to remove', path);
     const conn = new NodeSSH();
     conn
       .connect(sshOptions)
       .then(() => {
-        console.log('connected and trying to remove', path);
         executeCommand(`rm -rf ${path}`)
           .then(() => {
             resolve('success');
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+}
+
+export function readRemoteFile(
+  privateKey: string,
+  passphrase: string,
+  username: string,
+  host: string,
+  path: string,
+): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    const sshOptions: Config = {
+      debug: console.log,
+      host,
+      port: 22,
+      username,
+      privateKey: privateKey,
+      passphrase: passphrase,
+    };
+    const conn = new NodeSSH();
+    conn
+      .connect(sshOptions)
+      .then(() => {
+        console.log('readRemoteFile: connected and trying to read', path);
+        executeCommand(`cat ${path}`)
+          .then((output) => {
+            resolve(output);
           })
           .catch((err) => {
             console.log(err);

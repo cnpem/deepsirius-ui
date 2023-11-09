@@ -95,4 +95,19 @@ export const remoteJobRouter = createTRPCRouter({
       );
       return { cancelStatus: cancelStatus };
     }),
+  checkStatus: protectedProcedure
+    .input(z.object({ jobId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const privateKey = ctx.privateKey ?? '';
+      const username = ctx.session.user.name ?? '';
+
+      const jobStatus = await checkJobState(
+        privateKey,
+        env.PRIVATE_KEY_PASSPHRASE,
+        username,
+        env.SSH_HOST,
+        input.jobId,
+      );
+      return { jobStatus: jobStatus };
+    }),
 });

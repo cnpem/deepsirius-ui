@@ -1,9 +1,9 @@
-import { exampleRouter } from '~/server/api/routers/example';
 import { createTRPCRouter } from '~/server/api/trpc';
 
 import { remoteFilesRouter } from './routers/remote-files';
 import { remoteJobRouter } from './routers/remote-job';
-import { workspaceStateRouter } from './routers/workspace-state-router';
+import { remoteProcessRouter } from './routers/remote-node-process-router';
+import { workspaceDbStateRouter } from './routers/workspace-db-state-router';
 
 /**
  * This is the primary router for your server.
@@ -11,10 +11,10 @@ import { workspaceStateRouter } from './routers/workspace-state-router';
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  example: exampleRouter,
   remotejob: remoteJobRouter,
   remotefiles: remoteFilesRouter,
-  workspaceState: workspaceStateRouter,
+  workspaceDbState: workspaceDbStateRouter,
+  remoteProcess: remoteProcessRouter,
 });
 
 // export type definition of API

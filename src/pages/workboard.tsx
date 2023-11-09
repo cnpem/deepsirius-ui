@@ -3,9 +3,12 @@ import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { Layout } from '~/components/layout';
 
-const NoSSRFlow = dynamic(() => import('~/components/workboard/flow'), {
-  ssr: false,
-});
+const NoSSRFlow = dynamic(
+  () => import('~/components/workboard/workspace-flow-controller'),
+  {
+    ssr: false,
+  },
+);
 
 const Workboard: NextPage = () => {
   return (

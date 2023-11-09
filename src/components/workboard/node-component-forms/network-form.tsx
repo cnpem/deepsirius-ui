@@ -24,7 +24,7 @@ import {
 import { Switch } from '~/components/ui/switch';
 
 const patchSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
-const networkFormSchema = z.object({
+export const networkSchema = z.object({
   // field of type z.string() with no spaces or special characters allowed
   networkUserLabel: z
     .string()
@@ -45,7 +45,14 @@ const networkFormSchema = z.object({
   // field of type z.number() with a minimum value of 0
   learningRate: z.coerce.number().gt(0, { message: 'Must be greater than 0' }),
   // field of type z.enum() with options of 'Adam', 'SGD'
-  optimizer: z.enum(['adam', 'SGD']),
+  optimizer: z.enum([
+    'adam',
+    'momentum',
+    'adagrad',
+    'nesterov',
+    'gradientdescent',
+    'rmsprop',
+  ]),
   // field of type z.enum() with options of 'CrossEntropy', 'dice', 'xent_dice'
   // meaning cross entropy, dice or both combined
   lossFunction: z.enum(['CrossEntropy', 'dice', 'xent_dice']),
@@ -55,13 +62,13 @@ const networkFormSchema = z.object({
   patchSize: z.enum(patchSizes),
 });
 
-export type NetworkFormType = z.infer<typeof networkFormSchema>;
+export type NetworkFormType = z.infer<typeof networkSchema>;
 export type networkFormCallback = (data: NetworkFormType) => void;
 
 type NetworkFormProps = {
   onSubmitHandler: networkFormCallback;
   networkUserLabel?: string;
-  networkTypeName?: z.infer<typeof networkFormSchema>['networkTypeName'];
+  networkTypeName?: z.infer<typeof networkSchema>['networkTypeName'];
 };
 
 export function useNetworkForm({
@@ -69,10 +76,10 @@ export function useNetworkForm({
   networkTypeName = 'unet2d',
 }: {
   networkUserLabel?: string;
-  networkTypeName?: z.infer<typeof networkFormSchema>['networkTypeName'];
+  networkTypeName?: z.infer<typeof networkSchema>['networkTypeName'];
 }) {
   const form = useForm<NetworkFormType>({
-    resolver: zodResolver(networkFormSchema),
+    resolver: zodResolver(networkSchema),
     defaultValues: {
       networkUserLabel: networkUserLabel,
       networkTypeName: networkTypeName,
@@ -106,7 +113,11 @@ const networkOpts: FormFieldItems = [
 
 const optimizerOpts: FormFieldItems = [
   { label: 'Adam', value: 'adam' },
-  { label: 'SGD', value: 'SGD' },
+  { label: 'Momentum', value: 'momentum' },
+  { label: 'Adagrad', value: 'adagrad' },
+  { label: 'Nesterov', value: 'nesterov' },
+  { label: 'Gradient Descent', value: 'gradientdescent' },
+  { label: 'RMS Prop', value: 'rmsprop' },
 ];
 
 const lossOpts: FormFieldItems = [
@@ -214,31 +225,22 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
           name="optimizer"
           control={form.control}
           render={({ field }) => (
-            <FormItem className="">
-              <FormControl>
-                <div className=" flex items-center space-x-4 rounded-md py-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      Optimizer
-                    </p>
-                  </div>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex justify-end"
-                  >
-                    {optimizerOpts.map((option) => (
-                      <div
-                        key={option.value}
-                        className="flex items-center space-x-1"
-                      >
-                        <FormLabel id="optimizer">{option.label}</FormLabel>
-                        <RadioGroupItem value={option.value} />
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-              </FormControl>
+            <FormItem>
+              <FormLabel>Optimizer</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a verified email to display" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {optimizerOpts.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormItem>
           )}
         />

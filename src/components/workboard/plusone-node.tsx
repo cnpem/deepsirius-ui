@@ -10,7 +10,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-// import { toast } from '~/components/ui/use-toast';
+import { ToastAction } from '~/components/ui/toast';
+import { useToast } from '~/components/ui/use-toast';
 import {
   type AllowedNodeTypes,
   AllowedNodeTypesList,
@@ -21,13 +22,30 @@ import {
 
 // selects the type of node to be created using a dropdown menu
 export function PlusOneNode() {
-  // const { onNodeAdd } = useStoreNodes();
-  const { nodes } = useStore((state) => ({
+  const { nodes, workspacePath } = useStore((state) => ({
+    workspacePath: state.workspacePath,
     nodes: state.nodes,
   }));
   const { addNode } = useStoreActions();
+  const { toast } = useToast();
 
   const onNodeAdd = (nodeType: AllowedNodeTypes) => {
+    if (!workspacePath) {
+      toast({
+        variant: 'destructive',
+        title: 'Uh oh! Something went wrong.',
+        description: 'Looks like the workspace was not loaded properly.',
+        action: (
+          <ToastAction
+            altText="Reload the view"
+            onClick={() => window.location.reload()}
+          >
+            Reload the view
+          </ToastAction>
+        ),
+      });
+      return;
+    }
     const nodesMaxX = Math.max(...nodes.map((node) => node.position.x));
     const nodesMinX = Math.min(...nodes.map((node) => node.position.x));
     const nodesMinY = Math.min(...nodes.map((node) => node.position.y));
@@ -41,10 +59,10 @@ export function PlusOneNode() {
       type: nodeType,
       position: initialPostition,
       data: {
-        registryId: nodeid,
+        workspacePath,
         status: 'active',
         xState: '',
-        remoteFsDataPath: 'testDir/',
+        remoteFsDataPath: '',
       },
     };
     // now that the node is created in the database, we can add it to the store with an always defined registryId

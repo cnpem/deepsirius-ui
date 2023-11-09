@@ -46,11 +46,7 @@ const dataSchema = z.object({
     }),
 });
 
-const datasetSchema = z.object({
-  datasetName: z.string().nonempty({ message: 'Must have a dataset name!' }),
-  data: dataSchema
-    .array()
-    .nonempty({ message: 'Must have at least one image!' }),
+const augmentationSchema = z.object({
   vflip: z.boolean(),
   hflip: z.boolean(),
   rotateClock: z.boolean(),
@@ -62,12 +58,21 @@ const datasetSchema = z.object({
   poissonNoise: z.boolean(),
   averageBlur: z.boolean(),
   elasticDeformation: z.boolean(),
+});
+
+export const datasetSchema = z.object({
+  datasetName: z.string().nonempty({ message: 'Must have a dataset name!' }),
+  data: dataSchema
+    .array()
+    .nonempty({ message: 'Must have at least one image!' }),
+  augmentation: augmentationSchema,
   patchSize: z.enum(powerSizes),
   sampleSize: z.coerce.number().min(1),
   strategy: z.enum(strategies),
   classes: z.coerce.number().min(2),
 });
 
+// this should be named DatasetFormType
 export type FormType = z.input<typeof datasetSchema>;
 export type FormCallback = (data: FormType) => void;
 
@@ -86,17 +91,19 @@ function useDatasetForm(
     defaultValues: {
       datasetName: name,
       data: data,
-      vflip: false,
-      hflip: false,
-      rotateClock: false,
-      rotateCClock: false,
-      contrast: false,
-      dropout: false,
-      linearContrast: false,
-      gaussianBlur: false,
-      poissonNoise: false,
-      averageBlur: false,
-      elasticDeformation: false,
+      augmentation: {
+        vflip: false,
+        hflip: false,
+        rotateClock: false,
+        rotateCClock: false,
+        contrast: false,
+        dropout: false,
+        linearContrast: false,
+        gaussianBlur: false,
+        poissonNoise: false,
+        averageBlur: false,
+        elasticDeformation: false,
+      },
       patchSize: '256',
       sampleSize: 100,
       strategy: 'uniform',
@@ -311,7 +318,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
           <TabsContent value="augmentation">
             <div className="grid grid-cols-3 gap-4 border p-2 rounded-md border-dashed">
               <FormField
-                name="vflip"
+                name="augmentation.vflip"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">
@@ -332,7 +339,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                 )}
               />
               <FormField
-                name="hflip"
+                name="augmentation.hflip"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">
@@ -353,7 +360,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                 )}
               />
               <FormField
-                name="rotateClock"
+                name="augmentation.rotateClock"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">
@@ -374,7 +381,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                 )}
               />
               <FormField
-                name="rotateCClock"
+                name="augmentation.rotateCClock"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">
@@ -395,7 +402,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                 )}
               />
               <FormField
-                name="contrast"
+                name="augmentation.contrast"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">
@@ -416,7 +423,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                 )}
               />
               <FormField
-                name="linearContrast"
+                name="augmentation.linearContrast"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">
@@ -437,7 +444,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                 )}
               />
               <FormField
-                name="dropout"
+                name="augmentation.dropout"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">
@@ -458,7 +465,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                 )}
               />
               <FormField
-                name="gaussianBlur"
+                name="augmentation.gaussianBlur"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">
@@ -479,7 +486,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                 )}
               />
               <FormField
-                name="poissonNoise"
+                name="augmentation.poissonNoise"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">
@@ -500,7 +507,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                 )}
               />
               <FormField
-                name="averageBlur"
+                name="augmentation.averageBlur"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">
@@ -521,7 +528,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                 )}
               />
               <FormField
-                name="elasticDeformation"
+                name="augmentation.elasticDeformation"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="">

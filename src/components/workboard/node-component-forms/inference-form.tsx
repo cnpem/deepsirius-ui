@@ -26,8 +26,18 @@ import {
 import { Switch } from '~/components/ui/switch';
 import { cn } from '~/lib/utils';
 
-const powerSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
-const inferenceSchema = z.object({
+const powerSizes = [
+  '0',
+  '16',
+  '32',
+  '64',
+  '128',
+  '256',
+  '512',
+  '1024',
+] as const;
+export const inferenceSchema = z.object({
+  outputDir: z.string().nonempty({ message: 'Must have a valid output dir!' }),
   inputImages: z
     .array(
       z.object({
@@ -52,10 +62,12 @@ export type InferenceFormCallback = (data: FormType) => void;
 
 type InferenceFormProps = {
   onSubmitHandler: InferenceFormCallback;
+  outputDir?: string;
   inputImages?: z.infer<typeof inferenceSchema>['inputImages'][number][];
 };
 
 export function useInferenceForm(
+  outputDir: string | undefined,
   inputImages: Array<{ name: string; path: string }> = [],
 ) {
   const form = useForm<FormType>({
@@ -74,9 +86,10 @@ export function useInferenceForm(
 
 export function InferenceForm({
   onSubmitHandler,
+  outputDir,
   inputImages,
 }: InferenceFormProps) {
-  const form = useInferenceForm(inputImages);
+  const form = useInferenceForm(outputDir, inputImages);
   const { fields, append, remove } = useFieldArray({
     name: 'inputImages',
     control: form.control,
@@ -91,9 +104,45 @@ export function InferenceForm({
     append({ name: name, path: path });
   };
 
+  const onOutputDirSelect = (path: string) => {
+    form.setValue('outputDir', path);
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
+        <div>
+          <FormField
+            control={form.control}
+            name="outputDir"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className={'sr-only'}>Output Directory</FormLabel>
+                <FormDescription className={'sr-only'}>
+                  Select the output directory.
+                </FormDescription>
+                <FormControl>
+                  <div className="flex w-full max-w-sm items-center space-x-2">
+                    {!!field.value && <Input {...field} disabled />}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FsTreeDialog
+            handleSelect={onOutputDirSelect}
+            message={{
+              title: 'Select output directory',
+              description:
+                'Select the path to a valid output directory or paste it down below.',
+            }}
+          >
+            <Button type="button" variant="link" size="sm" className="mt-1">
+              Select output dir
+            </Button>
+          </FsTreeDialog>
+        </div>
         <div>
           {fields.map((field, index) => (
             <FormField

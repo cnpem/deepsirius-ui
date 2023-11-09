@@ -29,10 +29,16 @@ import {
 } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
+import { type NetworkXState } from './network-node';
+
 interface JobEvent {
   type: 'done.invoke';
   data: { jobId?: string; jobStatus?: string; formData?: FormType };
 }
+
+type FormSubmitEvent =
+  | { type: 'start'; data: { formData: FormType; connectedNodeName: string } }
+  | { type: 'retry'; data: { formData: FormType; connectedNodeName: string } };
 
 const inferenceMachine = createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QEsB2AzMAnMqDGYAdGgIZ4AuyAbmAMRmVUnlgDaADALqKgAOA9rGSV+qHiAAeiAIwA2AMyEAnCqUB2JQCYAHEoCs2te1kAaEAE9E82ZsJrNsvWoAsavUtnsdzgL4+zaJg4+EQM1HSw5CRY5BzcSCACQiJiCVIIzuxqhM6a0tp67tq60vLWZpYI1rb2jnoKes7S7OzafgEY2LgEhABGAK6w5oS8uBBoULQQokRoVPwA1kSw-b0AtsIAUvy9ceJJwsii4unarTnazvJn7HqamhraFYhOeoROmlrSV9Vl7SCBLohPqDYajVDjVCTbBYfhYEYAG2Y6Dha0IK3WWx2ewSBxSJxkOiUhHkVzU8nJmnkSmkBmeCAeb1qTjUcmk9n0-0BwR6AyGhCw-VQqAmUxmxFQ8yWEqC3SIfOGguFEwQc34eGYR1QcRxfEEh2OaUJuhJZIp8ipNLpFkQskMhBaam09yUZPuei5nR58tBAqFIqhYtQs0lixDsuBCr9yqhqtDGpSOuk8T1yS1BIQ0k+xNJ5sp1NpTxtCHctkdzoM0izzl8-gBXrlIP5SoDk2mwYlUvDQN5vpbKrVCa1Os0KcS+vxRsz2dNeYtBetlQUxL0WWdZJc2gtnojveb-tF7ZDXZlPZ9+5jUDj8yHoh18jHePTU-U2T08izdyyt2a8npziUdhlE+IwyircktB3M8m0VA9Aw1EIEV1cc00NUB0maZxtByPJLjtJRikA0xi2pZxlDURwKJrLCAOkKDvUIGE4VoHByCwcxkKfNDJBeFoHSdLMXGuRp1HpbRpHeFoWmkQCrgcLD6MbFY8AIWBYFodA0DAcghTYLh9gnZ90N4oC10Eq4CgAtR6QoiSiM0XImnfJ0lD8OtUH4CA4HEbk5QM1DUmMhAAFpiMqULFOBUgKHCfyDUCniMk0elrEUe5KNcdxPG8SKejCGg4snIKdDeXJ8go2QVAtBQUoUQh0qcTKPC8S5cvPSpU3ijMsOyMyHgskTrJIrIcgogwKTk8lZFrDpd3akYxgmQqjMS983j6oTLNE4tChXACAIc75qXkNqYOjVtlu4jCvCA1133Yax8iaYp6QMbDih0TRnLJGxTqYrBLoSjCbAku0XCUakFBrelPv4xxdGdZpvtO5TVPgXFDKumQDDeD8HK3ORDDOP9i0qiT3CrMrZCh0k3J8IA */
@@ -43,12 +49,7 @@ const inferenceMachine = createMachine({
       jobStatus: string;
       inputImages: Array<{ name: string; path: string }>;
     },
-    events: {} as
-      | { type: 'activate' }
-      | { type: 'start'; data: { formData: FormType } }
-      | { type: 'cancel' }
-      | { type: 'retry'; data: { formData: FormType } }
-      | { type: 'finetune'; data: { formData: FormType } },
+    events: {} as FormSubmitEvent | { type: 'cancel' },
   },
   initial: 'active',
   context: {
@@ -129,40 +130,26 @@ const inferenceMachine = createMachine({
     },
     success: {
       tags: ['success'],
-      on: {
-        finetune: {
-          target: 'busy',
-          actions: assign({ jobStatus: '' }),
-        },
-      },
     },
   },
   predictableActionArguments: true,
 });
 export type InferenceXState = StateFrom<typeof inferenceMachine>;
 
-export function InferenceNode({ id, data }: NodeProps<NodeData>) {
-  const createJob = api.remotejob.create.useMutation();
+export function InferenceNode(nodeProps: NodeProps<NodeData>) {
+  // const createJob = api.remotejob.create.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const { checkConnectedSource } = useStoreActions();
+  const submitJob = api.remoteProcess.submitInference.useMutation();
+  const { getSourceData } = useStoreActions();
   const { onUpdateNode } = useStoreActions();
-  const [nodeStatus, setNodeStatus] = useState<NodeStatus>(data.status);
-
-  // handle node activation if theres a source node connected to it
-  const handleActivation = () => {
-    const checkSource = checkConnectedSource(id);
-    if (checkSource) {
-      actor.send('activate');
-    } else {
-      // TODO: make this pretty
-      alert('Please connect a source node to this node.');
-    }
-  };
+  const [nodeStatus, setNodeStatus] = useState<NodeStatus>(
+    nodeProps.data.status,
+  );
 
   const prevXState = State.create(
-    data.xState
-      ? (JSON.parse(data.xState) as InferenceXState)
+    nodeProps.data.xState
+      ? (JSON.parse(nodeProps.data.xState) as InferenceXState)
       : inferenceMachine.initialState,
   );
 
@@ -189,39 +176,34 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
       services: {
         submitJob: (_, event) => {
           return new Promise((resolve, reject) => {
-            const formData =
-              event.type !== 'cancel' && event.type !== 'activate'
-                ? event.data.formData
-                : '';
-            console.log('data submit: ', formData);
-            const jobInput = {
-              jobName: 'deepsirius-inference',
-              output: 'deepsirius-inference-output.txt',
-              error: 'deepsirius-inference-output-error.txt',
-              ntasks: 1,
-              partition: 'proc2',
-              command:
-                'echo "' +
-                JSON.stringify({ ...formData, ...data }) +
-                '" \n sleep 5 \n echo "job completed."',
-            };
-            createJob
-              .mutateAsync(jobInput)
+            const submitEvent = event as FormSubmitEvent;
+            if (!submitEvent.data.formData)
+              reject(new Error("This event shouldn't submit a job"));
+            const formData = submitEvent.data.formData;
+            const connectedNodeName = submitEvent.data.connectedNodeName;
+            submitJob
+              .mutateAsync({
+                workspacePath: nodeProps.data.workspacePath,
+                networkName: connectedNodeName,
+                formData: formData,
+              })
               .then((data) => {
                 resolve({ ...data, formData });
               })
               .catch((err) => reject(err));
           });
         },
-
         jobStatus: (context) => {
           return new Promise((resolve, reject) => {
-            checkJob
-              .mutateAsync({ jobId: context.jobId })
-              .then((data) => {
-                resolve(data);
-              })
-              .catch((err) => reject(err));
+            // wait 5 seconds before checking the job status
+            setTimeout(() => {
+              checkJob
+                .mutateAsync({ jobId: context.jobId })
+                .then((data) => {
+                  resolve(data);
+                })
+                .catch((err) => reject(err));
+            }, 5000);
           });
         },
       },
@@ -235,9 +217,9 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
         setNodeStatus(newStatus);
         // update the node data in the store
         onUpdateNode({
-          id: id, // this is the component id from the react-flow
+          id: nodeProps.id, // this is the component id from the react-flow
           data: {
-            ...data,
+            ...nodeProps.data,
             status: newStatus,
             xState: JSON.stringify(state),
           },
@@ -255,6 +237,15 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
   };
 
   const { jobId, jobStatus, inputImages } = useSelector(actor, selector);
+
+  const getConnectedNetworkLabel = () => {
+    const connectedNodeData = getSourceData(nodeProps.id);
+    if (!connectedNodeData?.xState) return;
+    const connectedXState = JSON.parse(
+      connectedNodeData.xState,
+    ) as NetworkXState;
+    return connectedXState.context.networkLabel ?? undefined;
+  };
 
   return (
     <Card
@@ -278,9 +269,20 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
               <AccordionContent>
                 <InferenceForm
                   onSubmitHandler={(formSubmitData) => {
+                    const connectedNetworkLabel = getConnectedNetworkLabel();
+                    if (!connectedNetworkLabel) {
+                      toast({
+                        title: 'Error',
+                        description: 'Please connect a network node.',
+                      });
+                      return;
+                    }
                     actor.send({
                       type: 'start',
-                      data: { formData: formSubmitData },
+                      data: {
+                        formData: formSubmitData,
+                        connectedNodeName: connectedNetworkLabel,
+                      },
                     });
                     toast({
                       title: 'You submitted the following values:',
@@ -288,7 +290,7 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
                         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
                           <code className="text-white">
                             {JSON.stringify(
-                              { ...formSubmitData, ...data },
+                              { ...formSubmitData, ...nodeProps.data },
                               null,
                               2,
                             )}
@@ -343,17 +345,28 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
               <AccordionContent>
                 <InferenceForm
                   inputImages={inputImages}
-                  onSubmitHandler={(data) => {
+                  onSubmitHandler={(formSubmitData) => {
+                    const connectedNetworkLabel = getConnectedNetworkLabel();
+                    if (!connectedNetworkLabel) {
+                      toast({
+                        title: 'Error',
+                        description: 'Please connect a network node.',
+                      });
+                      return;
+                    }
                     actor.send({
                       type: 'retry',
-                      data: { formData: data },
+                      data: {
+                        formData: formSubmitData,
+                        connectedNodeName: connectedNetworkLabel,
+                      },
                     });
                     toast({
                       title: 'You submitted the following values:',
                       description: (
                         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
                           <code className="text-white">
-                            {JSON.stringify(data, null, 2)}
+                            {JSON.stringify(formSubmitData, null, 2)}
                           </code>
                         </pre>
                       ),
@@ -391,11 +404,6 @@ export function InferenceNode({ id, data }: NodeProps<NodeData>) {
             </div>
           </div>
         </CardContent>
-      )}
-      {nodeStatus === 'inactive' && (
-        <CardFooter className="flex justify-start">
-          <Button onClick={handleActivation}>activate</Button>
-        </CardFooter>
       )}
     </Card>
   );

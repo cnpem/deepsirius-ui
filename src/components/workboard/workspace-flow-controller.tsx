@@ -4,13 +4,15 @@ import ReactFlow, {
   Background,
   BackgroundVariant,
   Controls,
-  type Edge,
   MiniMap,
   type Node,
   Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import CustomConnectionLine from '~/components/workboard/connection-line';
+import { PlusOneNode } from '~/components/workboard/plusone-node';
+import WorkspaceSelectDialog from '~/components/workboard/workspace-select-dialog';
 import {
   type NodeData,
   nodeTypes,
@@ -18,10 +20,6 @@ import {
   useStoreActions,
 } from '~/hooks/use-store';
 import { api } from '~/utils/api';
-
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import { PlusOneNode } from './plusone-node';
-import WorkspaceSelectDialog from './workspace-select-dialog';
 
 /**
  * The Geppetto component is the main component for the workspace flow
@@ -40,7 +38,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
   } = useStoreActions();
   const { nodes, edges, stateSnapshot } = useStore();
   const { mutate: updateDbState } =
-    api.workspaceState.updateWorkspace.useMutation({
+    api.workspaceDbState.updateWorkspace.useMutation({
       onSuccess: () => {
         console.log('dbstate updated successfully');
       },
@@ -48,6 +46,14 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         console.log('dbstate update error', error);
       },
     });
+  const { mutate: deleteNodeFiles } = api.remotefiles.remove.useMutation({
+    onSuccess: () => {
+      console.log('node files deleted successfully');
+    },
+    onError: (error) => {
+      console.log('node files delete error', error);
+    },
+  });
 
   useEffect(() => {
     updateDbState({
@@ -56,27 +62,23 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     });
   }, [updateDbState, stateSnapshot, workspacePath]);
 
-  // these callbacks will be useful for creating side effects when the nodes and edges change
-  // in this case, there will be other api calls for deleting files and directories in the remote filesystem that should be triggered when a node is deleted
-
   const handleNodesDelete = useCallback(
     (nodesToDelete: Node<NodeData>[]) => {
       console.log('nodes to delete', nodesToDelete);
       if (nodesToDelete) {
+        // delete the files and directories in the remote filesystem if the node has a remoteFsDataPath
+        nodesToDelete.forEach((node) => {
+          if (node.data.remoteFsDataPath) {
+            deleteNodeFiles({
+              path: node.data.remoteFsDataPath,
+            });
+          }
+        });
+        // delete the nodes from the store
         onNodesDelete(nodesToDelete);
       }
     },
-    [onNodesDelete],
-  );
-
-  const handleEdgesDelete = useCallback(
-    (edgesToDelete: Edge[]) => {
-      console.log('edges to delete', edgesToDelete);
-      if (edgesToDelete) {
-        onEdgesDelete(edgesToDelete);
-      }
-    },
-    [onEdgesDelete],
+    [deleteNodeFiles, onNodesDelete],
   );
 
   const variant = BackgroundVariant.Dots;
@@ -107,7 +109,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         onConnect={onConnect}
         onNodeDragStop={onNodeDragStop}
         onNodesDelete={handleNodesDelete}
-        onEdgesDelete={handleEdgesDelete}
+        onEdgesDelete={onEdgesDelete}
         connectionLineComponent={CustomConnectionLine}
         nodeTypes={nodeTypes}
         fitView

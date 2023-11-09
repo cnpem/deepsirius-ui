@@ -23,6 +23,8 @@ const server = z.object({
   SSH_HOST: z.string(),
   CA_CERT: z.string(),
   PRIVATE_KEY_PASSPHRASE: z.string().min(1),
+  PROCESSING_CONTAINER_STORAGE_BIND: z.string(),
+  PROCESSING_CONTAINER_PATH: z.string(),
 });
 
 /**
@@ -52,6 +54,9 @@ const processEnv = {
 
   NEXT_PUBLIC_TREE_PATH: process.env.NEXT_PUBLIC_TREE_PATH,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+  PROCESSING_CONTAINER_STORAGE_BIND:
+    process.env.PROCESSING_CONTAINER_STORAGE_BIND,
+  PROCESSING_CONTAINER_PATH: process.env.PROCESSING_CONTAINER_PATH,
 };
 
 // Don't touch the part below

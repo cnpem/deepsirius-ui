@@ -7,18 +7,10 @@ import { api } from '~/utils/api';
 
 const AuthShowcase: React.FC = () => {
   const { data: sessionData } = useSession();
-  const { data: secretMessage } = api.example.getSecretMessage.useQuery(
-    undefined,
-    {
-      enabled: sessionData?.user !== undefined,
-    },
-  );
-
   return (
     <div className="flex flex-col items-center justify-center gap-4">
       <p className="text-center text-2xl text-white">
         {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
-        {secretMessage && <span> - {secretMessage}</span>}
       </p>
       <button
         className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
@@ -35,8 +27,6 @@ const AuthShowcase: React.FC = () => {
 };
 
 const Home: NextPage = () => {
-  const hello = api.example.hello.useQuery({ text: 'from tRPC' });
-
   return (
     <Layout>
       <Head>
@@ -71,9 +61,6 @@ const Home: NextPage = () => {
             </a>
           </div>
           <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-white">
-              {hello.data ? hello.data.greeting : 'Loading tRPC query...'}
-            </p>
             <AuthShowcase />
           </div>
         </div>

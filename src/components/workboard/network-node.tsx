@@ -30,10 +30,26 @@ import {
 } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
+import { type DatasetXState } from './dataset-node';
+
 interface JobEvent {
   type: 'done.invoke';
   data: { jobId?: string; jobStatus?: string; formData?: NetworkFormType };
 }
+
+type FormSubmitEvent =
+  | {
+      type: 'create';
+      data: { formData: NetworkFormType; connectedNodeName: string };
+    }
+  | {
+      type: 'retry';
+      data: { formData: NetworkFormType; connectedNodeName: string };
+    }
+  | {
+      type: 'finetune';
+      data: { formData: NetworkFormType; connectedNodeName: string };
+    };
 
 const networkMachine = createMachine({
   id: 'network',
@@ -44,12 +60,7 @@ const networkMachine = createMachine({
       networkLabel: string;
       networkType: 'unet2d' | 'unet3d' | 'vnet';
     },
-    events: {} as
-      | { type: 'activate' }
-      | { type: 'start training'; data: { formData: NetworkFormType } }
-      | { type: 'cancel' }
-      | { type: 'retry'; data: { formData: NetworkFormType } }
-      | { type: 'finetune'; data: { formData: NetworkFormType } },
+    events: {} as FormSubmitEvent | { type: 'cancel' },
   },
   initial: 'active',
   context: {
@@ -61,7 +72,7 @@ const networkMachine = createMachine({
   states: {
     active: {
       on: {
-        'start training': 'training',
+        create: 'training',
       },
       tags: ['active'],
     },
@@ -207,28 +218,19 @@ const networkMachine = createMachine({
 });
 export type NetworkXState = StateFrom<typeof networkMachine>;
 
-export function NetworkNode({ id, data }: NodeProps<NodeData>) {
-  const createJob = api.remotejob.create.useMutation();
+export function NetworkNode(nodeProps: NodeProps<NodeData>) {
+  const submitJob = api.remoteProcess.submitNetwork.useMutation();
   const checkJob = api.remotejob.status.useMutation();
   const cancelJob = api.remotejob.cancel.useMutation();
-  const { checkConnectedSource } = useStoreActions();
+  const { getSourceData } = useStoreActions();
   const { onUpdateNode } = useStoreActions();
-  const [nodeStatus, setNodeStatus] = useState<NodeStatus>(data.status);
-
-  // handle node activation if theres a source node connected to it
-  const handleActivation = () => {
-    const checkSource = checkConnectedSource(id);
-    if (checkSource) {
-      actor.send('activate');
-    } else {
-      // TODO: make this pretty
-      alert('Please connect a source node to this node.');
-    }
-  };
+  const [nodeStatus, setNodeStatus] = useState<NodeStatus>(
+    nodeProps.data.status,
+  );
 
   const prevXState = State.create(
-    data.xState
-      ? (JSON.parse(data.xState) as NetworkXState)
+    nodeProps.data.xState
+      ? (JSON.parse(nodeProps.data.xState) as NetworkXState)
       : networkMachine.initialState,
   );
 
@@ -255,38 +257,36 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
       services: {
         submitJob: (state, event) => {
           return new Promise((resolve, reject) => {
-            const formData =
-              event.type !== 'cancel' && event.type !== 'activate'
-                ? event.data.formData
-                : '';
-            const jobInput = {
-              jobName: 'deepsirius-network',
-              output: 'deepsirius-network-output.txt',
-              error: 'deepsirius-network-error.txt',
-              ntasks: 1,
-              partition: 'proc2',
-              command:
-                'echo "' +
-                JSON.stringify({ ...formData, ...data }) +
-                '" \n sleep 5 \n echo "job completed."',
-            };
-            createJob
-              .mutateAsync(jobInput)
+            const submitEvent = event as FormSubmitEvent;
+            if (!submitEvent.data.formData)
+              reject(new Error("This event shouldn't submit a job"));
+            const formData = submitEvent.data.formData;
+            const connectedNodeName = submitEvent.data.connectedNodeName;
+            const submitType = submitEvent.type;
+            submitJob
+              .mutateAsync({
+                workspacePath: nodeProps.data.workspacePath,
+                datasetPath: connectedNodeName,
+                trainingType: submitType,
+                formData: formData,
+              })
               .then((data) => {
                 resolve({ ...data, formData });
               })
               .catch((err) => reject(err));
           });
         },
-
         jobStatus: (context) => {
           return new Promise((resolve, reject) => {
-            checkJob
-              .mutateAsync({ jobId: context.jobId })
-              .then((data) => {
-                resolve(data);
-              })
-              .catch((err) => reject(err));
+            // wait 5 seconds before checking the job status
+            setTimeout(() => {
+              checkJob
+                .mutateAsync({ jobId: context.jobId })
+                .then((data) => {
+                  resolve(data);
+                })
+                .catch((err) => reject(err));
+            }, 5000);
           });
         },
       },
@@ -299,9 +299,9 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
         setNodeStatus(newStatus);
         // update the node data in the store
         onUpdateNode({
-          id: id, // this is the component id from the react-flow
+          id: nodeProps.id, // this is the component id from the react-flow
           data: {
-            ...data,
+            ...nodeProps.data,
             status: newStatus,
             xState: JSON.stringify(state),
           },
@@ -332,21 +332,17 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
     networkType,
   } = useSelector(actor, selector);
 
+  const getConnectedDatasetName = () => {
+    const connectedNodeData = getSourceData(nodeProps.id);
+    if (!connectedNodeData?.xState) return;
+    const connectedXState = connectedNodeData.xState
+      ? (JSON.parse(connectedNodeData.xState) as DatasetXState)
+      : undefined;
+    return connectedXState?.context.datasetName ?? undefined;
+  };
+
   return (
     <>
-      {nodeStatus === 'inactive' && (
-        <Card className="w-[380px] bg-gray-100 dark:bg-muted">
-          <Handle type="target" position={Position.Left} />
-          <CardHeader>
-            <CardTitle>{networkLabel}</CardTitle>
-            <CardDescription>{nodeStatus}</CardDescription>
-          </CardHeader>
-          <CardFooter className="flex justify-start">
-            <Button onClick={handleActivation}>activate</Button>
-          </CardFooter>
-          <Handle type="source" position={Position.Right} />
-        </Card>
-      )}
       {nodeStatus === 'active' && (
         <Card className="w-[380px] bg-green-100 dark:bg-teal-800">
           <Handle type="target" position={Position.Left} />
@@ -360,21 +356,29 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
                 <AccordionTrigger>Train me!</AccordionTrigger>
                 <AccordionContent>
                   <NetworkForm
-                    onSubmitHandler={(formSubmitData) => {
+                    onSubmitHandler={(data) => {
+                      const connectedDatasetName = getConnectedDatasetName();
+                      if (!connectedDatasetName) {
+                        toast({
+                          title: 'You need to connect a dataset first',
+                          description:
+                            'The network needs a dataset to train on.',
+                        });
+                        return;
+                      }
                       actor.send({
-                        type: 'start training',
-                        data: { formData: formSubmitData },
+                        type: 'create',
+                        data: {
+                          formData: data,
+                          connectedNodeName: connectedDatasetName,
+                        },
                       });
                       toast({
                         title: 'You submitted the following values:',
                         description: (
                           <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
                             <code className="text-white">
-                              {JSON.stringify(
-                                { ...formSubmitData, ...data },
-                                null,
-                                2,
-                              )}
+                              {JSON.stringify({ ...data }, null, 2)}
                             </code>
                           </pre>
                         ),
@@ -451,9 +455,21 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
                   {isTrainingError && (
                     <NetworkForm
                       onSubmitHandler={(data) => {
+                        const connectedDatasetName = getConnectedDatasetName();
+                        if (!connectedDatasetName) {
+                          toast({
+                            title: 'You need to connect a dataset first',
+                            description:
+                              'The network needs a dataset to train on.',
+                          });
+                          return;
+                        }
                         actor.send({
                           type: 'retry',
-                          data: { formData: data },
+                          data: {
+                            formData: data,
+                            connectedNodeName: connectedDatasetName,
+                          },
                         });
                         toast({
                           title: 'You submitted the following values:',
@@ -473,9 +489,21 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
                       networkTypeName={networkType}
                       networkUserLabel={networkLabel}
                       onSubmitHandler={(data) => {
+                        const connectedDatasetName = getConnectedDatasetName();
+                        if (!connectedDatasetName) {
+                          toast({
+                            title: 'You need to connect a dataset first',
+                            description:
+                              'The network needs a dataset to train on.',
+                          });
+                          return;
+                        }
                         actor.send({
                           type: 'retry',
-                          data: { formData: data },
+                          data: {
+                            formData: data,
+                            connectedNodeName: connectedDatasetName,
+                          },
                         });
                         toast({
                           title: 'You submitted the following values:',
@@ -521,9 +549,21 @@ export function NetworkNode({ id, data }: NodeProps<NodeData>) {
                     networkTypeName={networkType}
                     networkUserLabel={networkLabel}
                     onSubmitHandler={(data) => {
+                      const connectedDatasetName = getConnectedDatasetName();
+                      if (!connectedDatasetName) {
+                        toast({
+                          title: 'You need to connect a dataset first',
+                          description:
+                            'The network needs a dataset to train on.',
+                        });
+                        return;
+                      }
                       actor.send({
                         type: 'finetune',
-                        data: { formData: data },
+                        data: {
+                          formData: data,
+                          connectedNodeName: connectedDatasetName,
+                        },
                       });
                       toast({
                         title: 'You submitted the following values:',

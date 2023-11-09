@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '~/components/ui/dialog';
-import { toast } from '~/components/ui/use-toast';
+import { useToast } from '~/components/ui/use-toast';
 import { env } from '~/env.mjs';
 import { type NodeData, useStoreActions } from '~/hooks/use-store';
 import { api } from '~/utils/api';
@@ -17,13 +17,135 @@ import { api } from '~/utils/api';
 import { FsTree } from '../fs-treeview';
 import { ScrollArea } from '../ui/scroll-area';
 
-// TODO: List the user's workspaces doesnt show all the workspaces if the list is longer than the scroll area
+export default function WorkspaceSelectDialog({ open }: { open: boolean }) {
+  const { toast } = useToast();
+  const { push } = useRouter();
+  const { setWorkspacePath } = useStoreActions();
 
-/**
- *
- * @returns buttons for selecting a workspace session from the user's available workspaces from the db
- */
-function ChooseUserWorkspaces() {
+  const [path, setPath] = useState(env.NEXT_PUBLIC_TREE_PATH);
+  const [jobId, setJobId] = useState('');
+  const [disabled, setDisabled] = useState(false);
+
+  const { mutate: registerWorkspaceInDb } =
+    api.workspaceDbState.createWorkspace.useMutation({
+      onSuccess: (data) => {
+        console.log('createWorkspace.onSuccess');
+        toast({
+          variant: 'default',
+          title: 'New workspace registered',
+          description: 'Your workspace has been registered in the database',
+        });
+        // finally, set the workspace path in the store if the db registration was successful
+        setWorkspacePath(data.path);
+        setDisabled(false);
+      },
+      onError: (error) => {
+        toast({
+          variant: 'destructive',
+          title: 'Error registering workspace',
+          description: `There was an error creating the register for the workspace in the db. ${error.message}`,
+        });
+        setDisabled(false);
+      },
+    });
+
+  const { mutate: submitNewWorkspace } =
+    api.remoteProcess.submitNewWorkspace.useMutation({
+      onSuccess: (data) => {
+        console.log('submitNewWorkspace.onSuccess', data);
+        setJobId(data.jobId);
+      },
+      onError: (error) => {
+        console.log('submitNewWorkspace.onError', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error creating workspace',
+          description: 'There was an error creating the workspace',
+        });
+        setDisabled(false);
+      },
+    });
+
+  const {} = api.remotejob.checkStatus.useQuery(
+    { jobId },
+    {
+      refetchOnMount: false,
+      enabled: !!jobId,
+      refetchInterval: 5000,
+      refetchIntervalInBackground: true,
+      onSuccess: (data) => {
+        console.log('checkStatus.onSuccess', data);
+        if (data.jobStatus === 'COMPLETED' && !!path) {
+          console.log('job completed');
+          // disable refetching until there is a new job
+          setJobId('');
+          registerWorkspaceInDb({ path: path });
+          toast({
+            variant: 'default',
+            title: 'Workspace created',
+            description: 'Your workspace has been created',
+          });
+        } else if (data.jobStatus === 'FAILED') {
+          toast({
+            variant: 'destructive',
+            title: 'Error creating workspace',
+            description: `There was an error creating the workspace. Job Status: ${data.jobStatus}`,
+          });
+          setDisabled(false);
+        }
+      },
+    },
+  );
+
+  const handleNewWorkspace = (path: string) => {
+    console.log('handleNewWorkspace');
+    setPath(path);
+    setDisabled(true);
+    submitNewWorkspace({ workspacePath: path });
+    toast({
+      variant: 'default',
+      title: 'Creating workspace',
+      description: 'Your workspace is being created',
+    });
+  };
+
+  const handleOpenChange = async (open: boolean) => {
+    if (!open) {
+      console.log('closing dialog and redirecting to /');
+      await push('/');
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(e) => void handleOpenChange(e)}>
+      <DialogContent className="sm:max-w-[825px]">
+        <DialogHeader>
+          <DialogTitle>Select workspace path</DialogTitle>
+          <DialogDescription>
+            Select an existing workspace or create a new one.
+          </DialogDescription>
+        </DialogHeader>
+        <FsTree
+          hidden={disabled}
+          path={path}
+          handlePathChange={setPath}
+          width={780}
+          height={250}
+        />
+        <Button
+          className="w-full"
+          onClick={() => handleNewWorkspace(path)}
+          disabled={disabled}
+        >
+          New
+        </Button>
+        <SelectUserWorkspaces disabled={disabled} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SelectUserWorkspaces({ disabled }: { disabled: boolean }) {
   // db interactions via tRPC
   // getting the workspaces for the user
   const {
@@ -31,7 +153,7 @@ function ChooseUserWorkspaces() {
     isError,
     isLoading,
     error,
-  } = api.workspaceState.getUserWorkspaces.useQuery();
+  } = api.workspaceDbState.getUserWorkspaces.useQuery();
   const { setWorkspacePath, initNodes, initEdges, updateStateSnapshot } =
     useStoreActions();
 
@@ -82,6 +204,7 @@ function ChooseUserWorkspaces() {
           <div className="flex flex-col gap-1">
             {userWorkspaces.map((workspace) => (
               <Button
+                disabled={disabled}
                 key={workspace.path}
                 variant="outline"
                 onClick={() =>
@@ -101,89 +224,4 @@ function ChooseUserWorkspaces() {
   }
   // if we get here, theres a problem with the db
   return <p>Something went wrong</p>;
-}
-
-/**
- *
- * @param open : boolean to control the dialog trigger from outside this component
- * @returns the WorkspaceSelectDialog component for selecting or creating a workspace session
- */
-export default function WorkspaceSelectDialog({ open }: { open: boolean }) {
-  const { setWorkspacePath } = useStoreActions();
-  const { mutate: createWorkspaceMutation } =
-    api.workspaceState.createWorkspace.useMutation({
-      onSuccess: () => {
-        console.log('createWorkspace.onSuccess');
-      },
-      onError: (error) => {
-        console.log('createWorkspace.onError', error);
-        setWorkspacePath('');
-      },
-    });
-
-  const handleNewWorkspace = (path: string) => {
-    createWorkspaceMutation({ path: path });
-    setWorkspacePath(path);
-  };
-
-  return (
-    <FsTreeDialog
-      open={open}
-      handleSelect={(path) => handleNewWorkspace(path)}
-      message={{
-        title: 'Select workspace path',
-        description: 'Select an existing workspace or create a new one.',
-      }}
-    >
-      <ChooseUserWorkspaces />
-    </FsTreeDialog>
-  );
-}
-
-function FsTreeDialog({
-  open,
-  children,
-  handleSelect,
-  message,
-}: {
-  open: boolean;
-  children: React.ReactNode;
-  handleSelect: (path: string) => void;
-  message: { title: string; description: string };
-}) {
-  const router = useRouter();
-  const treePath = env.NEXT_PUBLIC_TREE_PATH;
-  const [path, setPath] = useState(treePath);
-
-  const handleOpenChange = async (open: boolean) => {
-    if (!open) {
-      console.log('closing dialog and redirecting to /');
-      await router.push('/');
-    }
-  };
-  const onSelect = (path: string) => {
-    handleSelect(path);
-    setPath(treePath);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(e) => void handleOpenChange(e)}>
-      <DialogContent className="sm:max-w-[825px]">
-        <DialogHeader>
-          <DialogTitle>{message.title}</DialogTitle>
-          <DialogDescription>{message.description}</DialogDescription>
-        </DialogHeader>
-        <FsTree
-          path={path}
-          handlePathChange={setPath}
-          width={780}
-          height={250}
-        />
-        <Button className="w-full" onClick={() => onSelect(path)}>
-          New
-        </Button>
-        {children}
-      </DialogContent>
-    </Dialog>
-  );
 }

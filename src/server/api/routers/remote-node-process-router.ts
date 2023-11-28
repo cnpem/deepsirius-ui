@@ -104,49 +104,43 @@ export const remoteProcessRouter = createTRPCRouter({
         .map(({ label }) => `--input-labels ${label}`)
         .join(' ');
       // search if theres a true value in the augmentation object
-      const augmentationKwArgs = Object.values(
+      // and map the values to a new object with the keys that are used on the cli
+      const augmentationParams = Object.values(
         input.formData.augmentation,
       ).includes(true)
         ? {
-            'vertical-flip': input.formData.augmentation.vflip,
-            'horizontal-flip': input.formData.augmentation.hflip,
-            'rotate-90-degrees': input.formData.augmentation.rotateCClock,
-            'rotate-less-90-degrees': input.formData.augmentation.rotateClock,
+            flip_vertical: input.formData.augmentation.vflip,
+            flip_horizontal: input.formData.augmentation.hflip,
+            rot90: input.formData.augmentation.rotateCClock,
+            rot270: input.formData.augmentation.rotateClock,
             contrast: input.formData.augmentation.contrast,
-            'linear-contrast': input.formData.augmentation.linearContrast,
+            linearContrast: input.formData.augmentation.linearContrast,
             dropout: input.formData.augmentation.dropout,
-            'gaussian-blur': input.formData.augmentation.gaussianBlur,
-            'average-blur': input.formData.augmentation.averageBlur,
-            'additive-poisson-noise': input.formData.augmentation.poissonNoise,
-            'elastic-deformation':
-              input.formData.augmentation.elasticDeformation,
+            gaussian_blur: input.formData.augmentation.gaussianBlur,
+            average_blur: input.formData.augmentation.averageBlur,
+            poisson_noise: input.formData.augmentation.poissonNoise,
+            elastic: input.formData.augmentation.elasticDeformation,
           }
         : {};
       // filter object keys that are true and join them with a space in a single string
-      const augmentationKwArgsString = Object.values(
+      const augmentationParamsString = Object.values(
         input.formData.augmentation,
       ).includes(true)
-        ? '--aug-params ' +
-          Object.entries(augmentationKwArgs)
+        ? Object.entries(augmentationParams)
             .map(([key, value]) => {
               if (value) {
-                return `${key}`;
+                return `--aug-params ${key}`;
               }
             })
             .join(' ')
         : '';
-      // if there is, add the augmentation kwargs in the form "--aug-params arg-name-1 arg-name-2 ... arg-name-N" and use the augmented_dataset function on the cli
-      const cliFunction = Object.values(input.formData.augmentation).includes(
-        true,
-      )
-        ? 'augmented_dataset'
-        : 'create_dataset';
       // creating the full command line script
-      const cliScript = `ssc-deepsirius ${cliFunction} ${argsString} ${defaultKwargsString} ${augmentationKwArgsString} ${inputImgagesKwArgs} ${inputLabelsKwArgs}`;
+      const cliScript = `ssc-deepsirius create_dataset ${argsString} ${defaultKwargsString} ${augmentationParamsString} ${inputImgagesKwArgs} ${inputLabelsKwArgs}`;
       // defining the container script
       const containerScript = `singularity run --nv --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       // defining the full command
       const command = `${containerScript} ${cliScript}`;
+      console.log(command);
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
@@ -164,9 +158,6 @@ export const remoteProcessRouter = createTRPCRouter({
         sbatchContent,
       );
       return { jobId: jobId };
-      // await new Promise((resolve) => setTimeout(resolve, 1000));
-      // console.log(sbatchContent);
-      // return { jobId: '1' };
     }),
   submitNetwork: protectedProcedure
     .input(networkJobSchema)
@@ -218,9 +209,6 @@ export const remoteProcessRouter = createTRPCRouter({
         sbatchContent,
       );
       return { jobId: jobId };
-      // await new Promise((resolve) => setTimeout(resolve, 1000));
-      // console.log(sbatchContent);
-      // return { jobId: '2' };
     }),
   submitInference: protectedProcedure
     .input(inferenceJobSchema)
@@ -275,10 +263,5 @@ export const remoteProcessRouter = createTRPCRouter({
         sbatchContent,
       );
       return { jobId: jobId };
-      // await new Promise((resolve) => setTimeout(resolve, 1000));
-      // console.log(sbatchContent);
-      // return { jobId: '3' };
     }),
 });
-
-// TODO: create the routes for reading the output files of the jobs and returning them to the client which would be called by the node state machine depending on the status of the job

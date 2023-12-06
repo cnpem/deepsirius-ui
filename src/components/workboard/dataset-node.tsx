@@ -1,5 +1,7 @@
+import { Dialog, DialogContent } from '@radix-ui/react-dialog';
 import { useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
 import {
@@ -288,60 +290,96 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   const { jobId, jobStatus, jobStatusMessage, datasetName, contextData } =
     useSelector(actor, selector);
 
+  if (nodeProps.selected) {
+    console.log('hey');
+  }
+
   return (
-    <Card
-      data-state={nodeStatus}
-      className="w-[455px] data-[state=active]:bg-green-100 data-[state=busy]:bg-yellow-100
+    <>
+      {createPortal(
+        <Dialog
+          open={nodeStatus === 'active' && nodeProps.selected}
+          modal={false}
+        >
+          <DialogContent className="fixed z-10 inset-y-0 right-0 flex items-center justify-center h-flex p-1 w-[455px] bg-background">
+            <DatasetForm
+              data={[
+                {
+                  image: '/path/to/my/image',
+                  label: '/path/to/my/label',
+                },
+              ]}
+              onSubmitHandler={(formSubmitData) => {
+                actor.send({
+                  type: 'start',
+                  data: { formData: formSubmitData },
+                });
+                toast({
+                  title: 'You submitted the following values:',
+                  description: (
+                    <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                      <code className="text-white">
+                        {JSON.stringify(
+                          { ...formSubmitData, ...nodeProps.data },
+                          null,
+                          2,
+                        )}
+                      </code>
+                    </pre>
+                  ),
+                });
+              }}
+            />
+          </DialogContent>
+        </Dialog>,
+        document.body,
+      )}
+      <Card
+        data-state={nodeStatus}
+        className="w-[455px] data-[state=active]:bg-green-100 data-[state=busy]:bg-yellow-100
     data-[state=error]:bg-red-100 data-[state=inactive]:bg-gray-100
     data-[state=success]:bg-blue-100 data-[state=active]:dark:bg-teal-800
     data-[state=busy]:dark:bg-amber-700 data-[state=error]:dark:bg-rose-700
     data-[state=inactive]:dark:bg-muted data-[state=success]:dark:bg-cyan-700"
-    >
-      <CardHeader>
-        <CardTitle>{datasetName}</CardTitle>
-        <CardDescription>{nodeStatus}</CardDescription>
-      </CardHeader>
-      {nodeStatus === 'active' && (
-        <CardContent>
-          <Accordion type="single" collapsible>
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Lets bake some data!</AccordionTrigger>
-              <AccordionContent>
-                <DatasetForm
-                  data={[
-                    {
-                      image: '/path/to/my/image',
-                      label: '/path/to/my/label',
-                    },
-                  ]}
-                  onSubmitHandler={(formSubmitData) => {
-                    actor.send({
-                      type: 'start',
-                      data: { formData: formSubmitData },
-                    });
-                    toast({
-                      title: 'You submitted the following values:',
-                      description: (
-                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                          <code className="text-white">
-                            {JSON.stringify(
-                              { ...formSubmitData, ...nodeProps.data },
-                              null,
-                              2,
-                            )}
-                          </code>
-                        </pre>
-                      ),
-                    });
-                  }}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </CardContent>
-      )}
-      {nodeStatus === 'busy' && (
-        <>
+      >
+        <CardHeader>
+          <CardTitle>{datasetName}</CardTitle>
+          <CardDescription>{nodeStatus}</CardDescription>
+        </CardHeader>
+        {nodeStatus === 'active' && (
+          <CardContent>
+            <p className="text-gray-500 dark:text-gray-400 text-center">
+              {'click me'}
+            </p>
+          </CardContent>
+        )}
+        {nodeStatus === 'busy' && (
+          <>
+            <CardContent>
+              <div className="flex flex-col">
+                <p className="mb-2 text-3xl font-extrabold text-center">
+                  {jobId}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400 text-center">
+                  {jobStatus}
+                </p>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button
+                onClick={() => {
+                  actor.send('cancel');
+                  toast({
+                    title: 'Canceling job...',
+                  });
+                }}
+              >
+                cancel
+              </Button>
+            </CardFooter>
+          </>
+        )}
+        {nodeStatus === 'error' && (
           <CardContent>
             <div className="flex flex-col">
               <p className="mb-2 text-3xl font-extrabold text-center">
@@ -350,76 +388,56 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               <p className="text-gray-500 dark:text-gray-400 text-center">
                 {jobStatus}
               </p>
+              <p className="text-gray-500 dark:text-gray-400 text-center">
+                {jobStatusMessage || 'Something went wrong'}
+              </p>
+            </div>
+            <Accordion type="single" collapsible>
+              <AccordionItem value="item-1">
+                <AccordionTrigger>Retry?</AccordionTrigger>
+                <AccordionContent>
+                  <DatasetForm
+                    name={datasetName}
+                    data={contextData}
+                    onSubmitHandler={(data) => {
+                      actor.send({
+                        type: 'retry',
+                        data: { formData: data },
+                      });
+                      toast({
+                        title: 'You submitted the following values:',
+                        description: (
+                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                            <code className="text-white">
+                              {JSON.stringify(data, null, 2)}
+                            </code>
+                          </pre>
+                        ),
+                      });
+                    }}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </CardContent>
+        )}
+        {nodeStatus === 'success' && (
+          <CardContent>
+            <div className="flex flex-col">
+              <p className="mb-2 text-3xl font-extrabold text-center">
+                {jobId}
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 text-center">
+                {jobStatus}
+              </p>
+              <p className="text-gray-500 dark:text-gray-400 text-center">
+                {jobStatusMessage}
+              </p>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button
-              onClick={() => {
-                actor.send('cancel');
-                toast({
-                  title: 'Canceling job...',
-                });
-              }}
-            >
-              cancel
-            </Button>
-          </CardFooter>
-        </>
-      )}
-      {nodeStatus === 'error' && (
-        <CardContent>
-          <div className="flex flex-col">
-            <p className="mb-2 text-3xl font-extrabold text-center">{jobId}</p>
-            <p className="text-gray-500 dark:text-gray-400 text-center">
-              {jobStatus}
-            </p>
-            <p className="text-gray-500 dark:text-gray-400 text-center">
-              {jobStatusMessage || 'Something went wrong'}
-            </p>
-          </div>
-          <Accordion type="single" collapsible>
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Retry?</AccordionTrigger>
-              <AccordionContent>
-                <DatasetForm
-                  name={datasetName}
-                  data={contextData}
-                  onSubmitHandler={(data) => {
-                    actor.send({
-                      type: 'retry',
-                      data: { formData: data },
-                    });
-                    toast({
-                      title: 'You submitted the following values:',
-                      description: (
-                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                          <code className="text-white">
-                            {JSON.stringify(data, null, 2)}
-                          </code>
-                        </pre>
-                      ),
-                    });
-                  }}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </CardContent>
-      )}
-      {nodeStatus === 'success' && (
-        <CardContent>
-          <div className="flex flex-col">
-            <p className="mb-2 text-3xl font-extrabold text-center">{jobId}</p>
-            <p className="text-gray-500 dark:text-gray-400 text-center">
-              {jobStatus}
-            </p>
-            <p className="text-gray-500 dark:text-gray-400 text-center">
-              {jobStatusMessage}
-            </p>
-          </div>
-        </CardContent>
-      )}
-      <Handle type="source" position={Position.Right} />
-    </Card>
+        )}
+        <Handle type="source" position={Position.Right} />
+      </Card>
+    </>
   );
 }

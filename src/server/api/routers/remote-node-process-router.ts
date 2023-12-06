@@ -87,7 +87,7 @@ export const remoteProcessRouter = createTRPCRouter({
       // job configuration
       const jobName = 'deepsirius-dataset';
       const ntasks = 1;
-      const partition = 'proc2';
+      const partition = input.formData.slurmOptions.partition;
       // parsing args ssc-deepsirius package cli args
       const argsString = `${input.workspacePath} ${input.formData.datasetName}`;
       const defaultKwargs = {
@@ -156,7 +156,13 @@ export const remoteProcessRouter = createTRPCRouter({
         username,
         env.SSH_HOST,
         sbatchContent,
-      );
+      ).catch((err) => {
+        console.log('catch on tRPC:', err);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to create Dataset. ${err as string}`,
+        });
+      });
       return { jobId: jobId };
     }),
   submitNetwork: protectedProcedure

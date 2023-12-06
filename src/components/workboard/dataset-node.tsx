@@ -33,31 +33,41 @@ import {
 
 type JobEvent = {
   type: 'done.invoke';
-  data: { jobId?: string; jobStatus?: string; formData?: FormType };
+  data: {
+    jobId?: string;
+    jobStatus?: string;
+    formData?: FormType;
+    jobStatusMessage?: string;
+  };
 };
 
 type FormSubmitEvent =
   | { type: 'start'; data: { formData: FormType } }
   | { type: 'retry'; data: { formData: FormType } };
+// | { type: 'error'; data: { formData: FormType; jobStatusMessage: string } }
+
+type datasetContext = {
+  data: FormProps['data'];
+  datasetName: string;
+  jobId: string;
+  jobStatus: string;
+  jobStatusMessage: string;
+};
 
 const datasetMachine = createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QEsB2AzMAnMqDGYAdGgIZ4AuyAbmAMRmVUnlgDaADALqKgAOA9rGSV+qHiAAeiAIwA2AMyEAnCqUB2JQCYAHEoCs2te1kAaEAE9E82ZsJrNsvWoAsavUtnsdzgL4+zaJg4+EQM1HSw5CRY5BzcSCACQiJiCVIIzuxqhM6a0tp67tq60vLWZpYI1rb2jnoKes7S7OzafgEY2LgEhABGAK6w5oS8uBBoULQQokRoVPwA1kSw-b0AtsIAUvy9ceJJwsii4unarTnazvJn7HqamhraFYhOeoROmlrSV9Vl7SCBLohPqDYajVDjVCTbBYfhYEYAG2Y6Dha0IK3WWx2ewSBxSJxkOiUhHkVzU8nJmnkSmkBmeCAeb1qTjUcmk9n0-0BwR6AyGhCw-VQqAmUxmxFQ8yWEqC3SIfOGguFEwQc34eGYR1QcRxfEEh2OaUJuhJZIp8ipNLpFkQskMhBaam09yUZPuei5nR58tBAqFIqhYtQs0lixDsuBCr9yqhqtDGpSOuk8T1yS1BIQ0k+xNJ5sp1NpTxtCHctkdzoM0izzl8-gBXrlIP5SoDk2mwYlUvDQN5vpbKrVCa1Os0KcS+vxRsz2dNeYtBetlQUxL0WWdZJc2gtnojveb-tF7ZDXZlPZ9+5jUDj8yHoh18jHePTU-U2T08izdyyt2a8npziUdhlE+IwyircktB3M8m0VA9Aw1EIEV1cc00NUB0maZxtByPJLjtJRikA0xi2pZxlDURwKJrLCAOkKDvUIGE4VoHByCwcxkKfNDJBeFoHSdLMXGuRp1HpbRpHeFoWmkQCrgcLD6MbFY8AIWBYFodA0DAcghTYLh9gnZ90N4oC10Eq4CgAtR6QoiSiM0XImnfJ0lD8OtUH4CA4HEbk5QM1DUmMhAAFpiMqULFOBUgKHCfyDUCniMk0elrEUe5KNcdxPG8SKejCGg4snIKdDeXJ8go2QVAtBQUoUQh0qcTKPC8S5cvPSpU3ijMsOyMyHgskTrJIrIcgogwKTk8lZFrDpd3akYxgmQqjMS983j6oTLNE4tChXACAIc75qXkNqYOjVtlu4jCvCA1133Yax8iaYp6QMbDih0TRnLJGxTqYrBLoSjCbAku0XCUakFBrelPv4xxdGdZpvtO5TVPgXFDKumQDDeD8HK3ORDDOP9i0qiT3CrMrZCh0k3J8IA */
   id: 'dataset',
   schema: {
-    context: {} as {
-      jobId: string;
-      jobStatus: string;
-      datasetName: string;
-      data: FormProps['data'];
-    },
+    context: {} as datasetContext,
     events: {} as FormSubmitEvent | { type: 'cancel' },
   },
   initial: 'active',
   context: {
+    data: [],
+    datasetName: 'dataset',
     jobId: '',
     jobStatus: '',
-    datasetName: 'dataset',
-    data: [],
+    jobStatusMessage: '',
   },
   states: {
     active: {
@@ -86,6 +96,11 @@ const datasetMachine = createMachine({
             },
             onError: {
               target: '#dataset.error',
+              actions: assign({
+                jobStatusMessage: (context, event: JobEvent) =>
+                  event.data.jobStatusMessage ??
+                  'Something went wrong while submitting the job',
+              }),
             },
           },
         },
@@ -96,6 +111,10 @@ const datasetMachine = createMachine({
               {
                 target: '#dataset.success',
                 cond: 'isCompleted',
+                actions: assign({
+                  jobStatusMessage: (context) =>
+                    'successfully generated ' + context.datasetName + '.h5',
+                }),
               },
               {
                 target: '#dataset.error',
@@ -127,7 +146,7 @@ const datasetMachine = createMachine({
       on: {
         retry: {
           target: 'busy',
-          actions: assign({ jobStatus: '' }),
+          actions: assign({ jobStatus: '', jobStatusMessage: '' }),
         },
       },
     },
@@ -184,10 +203,20 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               reject(new Error('No form data found in event'));
             }
             submitJob
-              .mutateAsync({
-                workspacePath: nodeProps.data.workspacePath,
-                formData,
-              })
+              .mutateAsync(
+                {
+                  workspacePath: nodeProps.data.workspacePath,
+                  formData,
+                },
+                {
+                  onError: (err) => {
+                    const message = err.message;
+                    console.error('did you get any on that?', err);
+
+                    reject({ formData, jobStatusMessage: message });
+                  },
+                },
+              )
               .then((data) => {
                 // update the node remotefsDataPath in the store
                 onUpdateNode({
@@ -203,7 +232,13 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                 });
                 resolve({ ...data, formData });
               })
-              .catch((err) => reject(err));
+              .catch((err) => {
+                const message =
+                  err instanceof Error
+                    ? err.message
+                    : 'Unexpected error while submitting job.';
+                reject({ formData, jobStatusMessage: message });
+              });
           });
         },
         jobStatus: (context) => {
@@ -244,15 +279,14 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     return {
       jobId: state.context.jobId,
       jobStatus: state.context.jobStatus,
+      jobStatusMessage: state.context.jobStatusMessage,
       datasetName: state.context.datasetName,
       contextData: state.context.data,
     };
   };
 
-  const { jobId, jobStatus, datasetName, contextData } = useSelector(
-    actor,
-    selector,
-  );
+  const { jobId, jobStatus, jobStatusMessage, datasetName, contextData } =
+    useSelector(actor, selector);
 
   return (
     <Card
@@ -339,6 +373,9 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             <p className="text-gray-500 dark:text-gray-400 text-center">
               {jobStatus}
             </p>
+            <p className="text-gray-500 dark:text-gray-400 text-center">
+              {jobStatusMessage || 'Something went wrong'}
+            </p>
           </div>
           <Accordion type="single" collapsible>
             <AccordionItem value="item-1">
@@ -377,7 +414,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               {jobStatus}
             </p>
             <p className="text-gray-500 dark:text-gray-400 text-center">
-              {`Successfully generated ${datasetName}.h5`}
+              {jobStatusMessage}
             </p>
           </div>
         </CardContent>

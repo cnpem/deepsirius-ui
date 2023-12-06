@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogTrigger } from '~/components/ui/dialog';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,7 +29,11 @@ import {
 } from '~/components/ui/select';
 import { Switch } from '~/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
+import { slurmPartitionOptions } from '~/lib/constants';
 
+const slurmOptions = z.object({
+  partition: z.enum(slurmPartitionOptions),
+});
 const powerSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
 const strategies = ['uniform'] as const;
 const dataSchema = z.object({
@@ -61,6 +66,7 @@ const augmentationSchema = z.object({
 });
 
 export const datasetSchema = z.object({
+  slurmOptions,
   datasetName: z.string().nonempty({ message: 'Must have a dataset name!' }),
   data: dataSchema
     .array()
@@ -126,6 +132,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
   };
 
   const onSelectImage = (path: string, index: number) => {
+    form.register(`data.${index}.image`);
     form.setValue(`data.${index}.image`, path);
   };
 
@@ -287,8 +294,36 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
           </Button>
         </div>
 
-        <footer className="flex py-4">
-          <Button className="w-full" type="submit">
+        <footer className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="slurmOptions.partition"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="sr-only">Slurm Partition</FormLabel>
+                <Select onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Slurm Partition" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {slurmPartitionOptions.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription className="hidden">
+                  Please select a slurm partition assigned for your user for
+                  submitting this job.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button className="my-2 mx-0" type="submit">
             Create
           </Button>
         </footer>
@@ -587,7 +622,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a verified email to display" />
+                          <SelectValue placeholder="" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -614,7 +649,7 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a verified email to display" />
+                          <SelectValue placeholder="" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

@@ -141,7 +141,7 @@ export function submitJob(
   host: string,
   sbatchContent: string,
 ): Promise<string | undefined> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const { tempDir, scriptPath } = createTempScript(sbatchContent);
     const sshOptions: Config = {
       debug: console.log,
@@ -166,29 +166,40 @@ export function submitJob(
               .then(() => {
                 // console.log('removed script');
                 conn
-                  .execCommand(`sbatch --parsable ${deepsirius_script}`)
-                  .then((result) => {
-                    // console.log('STDOUT: ' + result.stdout);
-                    // console.log('STDERR: ' + result.stderr);
-                    const outputLines = result.stdout.trim().split('\n');
-                    const jobId = outputLines[0];
-                    resolve(jobId);
+                  .execCommand(`sbatch --parsable ${deepsirius_script}`, {
+                    onStderr: (chunk) => {
+                      reject(new Error(chunk.toString('utf8')));
+                    },
+                    onStdout: (chunk) => {
+                      console.log('STDOUT: ' + chunk.toString('utf8'));
+                      const outputLines = chunk
+                        .toString('utf8')
+                        .trim()
+                        .split('\n');
+                      const jobId = outputLines[0];
+                      resolve(jobId);
+                    },
+                  })
+                  .then(() => {
                     conn.dispose();
                   })
                   .catch((err) => {
-                    console.log(err);
+                    console.log('Catch on execCommand:', err);
                     conn.dispose();
                   });
               })
               .catch((err) => {
+                console.log('Catch on removing sbatchScript:', err);
                 console.log(err);
               });
           })
           .catch((err) => {
+            console.log('Catch on copying sbatchScript:', err);
             console.log(err);
           });
       })
       .catch((err) => {
+        console.log('Catch on connecting to ssh:', err);
         console.log(err);
       });
   });

@@ -41,7 +41,7 @@ export const remoteProcessRouter = createTRPCRouter({
       const ntasks = 1;
       const partition = 'proc2';
       // defining the container script
-      const containerScript = `singularity run --nv --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
+      const containerScript = `singularity run --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       // defining the full command
       const command = `${containerScript} ssc-deepsirius create_workspace ${input.workspacePath}`;
       const sbatchContent = [
@@ -137,7 +137,7 @@ export const remoteProcessRouter = createTRPCRouter({
       // creating the full command line script
       const cliScript = `ssc-deepsirius create_dataset ${argsString} ${defaultKwargsString} ${augmentationParamsString} ${inputImgagesKwArgs} ${inputLabelsKwArgs}`;
       // defining the container script
-      const containerScript = `singularity run --nv --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
+      const containerScript = `singularity run --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       // defining the full command
       const command = `${containerScript} ${cliScript}`;
       console.log(command);
@@ -189,7 +189,7 @@ export const remoteProcessRouter = createTRPCRouter({
       // full strings for the cli scripts
       const trainingScript = `ssc-deepsirius train_model ${kwArgsString} ${argsString}`;
       // defining the container script
-      const containerScript = `singularity run --nv --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
+      const containerScript = `singularity run --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       const command = `${containerScript} ${trainingScript}`;
       const sbatchContent = [
         '#!/bin/bash',

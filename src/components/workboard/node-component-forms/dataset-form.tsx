@@ -181,11 +181,11 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                       >
                         <HoverCardTrigger asChild>
                           {field.value.split('/').slice(-1)[0] === 'image' ? (
-                            <Button className="w-full">
+                            <Button size={'sm'}>
                               <Image className="mr-2 h-4 w-4" /> {`# ${index}`}
                             </Button>
                           ) : (
-                            <Button className="relative w-full">
+                            <Button className="relative" size={'sm'}>
                               <div className="absolute top-0 right-0 translate-x-1 -translate-y-1">
                                 <span className="relative flex h-3 w-3">
                                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
@@ -233,11 +233,11 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                       >
                         <HoverCardTrigger asChild>
                           {field.value.split('/').slice(-1)[0] === 'label' ? (
-                            <Button className="w-full">
+                            <Button size={'sm'}>
                               <Tag className="mr-2 h-4 w-4" /> {`# ${index}`}
                             </Button>
                           ) : (
-                            <Button className="relative w-full">
+                            <Button className="relative" size={'sm'}>
                               <div className="absolute top-0 right-0 translate-x-1 -translate-y-1">
                                 <span className="relative flex h-3 w-3">
                                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>

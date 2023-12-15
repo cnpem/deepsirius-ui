@@ -290,18 +290,34 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   const { jobId, jobStatus, jobStatusMessage, datasetName, contextData } =
     useSelector(actor, selector);
 
-  if (nodeProps.selected) {
-    console.log('hey');
+  interface PortalDialogProps {
+    open: boolean;
+    children: React.ReactNode;
   }
+
+  const PortalDialog = ({ open, children }: PortalDialogProps) => {
+    if (!open) return null;
+    const portalPanel = document.getElementById('node-props-panel');
+    if (portalPanel) {
+      return createPortal(children, portalPanel);
+    } else {
+      console.error('portal-panel not found');
+      // please refresh?
+      return createPortal(children, document.body);
+    }
+  };
 
   return (
     <>
-      {createPortal(
+      <PortalDialog open={nodeStatus === 'active' && nodeProps.selected}>
         <Dialog
           open={nodeStatus === 'active' && nodeProps.selected}
           modal={false}
         >
-          <DialogContent className="fixed z-10 inset-y-0 right-0 flex items-center justify-center h-flex p-1 w-[455px] bg-background">
+          <DialogContent
+            autoFocus
+            className="items-center justify-center gap-2 p-4 rounded-md bg-background dark:bg-muted dark:text-slate-400 text-slate-500"
+          >
             <DatasetForm
               data={[
                 {
@@ -331,9 +347,8 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               }}
             />
           </DialogContent>
-        </Dialog>,
-        document.body,
-      )}
+        </Dialog>
+      </PortalDialog>
       <Card
         data-state={nodeStatus}
         className="w-[455px] data-[state=active]:bg-green-100 data-[state=busy]:bg-yellow-100
@@ -348,9 +363,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
         </CardHeader>
         {nodeStatus === 'active' && (
           <CardContent>
-            <p className="text-gray-500 dark:text-gray-400 text-center">
-              {'click me'}
-            </p>
+            <div className="flex flex-col">
+              <p className="text-gray-500 dark:text-gray-400 text-center">
+                {'Click to create a job'}
+              </p>
+            </div>
           </CardContent>
         )}
         {nodeStatus === 'busy' && (

@@ -25,8 +25,6 @@ import { api } from '~/utils/api';
  * The Geppetto component is the main component for the workspace flow
  * It uses the ReactFlow component to render the nodes and edges
  * It also uses the zustand store to manage the state of the nodes and edges
- *
- * @returns
  */
 function Geppetto({ workspacePath }: { workspacePath: string }) {
   const {
@@ -130,13 +128,16 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
             <AlertDemo />
           </Panel>
         )}
+        <Panel position="top-right">
+          <div id="node-props-panel"></div>
+        </Panel>
         <Controls
           showZoom={false}
           className="bg-transparent px-1 dark:fill-white [&>button:hover]:dark:bg-slate-700 [&>button]:dark:bg-muted [&>button]:rounded-sm [&>button]:border-none [&>button]:my-2"
         ></Controls>
         <MiniMap
           nodeColor={nodeColor}
-          className="dark:bg-muted rounded-sm border-0 p-2"
+          className="dark:bg-muted rounded-sm border p-2"
           pannable
           zoomable
         />

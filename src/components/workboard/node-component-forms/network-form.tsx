@@ -7,6 +7,7 @@ import { Button } from '~/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,9 +23,16 @@ import {
   SelectValue,
 } from '~/components/ui/select';
 import { Switch } from '~/components/ui/switch';
+import { slurmGPUOptions, slurmPartitionOptions } from '~/lib/constants';
+
+const slurmOptions = z.object({
+  partition: z.enum(slurmPartitionOptions),
+  nGPU: z.enum(slurmGPUOptions),
+});
 
 const patchSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
 export const networkSchema = z.object({
+  slurmOptions,
   // field of type z.string() with no spaces or special characters allowed
   networkUserLabel: z
     .string()
@@ -90,6 +98,9 @@ export function useNetworkForm({
       optimizer: 'adam',
       patchSize: '32',
       lossFunction: 'CrossEntropy',
+      slurmOptions: {
+        nGPU: '1',
+      },
     },
   });
 
@@ -227,7 +238,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Optimizer</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a verified email to display" />
@@ -299,8 +310,66 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
             )}
           />
         </div>
-        <footer className="flex py-4">
-          <Button className="w-full" type="submit">
+        <footer className="grid grid-cols-2 grid-rows-2 gap-4">
+          <FormField
+            control={form.control}
+            name="slurmOptions.partition"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="sr-only">Slurm Partition</FormLabel>
+                <Select onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Slurm Partition" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {slurmPartitionOptions.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription className="hidden">
+                  Please select a slurm partition assigned for your user for
+                  submitting this job.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="slurmOptions.nGPU"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="sr-only">Slurm gres GPUs</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Slurm GPUs" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {slurmGPUOptions.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {`GPUs: ${item.toString()}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription className="hidden">
+                  Please select the number of GPUs for this job.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button className="my-2 mx-0 col-span-2" type="submit">
             Submit
           </Button>
         </footer>

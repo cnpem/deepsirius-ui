@@ -12,4 +12,7 @@ export const slurmPartitionOptions = [
   'tepui',
   'petro',
   'power',
+  'fake',
 ] as const;
+
+export const slurmGPUOptions = ['1', '2', '4'] as const;

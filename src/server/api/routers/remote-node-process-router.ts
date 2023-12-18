@@ -174,7 +174,8 @@ export const remoteProcessRouter = createTRPCRouter({
       // job configuration
       const jobName = 'deepsirius-network';
       const ntasks = 1;
-      const partition = 'proc2';
+      const partition = input.formData.slurmOptions.partition;
+      const gpus = input.formData.slurmOptions.nGPU;
       // parsing args ssc-deepsirius package cli args
       const argsString = `${input.workspacePath} ${input.formData.networkTypeName} ${input.formData.networkUserLabel} ${input.datasetPath}`;
       // mapping formData to cli kwargs
@@ -204,7 +205,7 @@ export const remoteProcessRouter = createTRPCRouter({
         `#SBATCH --error=${jobName}-error.txt`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
-        `#SBATCH --gres=gpu:1`,
+        `#SBATCH --gres=gpu:${gpus}`,
         `${command}`,
       ].join('\n');
       const jobId = await submitJob(
@@ -225,9 +226,10 @@ export const remoteProcessRouter = createTRPCRouter({
       // job configuration
       const jobName = 'deepsirius-inference';
       const ntasks = 1;
-      const partition = 'proc2';
+      const partition = input.formData.slurmOptions.partition;
+      const gpus = input.formData.slurmOptions.nGPU;
       // defining the container script
-      const containerScript = `singularity run --nv --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
+      const containerScript = `singularity run --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       // defining output directory for the inference results
       // const outputDir = `${input.workspacePath}/inference/${input.networkName}`;
       // parsing args ssc-deepsirius package cli args
@@ -258,7 +260,7 @@ export const remoteProcessRouter = createTRPCRouter({
         `#SBATCH --error=${jobName}-error.txt`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
-        `#SBATCH --gres=gpu:1`,
+        `#SBATCH --gres=gpu:${gpus}`,
         `${command}`,
       ].join('\n');
       const jobId = await submitJob(

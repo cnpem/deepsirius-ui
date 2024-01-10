@@ -2,12 +2,11 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { HoverCardTrigger } from '@radix-ui/react-hover-card';
-import { Image, Plus, Settings2, Tag, X } from 'lucide-react';
+import { Image, Plus, Tag, X } from 'lucide-react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { FsTreeDialog } from '~/components/fs-treeview';
 import { Button } from '~/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '~/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -21,6 +20,11 @@ import { HoverCard, HoverCardContent } from '~/components/ui/hover-card';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '~/components/ui/popover';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -28,7 +32,6 @@ import {
   SelectValue,
 } from '~/components/ui/select';
 import { Switch } from '~/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
 import { slurmPartitionOptions } from '~/lib/constants';
 
 const slurmOptions = z.object({
@@ -156,8 +159,10 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
             )}
           />
         )}
-        <SettingsDialog form={form} />
-        <div className={'relative border p-2 rounded-md border-dashed my-6'}>
+        {/* <SettingsDialog form={form} /> */}
+        <div
+          className={'relative border p-2 rounded-md border-dashed mt-6 mb-1'}
+        >
           <div className="relative">
             <Label className="absolute rounded-full p-1 text-sm scale-50 -translate-y-6 border-2 inset-x-0 top-0 text-center bg-muted ">
               Data
@@ -293,6 +298,348 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
             <Plus className="h-4 w-4" />
           </Button>
         </div>
+        <div
+          className={
+            'relative border p-2 rounded-md border-dashed mt-3 mb-1 text-center'
+          }
+        >
+          <div className="relative">
+            <Label className="absolute rounded-full p-1 text-sm scale-50 -translate-y-6 border-2 inset-x-0 top-0 text-center bg-muted ">
+              Params
+            </Label>
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={'ghost'}>Sampling</Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="classes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Classes</FormLabel>
+                      <Input {...field} placeholder="2" type="number" min={2} />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="sampleSize"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sample Size</FormLabel>
+                      <Input
+                        {...field}
+                        placeholder="100"
+                        type="number"
+                        min={1}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="strategy"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Strategy</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {strategies.map((item) => (
+                            <SelectItem key={item} value={item}>
+                              {item}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="patchSize"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Patch Size</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {powerSizes.map((item) => (
+                            <SelectItem key={item} value={item}>
+                              {item}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={'ghost'}>Augmentation</Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  name="augmentation.vflip"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Vertical Flip
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="augmentation.hflip"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Horizontal Flip
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="augmentation.rotateClock"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Rotate +90
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="augmentation.rotateCClock"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Rotate -90
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="augmentation.contrast"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Contrast
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="augmentation.linearContrast"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Linear Contrast
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="augmentation.dropout"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Dropout
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="augmentation.gaussianBlur"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Gaussian Blur
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="augmentation.poissonNoise"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Poisson Noise
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="augmentation.averageBlur"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Average Blur
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  name="augmentation.elasticDeformation"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <FormControl>
+                        <div className=" flex items-center space-x-4 py-4">
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              Elastic Deformation
+                            </p>
+                          </div>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
         <footer className="grid grid-cols-2 gap-4">
           <FormField
@@ -332,7 +679,8 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
   );
 }
 
-function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
+{
+  /* function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -670,4 +1018,5 @@ function SettingsDialog({ form }: { form: ReturnType<typeof useDatasetForm> }) {
       </DialogContent>
     </Dialog>
   );
+} */
 }

@@ -2,12 +2,6 @@ import { useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
 import {
   Card,
@@ -17,6 +11,12 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '~/components/ui/sheet';
 import { toast } from '~/components/ui/use-toast';
 import {
   type FormType,
@@ -263,46 +263,46 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
       </CardHeader>
       {nodeStatus === 'active' && (
         <CardContent>
-          <Accordion type="single" collapsible>
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Want some inference?</AccordionTrigger>
-              <AccordionContent>
-                <InferenceForm
-                  onSubmitHandler={(formSubmitData) => {
-                    const connectedNetworkLabel = getConnectedNetworkLabel();
-                    if (!connectedNetworkLabel) {
-                      toast({
-                        title: 'Error',
-                        description: 'Please connect a network node.',
-                      });
-                      return;
-                    }
-                    actor.send({
-                      type: 'start',
-                      data: {
-                        formData: formSubmitData,
-                        connectedNodeName: connectedNetworkLabel,
-                      },
-                    });
+          <Sheet open={nodeProps.selected} modal={false}>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Run Inference</SheetTitle>
+              </SheetHeader>
+              <InferenceForm
+                onSubmitHandler={(formSubmitData) => {
+                  const connectedNetworkLabel = getConnectedNetworkLabel();
+                  if (!connectedNetworkLabel) {
                     toast({
-                      title: 'You submitted the following values:',
-                      description: (
-                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                          <code className="text-white">
-                            {JSON.stringify(
-                              { ...formSubmitData, ...nodeProps.data },
-                              null,
-                              2,
-                            )}
-                          </code>
-                        </pre>
-                      ),
+                      title: 'Error',
+                      description: 'Please connect a network node.',
                     });
-                  }}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+                    return;
+                  }
+                  actor.send({
+                    type: 'start',
+                    data: {
+                      formData: formSubmitData,
+                      connectedNodeName: connectedNetworkLabel,
+                    },
+                  });
+                  toast({
+                    title: 'You submitted the following values:',
+                    description: (
+                      <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                        <code className="text-white">
+                          {JSON.stringify(
+                            { ...formSubmitData, ...nodeProps.data },
+                            null,
+                            2,
+                          )}
+                        </code>
+                      </pre>
+                    ),
+                  });
+                }}
+              />
+            </SheetContent>
+          </Sheet>
         </CardContent>
       )}
       {nodeStatus === 'busy' && (
@@ -339,43 +339,43 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
               {jobStatus}
             </p>
           </div>
-          <Accordion type="single" collapsible>
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Retry?</AccordionTrigger>
-              <AccordionContent>
-                <InferenceForm
-                  inputImages={inputImages}
-                  onSubmitHandler={(formSubmitData) => {
-                    const connectedNetworkLabel = getConnectedNetworkLabel();
-                    if (!connectedNetworkLabel) {
-                      toast({
-                        title: 'Error',
-                        description: 'Please connect a network node.',
-                      });
-                      return;
-                    }
-                    actor.send({
-                      type: 'retry',
-                      data: {
-                        formData: formSubmitData,
-                        connectedNodeName: connectedNetworkLabel,
-                      },
-                    });
+          <Sheet open={nodeProps.selected} modal={false}>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Retry</SheetTitle>
+              </SheetHeader>
+              <InferenceForm
+                inputImages={inputImages}
+                onSubmitHandler={(formSubmitData) => {
+                  const connectedNetworkLabel = getConnectedNetworkLabel();
+                  if (!connectedNetworkLabel) {
                     toast({
-                      title: 'You submitted the following values:',
-                      description: (
-                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                          <code className="text-white">
-                            {JSON.stringify(formSubmitData, null, 2)}
-                          </code>
-                        </pre>
-                      ),
+                      title: 'Error',
+                      description: 'Please connect a network node.',
                     });
-                  }}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+                    return;
+                  }
+                  actor.send({
+                    type: 'retry',
+                    data: {
+                      formData: formSubmitData,
+                      connectedNodeName: connectedNetworkLabel,
+                    },
+                  });
+                  toast({
+                    title: 'You submitted the following values:',
+                    description: (
+                      <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                        <code className="text-white">
+                          {JSON.stringify(formSubmitData, null, 2)}
+                        </code>
+                      </pre>
+                    ),
+                  });
+                }}
+              />
+            </SheetContent>
+          </Sheet>
         </CardContent>
       )}
       {nodeStatus === 'success' && (
@@ -386,21 +386,21 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
               {jobStatus}
             </p>
             <div>
-              <Accordion type="single" collapsible>
-                <AccordionItem value="item-1">
-                  <AccordionTrigger>Inferred images</AccordionTrigger>
-                  <AccordionContent>
-                    {inputImages.map((image, idx) => (
-                      <div
-                        key={idx}
-                        className="rounded-md border border-sky-800 hover:bg-blue-200 dark:hover:bg-cyan-800 px-4 py-3 font-mono text-sm"
-                      >
-                        {image.name}
-                      </div>
-                    ))}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+              <Sheet open={nodeProps.selected} modal={false}>
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Inference Results</SheetTitle>
+                  </SheetHeader>
+                  {inputImages.map((image, idx) => (
+                    <div
+                      key={idx}
+                      className="rounded-md border border-sky-800 hover:bg-blue-200 dark:hover:bg-cyan-800 px-4 py-3 font-mono text-sm"
+                    >
+                      {image.name}
+                    </div>
+                  ))}
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </CardContent>

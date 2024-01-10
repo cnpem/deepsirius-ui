@@ -1,16 +1,18 @@
-import { Dialog, DialogContent } from '@radix-ui/react-dialog';
 import { useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '~/components/ui/card';
+import { Sheet, SheetContent } from '~/components/ui/sheet';
 import { toast } from '~/components/ui/use-toast';
 import {
   type NodeData,
@@ -19,14 +21,6 @@ import {
 } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '../ui/card';
 import {
   DatasetForm,
   type FormProps,
@@ -290,65 +284,8 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   const { jobId, jobStatus, jobStatusMessage, datasetName, contextData } =
     useSelector(actor, selector);
 
-  interface PortalDialogProps {
-    open: boolean;
-    children: React.ReactNode;
-  }
-
-  const PortalDialog = ({ open, children }: PortalDialogProps) => {
-    if (!open) return null;
-    const portalPanel = document.getElementById('node-props-panel');
-    if (portalPanel) {
-      return createPortal(children, portalPanel);
-    } else {
-      console.error('portal-panel not found');
-      // please refresh?
-      return createPortal(children, document.body);
-    }
-  };
-
   return (
     <>
-      <PortalDialog open={nodeStatus === 'active' && nodeProps.selected}>
-        <Dialog
-          open={nodeStatus === 'active' && nodeProps.selected}
-          modal={false}
-        >
-          <DialogContent
-            autoFocus
-            className="items-center justify-center gap-2 p-4 rounded-md bg-background dark:bg-muted dark:text-slate-400 text-slate-500"
-          >
-            <DatasetForm
-              data={[
-                {
-                  image: '/path/to/my/image',
-                  label: '/path/to/my/label',
-                },
-              ]}
-              onSubmitHandler={(formSubmitData) => {
-                actor.send({
-                  type: 'start',
-                  data: { formData: formSubmitData },
-                });
-                toast({
-                  title: 'You submitted the following values:',
-                  description: (
-                    <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                      <code className="text-white">
-                        {JSON.stringify(
-                          { ...formSubmitData, ...nodeProps.data },
-                          null,
-                          2,
-                        )}
-                      </code>
-                    </pre>
-                  ),
-                });
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      </PortalDialog>
       <Card
         data-state={nodeStatus}
         className="w-[455px] data-[state=active]:bg-green-100 data-[state=busy]:bg-yellow-100
@@ -368,6 +305,38 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                 {'Click to create a job'}
               </p>
             </div>
+            <Sheet open={nodeProps.selected} modal={false}>
+              <SheetContent>
+                <DatasetForm
+                  data={[
+                    {
+                      image: '/path/to/my/image',
+                      label: '/path/to/my/label',
+                    },
+                  ]}
+                  onSubmitHandler={(formSubmitData) => {
+                    actor.send({
+                      type: 'start',
+                      data: { formData: formSubmitData },
+                    });
+                    toast({
+                      title: 'You submitted the following values:',
+                      description: (
+                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                          <code className="text-white">
+                            {JSON.stringify(
+                              { ...formSubmitData, ...nodeProps.data },
+                              null,
+                              2,
+                            )}
+                          </code>
+                        </pre>
+                      ),
+                    });
+                  }}
+                />
+              </SheetContent>
+            </Sheet>
           </CardContent>
         )}
         {nodeStatus === 'busy' && (
@@ -409,33 +378,30 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                 {jobStatusMessage || 'Something went wrong'}
               </p>
             </div>
-            <Accordion type="single" collapsible>
-              <AccordionItem value="item-1">
-                <AccordionTrigger>Retry?</AccordionTrigger>
-                <AccordionContent>
-                  <DatasetForm
-                    name={datasetName}
-                    data={contextData}
-                    onSubmitHandler={(data) => {
-                      actor.send({
-                        type: 'retry',
-                        data: { formData: data },
-                      });
-                      toast({
-                        title: 'You submitted the following values:',
-                        description: (
-                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                            <code className="text-white">
-                              {JSON.stringify(data, null, 2)}
-                            </code>
-                          </pre>
-                        ),
-                      });
-                    }}
-                  />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+            <Sheet open={nodeProps.selected} modal={false}>
+              <SheetContent>
+                <DatasetForm
+                  name={datasetName}
+                  data={contextData}
+                  onSubmitHandler={(data) => {
+                    actor.send({
+                      type: 'retry',
+                      data: { formData: data },
+                    });
+                    toast({
+                      title: 'You submitted the following values:',
+                      description: (
+                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                          <code className="text-white">
+                            {JSON.stringify(data, null, 2)}
+                          </code>
+                        </pre>
+                      ),
+                    });
+                  }}
+                />
+              </SheetContent>
+            </Sheet>
           </CardContent>
         )}
         {nodeStatus === 'success' && (

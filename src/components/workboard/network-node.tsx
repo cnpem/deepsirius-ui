@@ -2,12 +2,6 @@ import { useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '~/components/ui/accordion';
 import { Button } from '~/components/ui/button';
 import {
   Card,
@@ -17,6 +11,12 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '~/components/ui/sheet';
 import { toast } from '~/components/ui/use-toast';
 import {
   DefaultForm as NetworkForm,
@@ -351,43 +351,42 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             <CardDescription>{nodeStatus}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Accordion type="single" collapsible>
-              <AccordionItem value="item-1">
-                <AccordionTrigger>Train me!</AccordionTrigger>
-                <AccordionContent>
-                  <NetworkForm
-                    onSubmitHandler={(data) => {
-                      const connectedDatasetName = getConnectedDatasetName();
-                      if (!connectedDatasetName) {
-                        toast({
-                          title: 'You need to connect a dataset first',
-                          description:
-                            'The network needs a dataset to train on.',
-                        });
-                        return;
-                      }
-                      actor.send({
-                        type: 'create',
-                        data: {
-                          formData: data,
-                          connectedNodeName: connectedDatasetName,
-                        },
-                      });
+            <Sheet open={nodeProps.selected} modal={false}>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Training</SheetTitle>
+                </SheetHeader>
+                <NetworkForm
+                  onSubmitHandler={(data) => {
+                    const connectedDatasetName = getConnectedDatasetName();
+                    if (!connectedDatasetName) {
                       toast({
-                        title: 'You submitted the following values:',
-                        description: (
-                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                            <code className="text-white">
-                              {JSON.stringify({ ...data }, null, 2)}
-                            </code>
-                          </pre>
-                        ),
+                        title: 'You need to connect a dataset first',
+                        description: 'The network needs a dataset to train on.',
                       });
-                    }}
-                  />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                      return;
+                    }
+                    actor.send({
+                      type: 'create',
+                      data: {
+                        formData: data,
+                        connectedNodeName: connectedDatasetName,
+                      },
+                    });
+                    toast({
+                      title: 'You submitted the following values:',
+                      description: (
+                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                          <code className="text-white">
+                            {JSON.stringify({ ...data }, null, 2)}
+                          </code>
+                        </pre>
+                      ),
+                    });
+                  }}
+                />
+              </SheetContent>
+            </Sheet>
           </CardContent>
           <Handle type="source" position={Position.Right} />
         </Card>
@@ -448,79 +447,79 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
                 {jobStatus}
               </p>
             </div>
-            <Accordion type="single" collapsible>
-              <AccordionItem value="item-1">
-                <AccordionTrigger>Retry?</AccordionTrigger>
-                <AccordionContent>
-                  {isTrainingError && (
-                    <NetworkForm
-                      onSubmitHandler={(data) => {
-                        const connectedDatasetName = getConnectedDatasetName();
-                        if (!connectedDatasetName) {
-                          toast({
-                            title: 'You need to connect a dataset first',
-                            description:
-                              'The network needs a dataset to train on.',
-                          });
-                          return;
-                        }
-                        actor.send({
-                          type: 'retry',
-                          data: {
-                            formData: data,
-                            connectedNodeName: connectedDatasetName,
-                          },
-                        });
+            <Sheet open={nodeProps.selected} modal={false}>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Retry</SheetTitle>
+                </SheetHeader>
+                {isTrainingError && (
+                  <NetworkForm
+                    onSubmitHandler={(data) => {
+                      const connectedDatasetName = getConnectedDatasetName();
+                      if (!connectedDatasetName) {
                         toast({
-                          title: 'You submitted the following values:',
-                          description: (
-                            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                              <code className="text-white">
-                                {JSON.stringify(data, null, 2)}
-                              </code>
-                            </pre>
-                          ),
+                          title: 'You need to connect a dataset first',
+                          description:
+                            'The network needs a dataset to train on.',
                         });
-                      }}
-                    />
-                  )}
-                  {isTuningError && (
-                    <PrefilledForm
-                      networkTypeName={networkType}
-                      networkUserLabel={networkLabel}
-                      onSubmitHandler={(data) => {
-                        const connectedDatasetName = getConnectedDatasetName();
-                        if (!connectedDatasetName) {
-                          toast({
-                            title: 'You need to connect a dataset first',
-                            description:
-                              'The network needs a dataset to train on.',
-                          });
-                          return;
-                        }
-                        actor.send({
-                          type: 'retry',
-                          data: {
-                            formData: data,
-                            connectedNodeName: connectedDatasetName,
-                          },
-                        });
+                        return;
+                      }
+                      actor.send({
+                        type: 'retry',
+                        data: {
+                          formData: data,
+                          connectedNodeName: connectedDatasetName,
+                        },
+                      });
+                      toast({
+                        title: 'You submitted the following values:',
+                        description: (
+                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                            <code className="text-white">
+                              {JSON.stringify(data, null, 2)}
+                            </code>
+                          </pre>
+                        ),
+                      });
+                    }}
+                  />
+                )}
+                {isTuningError && (
+                  <PrefilledForm
+                    networkTypeName={networkType}
+                    networkUserLabel={networkLabel}
+                    onSubmitHandler={(data) => {
+                      const connectedDatasetName = getConnectedDatasetName();
+                      if (!connectedDatasetName) {
                         toast({
-                          title: 'You submitted the following values:',
-                          description: (
-                            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                              <code className="text-white">
-                                {JSON.stringify(data, null, 2)}
-                              </code>
-                            </pre>
-                          ),
+                          title: 'You need to connect a dataset first',
+                          description:
+                            'The network needs a dataset to train on.',
                         });
-                      }}
-                    />
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                        return;
+                      }
+                      actor.send({
+                        type: 'retry',
+                        data: {
+                          formData: data,
+                          connectedNodeName: connectedDatasetName,
+                        },
+                      });
+                      toast({
+                        title: 'You submitted the following values:',
+                        description: (
+                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                            <code className="text-white">
+                              {JSON.stringify(data, null, 2)}
+                            </code>
+                          </pre>
+                        ),
+                      });
+                    }}
+                  />
+                )}
+              </SheetContent>
+            </Sheet>
           </CardContent>
           <Handle type="source" position={Position.Right} />
         </Card>
@@ -541,45 +540,44 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
                 {jobStatus}
               </p>
             </div>
-            <Accordion type="single" collapsible>
-              <AccordionItem value="item-1">
-                <AccordionTrigger>Finetune?</AccordionTrigger>
-                <AccordionContent>
-                  <PrefilledForm
-                    networkTypeName={networkType}
-                    networkUserLabel={networkLabel}
-                    onSubmitHandler={(data) => {
-                      const connectedDatasetName = getConnectedDatasetName();
-                      if (!connectedDatasetName) {
-                        toast({
-                          title: 'You need to connect a dataset first',
-                          description:
-                            'The network needs a dataset to train on.',
-                        });
-                        return;
-                      }
-                      actor.send({
-                        type: 'finetune',
-                        data: {
-                          formData: data,
-                          connectedNodeName: connectedDatasetName,
-                        },
-                      });
+            <Sheet open={nodeProps.selected} modal={false}>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Finetune</SheetTitle>
+                </SheetHeader>
+                <PrefilledForm
+                  networkTypeName={networkType}
+                  networkUserLabel={networkLabel}
+                  onSubmitHandler={(data) => {
+                    const connectedDatasetName = getConnectedDatasetName();
+                    if (!connectedDatasetName) {
                       toast({
-                        title: 'You submitted the following values:',
-                        description: (
-                          <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                            <code className="text-white">
-                              {JSON.stringify(data, null, 2)}
-                            </code>
-                          </pre>
-                        ),
+                        title: 'You need to connect a dataset first',
+                        description: 'The network needs a dataset to train on.',
                       });
-                    }}
-                  />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                      return;
+                    }
+                    actor.send({
+                      type: 'finetune',
+                      data: {
+                        formData: data,
+                        connectedNodeName: connectedDatasetName,
+                      },
+                    });
+                    toast({
+                      title: 'You submitted the following values:',
+                      description: (
+                        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+                          <code className="text-white">
+                            {JSON.stringify(data, null, 2)}
+                          </code>
+                        </pre>
+                      ),
+                    });
+                  }}
+                />
+              </SheetContent>
+            </Sheet>
           </CardContent>
           <Handle type="source" position={Position.Right} />
         </Card>

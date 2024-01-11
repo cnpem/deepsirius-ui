@@ -209,7 +209,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               <p className="text-sm text-yellow-600 lowercase">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
                   nodeProps.data.jobStatus || 'jobStatus'
-                }}`}
+                }`}
               </p>
             </div>
             <Sheet open={nodeProps.selected} modal={false}>
@@ -273,7 +273,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               <p className="text-sm text-blue-600 lowercase">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
                   nodeProps.data.jobStatus || 'jobStatus'
-                }}`}
+                }`}
               </p>
             </div>
           </div>
@@ -299,7 +299,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               <p className="text-sm text-red-600 lowercase">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
                   nodeProps.data.jobStatus || 'jobStatus'
-                }}`}
+                }`}
               </p>
             </div>
           </div>

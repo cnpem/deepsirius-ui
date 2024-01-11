@@ -44,13 +44,15 @@ const validConnectionPairs = [
   ['network', 'inference'],
 ];
 
-export type NodeStatus = 'success' | 'error' | 'active' | 'busy' | 'inactive';
+export type NodeStatus = 'success' | 'error' | 'active' | 'busy';
 
 export type NodeData = {
   workspacePath: string;
-  status: NodeStatus; // this is just a state label without spaces for controlling the flow
-  xState?: string; // this is a long json
-  remoteFsDataPath?: string; // this is the path to the stored data related to the node component in the remote filesystem and should be deleted when the node is deleted
+  status: NodeStatus;
+  remotePath?: string;
+  jobId?: string;
+  jobStatus?: string;
+  message?: string;
 };
 
 type RFState = {
@@ -91,7 +93,7 @@ const initialState: RFState = {
   stateSnapshot: '',
 };
 
-const useSilentStore = create<RFStore>()(
+export const useStore = create<RFStore>()(
   persist(
     (set, get) => ({
       ...initialState,
@@ -101,16 +103,6 @@ const useSilentStore = create<RFStore>()(
             nodes: get().nodes,
             edges: get().edges,
           };
-          // logs only relevant info when updating the state snapshot in the db
-          const nodesSnapshot = dbState.nodes.map((node) => {
-            const nodesSnapshot = {
-              type: node.type,
-              status: node.data.status,
-              remoteFsDataPath: node.data.remoteFsDataPath,
-            };
-            return nodesSnapshot;
-          });
-          console.log('Store.updateStateSnapshot: ', nodesSnapshot);
           set({ stateSnapshot: JSON.stringify(dbState) });
         },
         resetStore: () => {
@@ -331,60 +323,5 @@ const useSilentStore = create<RFStore>()(
     },
   ),
 );
-
-// // Log every time state is changed
-// type Logger = <
-//   T,
-//   Mps extends [StoreMutatorIdentifier, unknown][] = [],
-//   Mcs extends [StoreMutatorIdentifier, unknown][] = [],
-// >(
-//   f: StateCreator<T, Mps, Mcs>,
-//   name?: string,
-// ) => StateCreator<T, Mps, Mcs>;
-
-// type LoggerImpl = <T>(
-//   f: StateCreator<T, [], []>,
-//   name?: string,
-// ) => StateCreator<T, [], []>;
-
-// const loggerImpl: LoggerImpl = (f, name) => (set, get, store) => {
-//   const loggedSet: typeof set = (...a) => {
-//     set(...a);
-//     console.log(...(name ? [`${name}:`] : []), get());
-//   };
-//   store.setState = loggedSet;
-
-//   return f(loggedSet, get, store);
-// };
-
-// export const logger = loggerImpl as unknown as Logger;
-
-// // this is our useStore hook that we can use in our components to get parts of the store and call actions
-// const useLoggerStore = create<RFStore>()(
-//   persist(
-//     logger(
-//       (set, get) => ({
-//         ...initialState,
-//         actions:
-//           useSilentStore((state) => state.actions, (a) => {
-//             console.log('useLoggerStore: ', a);
-//           }),
-//       }),
-//       'useStore',
-//     ),
-//     {
-//       name: 'workspace-path',
-//       // storage: createJSONStorage(() => localStorage),
-//       partialize: (state) => ({
-//         workspacePath: state.workspacePath,
-//         stateSnapshot: state.stateSnapshot,
-//         nodes: state.nodes,
-//         edges: state.edges,
-//       }),
-//     },
-//   ),
-// );
-
-export const useStore = useSilentStore;
 
 export const useStoreActions = () => useStore((state) => state.actions);

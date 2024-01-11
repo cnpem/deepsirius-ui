@@ -1,6 +1,5 @@
 import { useInterpret, useSelector } from '@xstate/react';
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Handle, type NodeProps, Position } from 'reactflow';
 import { State, type StateFrom, assign, createMachine } from 'xstate';
 import { Button } from '~/components/ui/button';
@@ -12,7 +11,12 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card';
-import { Sheet, SheetContent } from '~/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '~/components/ui/sheet';
 import { toast } from '~/components/ui/use-toast';
 import {
   type NodeData,
@@ -307,6 +311,9 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             </div>
             <Sheet open={nodeProps.selected} modal={false}>
               <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Create</SheetTitle>
+                </SheetHeader>
                 <DatasetForm
                   data={[
                     {
@@ -380,6 +387,9 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             </div>
             <Sheet open={nodeProps.selected} modal={false}>
               <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Retry</SheetTitle>
+                </SheetHeader>
                 <DatasetForm
                   name={datasetName}
                   data={contextData}

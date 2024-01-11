@@ -53,14 +53,7 @@ export const networkSchema = z.object({
   // field of type z.number() with a minimum value of 0
   learningRate: z.coerce.number().gt(0, { message: 'Must be greater than 0' }),
   // field of type z.enum() with options of 'Adam', 'SGD'
-  optimizer: z.enum([
-    'adam',
-    'momentum',
-    'adagrad',
-    'nesterov',
-    'gradientdescent',
-    'rmsprop',
-  ]),
+  optimizer: z.enum(['adam', 'adagrad', 'gradientdescent']),
   // field of type z.enum() with options of 'CrossEntropy', 'dice', 'xent_dice'
   // meaning cross entropy, dice or both combined
   lossFunction: z.enum(['CrossEntropy', 'dice', 'xent_dice']),
@@ -124,11 +117,8 @@ const networkOpts: FormFieldItems = [
 
 const optimizerOpts: FormFieldItems = [
   { label: 'Adam', value: 'adam' },
-  { label: 'Momentum', value: 'momentum' },
   { label: 'Adagrad', value: 'adagrad' },
-  { label: 'Nesterov', value: 'nesterov' },
   { label: 'Gradient Descent', value: 'gradientdescent' },
-  { label: 'RMS Prop', value: 'rmsprop' },
 ];
 
 const lossOpts: FormFieldItems = [
@@ -164,12 +154,13 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
           name="networkTypeName"
           control={form.control}
           render={({ field }) => (
-            <FormItem className="flex items-center justify-center rounded-lg py-4">
+            <FormItem className="mt-2">
+              <FormLabel>Network Type</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  className="flex space-x-2"
+                  className="flex justify-center pb-2"
                 >
                   {networkOpts.map((option) => (
                     <div key={option.value} className="items-center space-x-1">
@@ -238,24 +229,27 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Optimizer</FormLabel>
-              <Select onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a verified email to display" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {optimizerOpts.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex justify-center pb-2"
+                >
+                  {optimizerOpts.map((option) => (
+                    <div
+                      key={option.value}
+                      className="flex items-center space-x-1"
+                    >
+                      <FormLabel id="optimizer">{option.label}</FormLabel>
+                      <RadioGroupItem value={option.value} />
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
+                </RadioGroup>
+              </FormControl>
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 grid-rows-2 gap-x-4 gap-y-1">
           <FormField
             name="lossFunction"
             control={form.control}
@@ -268,7 +262,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a verified email to display" />
+                      <SelectValue />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -294,7 +288,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a verified email to display" />
+                      <SelectValue />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -309,8 +303,6 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
               </FormItem>
             )}
           />
-        </div>
-        <footer className="grid grid-cols-2 grid-rows-2 gap-4">
           <FormField
             control={form.control}
             name="slurmOptions.partition"
@@ -369,6 +361,8 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
               </FormItem>
             )}
           />
+        </div>
+        <footer className="grid grid-cols-2 gap-4">
           <Button className="my-2 mx-0 col-span-2" type="submit">
             Submit
           </Button>

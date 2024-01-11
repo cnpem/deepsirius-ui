@@ -146,20 +146,17 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
   return (
     <Form {...form}>
       <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
-        {!name && (
-          <FormField
-            control={form.control}
-            name="datasetName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Dataset Name</FormLabel>
-                <Input {...field} placeholder="my_dataset" />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        {/* <SettingsDialog form={form} /> */}
+        <FormField
+          control={form.control}
+          name="datasetName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Dataset Name</FormLabel>
+              <Input {...field} placeholder="my_dataset" />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div
           className={'relative border p-2 rounded-md border-dashed mt-6 mb-1'}
         >

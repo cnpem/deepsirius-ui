@@ -229,6 +229,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                             ...nodeProps.data,
                             status: 'error',
                             jobId: nodeProps.data.jobId,
+                            jobStatus: 'CANCELED',
                             message: `Job ${
                               nodeProps.data.jobId ?? 'aa'
                             } canceled in ${dayjs().format(

@@ -53,6 +53,7 @@ export type NodeData = {
   jobId?: string;
   jobStatus?: string;
   message?: string;
+  updatedAt?: string;
 };
 
 type RFState = {

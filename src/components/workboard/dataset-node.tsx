@@ -62,6 +62,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
         if (!nodeProps.data.jobId) {
           console.error('checkJob.onSuccess', 'no job id', data);
         }
+        const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
         if (data.jobStatus === 'COMPLETED') {
           toast({
             title: 'Job finished',
@@ -76,9 +77,8 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               jobStatus: data.jobStatus,
               message: `Job ${
                 nodeProps.data.jobId ?? 'aa'
-              } finished successfully in ${dayjs().format(
-                'YYYY-MM-DD HH:mm:ss',
-              )}`,
+              } finished successfully in ${date}`,
+              updatedAt: date,
             },
           });
           updateNodeInternals(nodeProps.id);
@@ -94,9 +94,8 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               status: 'error',
               jobId: nodeProps.data.jobId,
               jobStatus: data.jobStatus,
-              message: `Job ${
-                nodeProps.data.jobId ?? 'aa'
-              } failed in ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`,
+              message: `Job ${nodeProps.data.jobId ?? 'aa'} failed in ${date}`,
+              updatedAt: date,
             },
           });
           updateNodeInternals(nodeProps.id);
@@ -109,8 +108,9 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               jobId: nodeProps.data.jobId,
               jobStatus: data.jobStatus,
               message: `Job ${nodeProps.data.jobId ?? 'aa'} is ${
-                data.jobStatus ?? 'aa'
-              } in ${dayjs().format('YYYY-MM-DD HH:mm:ss')}`,
+                data.jobStatus?.toLocaleLowerCase() ?? 'aa'
+              }, last checked at ${date}`,
+              updatedAt: date,
             },
           });
           updateNodeInternals(nodeProps.id);
@@ -165,7 +165,10 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
 
   if (nodeProps.data.status === 'active') {
     return (
-      <Card className="w-fit bg-green-100 text-green-800 active:border-green-500 border-green-800 dark:bg-muted dark:text-green-400">
+      <Card
+        data-selected={nodeProps.selected}
+        className="w-fit bg-green-100 text-green-800 data-[selected=true]:border-green-500 border-green-800 dark:bg-muted dark:text-green-400"
+      >
         <CardContent className="p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
             <DatabaseIcon className="inline-block" />
@@ -198,7 +201,10 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
 
   if (nodeProps.data.status === 'busy') {
     return (
-      <Card className="w-fit bg-yellow-100 text-yellow-800 active:border-yellow-600 border-yellow-800 dark:bg-muted dark:text-yellow-400">
+      <Card
+        data-selected={nodeProps.selected}
+        className="w-fit bg-yellow-100 text-yellow-800 data-[selected=true]:border-yellow-600 border-yellow-800 dark:bg-muted dark:text-yellow-400"
+      >
         <CardContent className="p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
             <DatabaseIcon className="inline-block" />
@@ -208,17 +214,43 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               </p>
               <p className="text-sm text-yellow-600 lowercase">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
-                  nodeProps.data.jobStatus || 'jobStatus'
+                  nodeProps.data.jobStatus || 'checking status..'
                 }`}
               </p>
             </div>
             <Sheet open={nodeProps.selected} modal={false}>
-              <SheetContent>
+              <SheetContent className="flex flex-col gap-4">
+                <Alert>
+                  <AlertDescription>{nodeProps.data.message}</AlertDescription>
+                </Alert>
+                <SheetHeader>
+                  <SheetTitle>Details</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
+                  <div className="flex flex-row items-center justify-between gap-1">
+                    <p className="font-medium">id</p>
+                    <p className="text-violet-600">{nodeProps.data.jobId}</p>
+                  </div>
+                  <div className="flex flex-row items-center justify-between gap-1">
+                    <p className="font-medium">status</p>
+                    <p className="text-violet-600 lowercase">
+                      {nodeProps.data.jobStatus}
+                    </p>
+                  </div>
+                  <div className="flex flex-row items-center justify-between gap-1">
+                    <p className="font-medium">updated at</p>
+                    <p className="text-violet-600 text-end">
+                      {nodeProps.data.updatedAt}
+                    </p>
+                  </div>
+                </div>
+                <hr />
                 <Button
                   onClick={() => {
                     //   actor.send('cancel');
                     cancelJob({ jobId: nodeProps.data.jobId as string })
                       .then(() => {
+                        const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
                         toast({
                           title: 'Job canceled',
                           description: 'The job has been canceled',
@@ -229,12 +261,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                             ...nodeProps.data,
                             status: 'error',
                             jobId: nodeProps.data.jobId,
-                            jobStatus: 'CANCELED',
+                            jobStatus: 'CANCELLED',
                             message: `Job ${
                               nodeProps.data.jobId ?? 'aa'
-                            } canceled in ${dayjs().format(
-                              'YYYY-MM-DD HH:mm:ss',
-                            )}`,
+                            } canceled in ${date}`,
+                            updatedAt: date,
                           },
                         });
                         updateNodeInternals(nodeProps.id);
@@ -263,7 +294,10 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
 
   if (nodeProps.data.status === 'success') {
     return (
-      <Card className="w-fit bg-blue-100 text-blue-800 active:border-blue-500 border-blue-800 dark:bg-muted dark:text-blue-400">
+      <Card
+        data-selected={nodeProps.selected}
+        className="w-fit bg-blue-100 text-blue-800 data-[selected=true]:border-blue-500 border-blue-800 dark:bg-muted dark:text-blue-400"
+      >
         <CardContent className="p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
             <DatabaseIcon className="inline-block" />
@@ -279,7 +313,33 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             </div>
           </div>
           <Sheet open={nodeProps.selected} modal={false}>
-            <SheetContent></SheetContent>
+            <SheetContent className="flex flex-col gap-4">
+              <Alert>
+                <AlertDescription>{nodeProps.data.message}</AlertDescription>
+              </Alert>
+              <SheetHeader>
+                <SheetTitle>Details</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">id</p>
+                  <p className="text-violet-600">{nodeProps.data.jobId}</p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">status</p>
+                  <p className="text-violet-600 lowercase">
+                    {nodeProps.data.jobStatus}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">updated at</p>
+                  <p className="text-violet-600 text-end">
+                    {nodeProps.data.updatedAt}
+                  </p>
+                </div>
+              </div>
+              <hr />
+            </SheetContent>
           </Sheet>
         </CardContent>
         <Handle type="source" position={Position.Right} />
@@ -289,7 +349,10 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
 
   if (nodeProps.data.status === 'error') {
     return (
-      <Card className="w-fit bg-red-100 text-red-800 active:border-red-500 border-red-800 dark:bg-muted dark:text-red-400">
+      <Card
+        data-selected={nodeProps.selected}
+        className="w-fit bg-red-100 text-red-800 data-[selected=true]:border-red-500 border-red-800 dark:bg-muted dark:text-red-400"
+      >
         <CardContent className="p-4 relative pr-8">
           <div className=" flex flex-row items-center gap-4">
             <DatabaseIcon className="inline-block" />
@@ -305,7 +368,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             </div>
           </div>
           <Sheet open={nodeProps.selected} modal={false}>
-            <SheetContent>
+            <SheetContent className="flex flex-col gap-4">
               <Alert variant="destructive">
                 <AlertTriangleIcon className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
@@ -316,7 +379,6 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               <SheetHeader>
                 <SheetTitle>Retry</SheetTitle>
               </SheetHeader>
-
               <DatasetForm
                 name={formData.datasetName}
                 data={formData.data}
@@ -329,4 +391,6 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
       </Card>
     );
   }
+
+  return null;
 }

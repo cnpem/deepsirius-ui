@@ -66,9 +66,9 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
       if (nodesToDelete) {
         // delete the files and directories in the remote filesystem if the node has a remoteFsDataPath
         nodesToDelete.forEach((node) => {
-          if (node.data.remoteFsDataPath) {
+          if (node.data.remotePath) {
             deleteNodeFiles({
-              path: node.data.remoteFsDataPath,
+              path: node.data.remotePath,
             });
           }
         });

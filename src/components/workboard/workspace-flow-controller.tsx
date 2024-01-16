@@ -7,6 +7,7 @@ import ReactFlow, {
   MiniMap,
   type Node,
   Panel,
+  useKeyPress,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
@@ -20,6 +21,8 @@ import {
   useStoreActions,
 } from '~/hooks/use-store';
 import { api } from '~/utils/api';
+
+import { toast } from '../ui/use-toast';
 
 /**
  * The Geppetto component is the main component for the workspace flow
@@ -37,17 +40,11 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
   const { nodes, edges, stateSnapshot } = useStore();
   const { mutate: updateDbState } =
     api.workspaceDbState.updateWorkspace.useMutation({
-      onSuccess: () => {
-        console.log('dbstate updated successfully');
-      },
       onError: (error) => {
         console.log('dbstate update error', error);
       },
     });
-  const { mutate: deleteNodeFiles } = api.remotefiles.remove.useMutation({
-    onSuccess: () => {
-      console.log('node files deleted successfully');
-    },
+  const { mutate: deleteFiles } = api.remotefiles.remove.useMutation({
     onError: (error) => {
       console.log('node files delete error', error);
     },
@@ -62,22 +59,39 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
 
   const handleNodesDelete = useCallback(
     (nodesToDelete: Node<NodeData>[]) => {
-      console.log('nodes to delete', nodesToDelete);
-      if (nodesToDelete) {
-        // delete the files and directories in the remote filesystem if the node has a remoteFsDataPath
-        nodesToDelete.forEach((node) => {
-          if (node.data.remotePath) {
-            deleteNodeFiles({
-              path: node.data.remotePath,
-            });
-          }
+      const deletableNodes = nodesToDelete.filter(
+        (node) => node.data.status !== 'busy',
+      );
+      // show error message if some nodes should not be deleted
+      if (nodesToDelete.length > deletableNodes.length) {
+        toast({
+          title: 'Error',
+          description: 'Cannot delete busy nodes',
         });
-        // delete the nodes from the store
-        onNodesDelete(nodesToDelete);
       }
+      // delete remote files
+      deletableNodes
+        .map((node) => node.data.remotePath)
+        .filter(Boolean)
+        .forEach((p) => {
+          deleteFiles({ path: p as string }); // this type assertion is safe because we filter out nodes without remotePath
+        });
+      // remove nodes from the store
+      onNodesDelete(deletableNodes);
     },
-    [deleteNodeFiles, onNodesDelete],
+    [deleteFiles, onNodesDelete],
   );
+
+  const deletePressed = useKeyPress(['Delete', 'Backspace']);
+
+  useEffect(() => {
+    if (deletePressed) {
+      const selectedNodes = nodes.filter((node) => node.selected);
+      if (selectedNodes.length > 0) {
+        handleNodesDelete(selectedNodes);
+      }
+    }
+  }, [deletePressed, handleNodesDelete, nodes]);
 
   const variant = BackgroundVariant.Dots;
 
@@ -103,10 +117,9 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
-        // onEdgesChange={onEdgesChange} // this is not needed because the edges are not editable, only deletable
         onConnect={onConnect}
         onNodeDragStop={onNodeDragStop}
-        onNodesDelete={handleNodesDelete}
+        deleteKeyCode={[]} // disable delete key
         onEdgesDelete={onEdgesDelete}
         connectionLineComponent={CustomConnectionLine}
         nodeTypes={nodeTypes}

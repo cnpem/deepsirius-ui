@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 .react-flow .react-flow__handle {
-  @apply -mx-1 h-4 w-4 rounded-full border-current bg-purple-400 dark:border-current dark:bg-purple-600;
+  @apply h-6 w-3 rounded-sm border-current bg-purple-400 dark:border-current dark:bg-purple-600;
 }
 
 @layer base {

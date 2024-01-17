@@ -70,7 +70,10 @@ const augmentationSchema = z.object({
 
 export const datasetSchema = z.object({
   slurmOptions,
-  datasetName: z.string().nonempty({ message: 'Must have a dataset name!' }),
+  datasetName: z
+    .string()
+    .nonempty({ message: 'Must have a dataset name!' })
+    .refine((s) => !s.includes(' '), 'No Spaces!'),
   data: dataSchema
     .array()
     .nonempty({ message: 'Must have at least one image!' }),

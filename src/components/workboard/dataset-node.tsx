@@ -114,7 +114,6 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   const { onUpdateNode } = useStoreActions();
 
   const handleSubmitJob = (formData: FormType) => {
-    console.log('handleSubmitJob');
     submitJob({
       formData,
       workspacePath: nodeProps.data.workspacePath,

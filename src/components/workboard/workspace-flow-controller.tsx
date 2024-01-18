@@ -6,14 +6,15 @@ import {
   PlusCircle,
 } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import ReactFlow, {
   Background,
   BackgroundVariant,
   Controls,
+  type Edge,
   MiniMap,
   type Node,
   Panel,
-  useKeyPress,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
@@ -31,7 +32,7 @@ import { api } from '~/utils/api';
 import { AvatarDrop } from '../avatar-dropdown';
 import { ControlHelpButton } from '../help';
 import { ControlThemeButton } from '../theme-toggle';
-import { toast } from '../ui/use-toast';
+import { useToast } from '../ui/use-toast';
 
 /**
  * The Geppetto component is the main component for the workspace flow
@@ -44,6 +45,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     onNodeDragStop,
     onNodesDelete,
     onEdgesDelete,
+    onEdgesChange,
     onNodesChange,
   } = useStoreActions();
   const { nodes, edges, stateSnapshot } = useStore();
@@ -66,41 +68,83 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     });
   }, [updateDbState, stateSnapshot, workspacePath]);
 
-  const handleNodesDelete = useCallback(
-    (nodesToDelete: Node<NodeData>[]) => {
-      const deletableNodes = nodesToDelete.filter(
-        (node) => node.data.status !== 'busy',
-      );
-      // show error message if some nodes should not be deleted
-      if (nodesToDelete.length > deletableNodes.length) {
-        toast({
-          title: 'Error',
-          description: 'Cannot delete busy nodes',
-        });
-      }
-      // delete remote files
-      deletableNodes
-        .map((node) => node.data.remotePath)
-        .filter(Boolean)
-        .forEach((p) => {
-          deleteFiles({ path: p as string }); // this type assertion is safe because we filter out nodes without remotePath
-        });
-      // remove nodes from the store
-      onNodesDelete(deletableNodes);
-    },
-    [deleteFiles, onNodesDelete],
-  );
+  const { toast } = useToast();
 
-  const deletePressed = useKeyPress(['Delete', 'Backspace']);
-
-  useEffect(() => {
-    if (deletePressed) {
-      const selectedNodes = nodes.filter((node) => node.selected);
-      if (selectedNodes.length > 0) {
-        handleNodesDelete(selectedNodes);
-      }
+  const handleNodesDelete = useCallback(() => {
+    const [deletableNodes, protectedNodes] = nodes.reduce(
+      (acc, node) => {
+        if (node.selected) {
+          if (node.data.status === 'busy') {
+            acc[1].push(node);
+          } else {
+            acc[0].push(node);
+          }
+        }
+        return acc;
+      },
+      [[], []] as [Node<NodeData>[], Node<NodeData>[]],
+    );
+    // show error message if some nodes should not be deleted
+    if (protectedNodes.length > 0) {
+      console.log('cannot delete busy nodes', protectedNodes);
+      toast({
+        title: 'Error',
+        description: 'Cannot delete busy nodes',
+      });
     }
-  }, [deletePressed, handleNodesDelete, nodes]);
+    if (deletableNodes.length === 0) return;
+    // delete remote files
+    deletableNodes
+      .map((node) => node.data.remotePath)
+      .filter(Boolean)
+      .forEach((p) => {
+        deleteFiles({ path: p as string }); // this type assertion is safe because we filter out nodes without remotePath
+      });
+    // remove nodes from the store
+    onNodesDelete(deletableNodes);
+  }, [deleteFiles, nodes, onNodesDelete, toast]);
+
+  const handleEdgesDelete = useCallback(() => {
+    const nodeIsBusy = (nodeId: string) =>
+      nodes.find((node) => node.id === nodeId)?.data.status === 'busy';
+    const [deletableEdges, protectedEdges] = edges.reduce(
+      (acc, edge) => {
+        if (edge.selected) {
+          if (nodeIsBusy(edge.target)) {
+            acc[1].push(edge);
+          } else {
+            acc[0].push(edge);
+          }
+        }
+        return acc;
+      },
+      [[], []] as [Edge[], Edge[]],
+    );
+    // show error message if some edges should not be deleted
+    if (protectedEdges.length > 0) {
+      console.log('cannot delete edges to busy nodes', protectedEdges);
+      toast({
+        title: 'Error',
+        description: 'Cannot delete edges to busy nodes',
+      });
+    }
+    if (deletableEdges.length === 0) return;
+    // remove edges from the store
+    onEdgesDelete(deletableEdges);
+  }, [edges, nodes, onEdgesDelete, toast]);
+
+  useHotkeys(['backspace', 'del', 'Delete'], () => {
+    console.log('i will survive!');
+    // check if there are selected nodes
+    const selectedNodes = nodes.filter((node) => node.selected);
+    if (selectedNodes.length > 0) {
+      handleNodesDelete();
+    }
+    const selectedEdges = edges.filter((edge) => edge.selected);
+    if (selectedEdges.length > 0) {
+      handleEdgesDelete();
+    }
+  });
 
   const variant = BackgroundVariant.Dots;
 
@@ -126,10 +170,10 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeDragStop={onNodeDragStop}
         deleteKeyCode={[]} // disable delete key
-        onEdgesDelete={onEdgesDelete}
         connectionLineComponent={CustomConnectionLine}
         nodeTypes={nodeTypes}
         fitView

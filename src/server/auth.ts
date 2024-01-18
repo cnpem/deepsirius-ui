@@ -147,16 +147,19 @@ export const authOptions: NextAuthOptions = {
         const comment = `${user.name}@deepsirius`;
         const { name: username, password } = user;
         // clean up old public key
-        await removePublicKeyByComment(
+        const removePromise = removePublicKeyByComment(
           username,
           env.SSH_HOST,
           password,
           comment,
         );
-        const pair = await generateKeyPairPromise({
+        const pairPromise = generateKeyPairPromise({
           comment: comment,
           passphrase: env.PRIVATE_KEY_PASSPHRASE,
         });
+
+        const [, pair] = await Promise.all([removePromise, pairPromise]);
+
         // copy new public key
         await copyPublicKeyToRemote(
           pair.pubKey,
@@ -164,6 +167,7 @@ export const authOptions: NextAuthOptions = {
           env.SSH_HOST,
           password,
         );
+
         token.privateKey = pair.key;
         token.email = user.email;
         token.name = user.name;

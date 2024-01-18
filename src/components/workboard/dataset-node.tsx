@@ -188,7 +188,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             </SheetContent>
           </Sheet>
         </CardContent>
-        <Handle type="source" position={Position.Right} />
+        <Handle
+          className="!bg-green-400 active:!bg-green-500 dark:!bg-muted dark:active:!bg-green-400"
+          type="source"
+          position={Position.Right}
+        />
       </Card>
     );
   }
@@ -281,7 +285,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             </Sheet>
           </div>
         </CardContent>
-        <Handle type="source" position={Position.Right} />
+        <Handle
+          className="!bg-yellow-400 active:!bg-yellow-500 dark:!bg-muted dark:active:!bg-yellow-400"
+          type="source"
+          position={Position.Right}
+        />
       </Card>
     );
   }
@@ -336,7 +344,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             </SheetContent>
           </Sheet>
         </CardContent>
-        <Handle type="source" position={Position.Right} />
+        <Handle
+          className="!bg-blue-400 active:!bg-blue-500 dark:!bg-muted dark:active:!bg-blue-400"
+          type="source"
+          position={Position.Right}
+        />
       </Card>
     );
   }
@@ -381,7 +393,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             </SheetContent>
           </Sheet>
         </CardContent>
-        <Handle type="source" position={Position.Right} />
+        <Handle
+          className="!bg-red-400 active:!bg-red-500 dark:!bg-muted dark:active:!bg-red-400"
+          type="source"
+          position={Position.Right}
+        />
       </Card>
     );
   }

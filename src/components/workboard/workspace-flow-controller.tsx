@@ -1,4 +1,10 @@
-import { ArrowBigLeft, PlusCircle } from 'lucide-react';
+import {
+  ArrowBigLeft,
+  BrainIcon,
+  CoffeeIcon,
+  DatabaseIcon,
+  PlusCircle,
+} from 'lucide-react';
 import { useCallback, useEffect } from 'react';
 import ReactFlow, {
   Background,
@@ -96,17 +102,17 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
   const variant = BackgroundVariant.Dots;
 
   const nodeColor = (node: Node<NodeData>) => {
-    switch (node.type) {
-      case 'dataset':
-        return '#6ede87';
-      case 'new':
-        return '#eb0ee3';
-      case 'network':
-        return '#3162c4';
-      case 'inference':
-        return '#eb870e';
+    switch (node.data.status) {
+      case 'active':
+        return '#4CAF50';
+      case 'busy':
+        return '#FFC107';
+      case 'error':
+        return '#F44336';
+      case 'success':
+        return '#2196F3';
       default:
-        return '#ff0072';
+        return '#9E9E9E';
     }
   };
 
@@ -128,8 +134,8 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         <Panel position="top-left" className="flex flex-col gap-2">
           <PlusOneNode />
         </Panel>
-        <Panel position="bottom-center" className="flex flex-col gap-2">
-          <span className="text-xs font-semibold border rounded-sm p-2 bg-muted text-slate-500 dark:text-slate-400 ">
+        <Panel position="bottom-center">
+          <span className="flex w-fit text-xs font-semibold border rounded-sm p-2 bg-muted text-slate-500 dark:text-slate-400 ">
             <span className="text-purple-500 dark:text-purple-400">
               Workspace:
             </span>{' '}
@@ -150,7 +156,8 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         ></Controls>
         <MiniMap
           nodeColor={nodeColor}
-          className="dark:bg-muted rounded-sm border p-2"
+          nodeComponent={MiniMapNode}
+          className="border dark:bg-muted rounded-lg p-2 scale-90 -translate-y-8"
           pannable
           zoomable
         />
@@ -158,6 +165,63 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
       </ReactFlow>
     </div>
   );
+}
+
+function MiniMapNode({
+  x,
+  y,
+  color,
+  id,
+  width,
+  height,
+}: {
+  x: number;
+  y: number;
+  color: string;
+  id: string;
+  width: number;
+  height: number;
+}) {
+  const { nodes } = useStore();
+  const node = nodes.find((n) => n.id === id);
+  if (node?.type === 'dataset') {
+    return (
+      <DatabaseIcon
+        width={3 * width}
+        height={3 * height}
+        x={x}
+        y={y}
+        stroke={color}
+        fillOpacity={0.5}
+        fill={color}
+      />
+    );
+  }
+  if (node?.type === 'network') {
+    return (
+      <BrainIcon
+        size={300}
+        x={x}
+        y={y}
+        stroke={color}
+        fillOpacity={0.4}
+        fill={color}
+      />
+    );
+  }
+  if (node?.type === 'inference') {
+    return (
+      <CoffeeIcon
+        size={300}
+        x={x}
+        y={y}
+        stroke={color}
+        fillOpacity={0.4}
+        fill={color}
+      />
+    );
+  }
+  return null;
 }
 
 function AlertDemo() {

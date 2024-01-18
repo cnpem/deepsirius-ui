@@ -1,8 +1,8 @@
 import {
   ArrowBigLeft,
-  BrainIcon,
   CoffeeIcon,
   DatabaseIcon,
+  DumbbellIcon,
   PlusCircle,
 } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
@@ -29,6 +29,9 @@ import {
 } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
+import { AvatarDrop } from '../avatar-dropdown';
+import { ControlHelpButton } from '../help';
+import { ControlThemeButton } from '../theme-toggle';
 import { useToast } from '../ui/use-toast';
 
 /**
@@ -162,7 +165,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
 
   //TODO: would be nice to change the height for full screen mode to h-[930px]
   return (
-    <div className="p-2 h-[calc(100vh-65px)]">
+    <div className="p-1 h-screen">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -187,21 +190,26 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
           </span>
         </Panel>
         {nodes.length === 0 && (
-          <Panel position="top-center" className="flex flex-col gap-2">
+          <Panel position="top-center">
             <AlertDemo />
           </Panel>
         )}
         <Panel position="top-right">
           <div id="node-props-panel"></div>
+          <AvatarDrop />
         </Panel>
         <Controls
           showZoom={false}
-          className="bg-transparent px-1 dark:fill-white [&>button:hover]:dark:bg-slate-700 [&>button]:dark:bg-muted [&>button]:rounded-sm [&>button]:border-none [&>button]:my-2"
-        ></Controls>
+          showInteractive={false}
+          className="bg-transparent px-1 dark:fill-slate-400 [&>button:hover]:dark:fill-slate-100 [&>button:hover]:dark:bg-slate-700 [&>button]:dark:bg-muted [&>button]:rounded-sm [&>button]:border-none [&>button]:my-2 [&>button]:h-6 [&>button]:w-6"
+        >
+          <ControlThemeButton />
+          <ControlHelpButton />
+        </Controls>
         <MiniMap
           nodeColor={nodeColor}
           nodeComponent={MiniMapNode}
-          className="border dark:bg-muted rounded-lg p-2 scale-90 -translate-y-8"
+          className="border dark:bg-muted rounded-lg p-2 scale-90 -translate-y-8 translate-x-2"
           pannable
           zoomable
         />
@@ -231,8 +239,8 @@ function MiniMapNode({
   if (node?.type === 'dataset') {
     return (
       <DatabaseIcon
-        width={3 * width}
-        height={3 * height}
+        width={1.2 * width}
+        height={1.2 * height}
         x={x}
         y={y}
         stroke={color}
@@ -243,7 +251,9 @@ function MiniMapNode({
   }
   if (node?.type === 'network') {
     return (
-      <BrainIcon
+      <DumbbellIcon
+        width={1.2 * width}
+        height={1.2 * height}
         size={300}
         x={x}
         y={y}
@@ -256,6 +266,8 @@ function MiniMapNode({
   if (node?.type === 'inference') {
     return (
       <CoffeeIcon
+        width={1.2 * width}
+        height={1.2 * height}
         size={300}
         x={x}
         y={y}

@@ -1,6 +1,7 @@
 import { Book, Bug, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { ControlButton } from 'reactflow';
 
 import { Button } from './ui/button';
 import {
@@ -167,6 +168,43 @@ export function HelpDialog() {
         <Button size={'icon'} variant={'ghost'} title="need help?">
           <HelpCircle className="dark:text-slate-400 dark:hover:text-slate-100" />
         </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:w-full sm:max-w-[625px]" forceMount>
+        <DialogHeader>
+          <DialogTitle>
+            Help{' '}
+            <span className="ml-2 text-xs text-blue-600 border-0 bg-sky-200 dark:bg-sky-700 dark:text-blue-200 rounded-md px-2 py-1 ">
+              H
+            </span>
+          </DialogTitle>
+          <span className="w-full p-0.5 bg-muted"></span>
+          <DialogDescription>
+            <div className="flex flex-col gap-6">
+              <ExternalLinks />
+              <NodeCaption />
+              <span className="text-lg font-semibold">Shortcuts</span>
+              <div className="grid grid-cols-2 gap-4">
+                <WorkboardShortcuts />
+              </div>
+            </div>
+          </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function ControlHelpButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <ControlButton
+          title="need help?"
+          className="font-medium dark:text-slate-400 dark:hover:text-slate-100"
+        >
+          ?
+        </ControlButton>
       </DialogTrigger>
       <DialogContent className="sm:w-full sm:max-w-[625px]" forceMount>
         <DialogHeader>

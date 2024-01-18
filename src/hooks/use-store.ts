@@ -132,13 +132,22 @@ export const useStore = create<RFStore>()(
           get().actions.updateStateSnapshot();
         },
         onNodesChange: (changes: NodeChange[]) => {
+          console.log('Store.onNodesChange: node change', changes);
+          const allowedChanges = changes.filter(
+            (change) => change.type !== 'remove',
+          );
           set({
-            nodes: applyNodeChanges(changes, get().nodes),
+            nodes: applyNodeChanges(allowedChanges, get().nodes),
           });
         },
         onEdgesChange: (changes: EdgeChange[]) => {
+          console.log('Store.onNodesChange: node change', changes);
+          const allowedChanges = changes.filter(
+            (change) => change.type !== 'remove',
+          );
+
           set({
-            edges: applyEdgeChanges(changes, get().edges),
+            edges: applyEdgeChanges(allowedChanges, get().edges),
           });
         },
         isValidConnection: (params: Edge | Connection) => {

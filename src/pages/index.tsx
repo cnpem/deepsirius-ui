@@ -1,9 +1,9 @@
+import { ArrowRightIcon } from 'lucide-react';
 import { type NextPage } from 'next';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { Layout } from '~/components/layout';
-import { api } from '~/utils/api';
 
 const AuthShowcase: React.FC = () => {
   const { data: sessionData } = useSession();
@@ -12,16 +12,25 @@ const AuthShowcase: React.FC = () => {
       <p className="text-center text-2xl text-white">
         {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
       </p>
-      <button
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={
-          sessionData
-            ? () => void signOut()
-            : () => void signIn(undefined, { callbackUrl: '/workboard' })
-        }
-      >
-        {sessionData ? 'Sign out' : 'Sign in'}
-      </button>
+      <div className="flex gap-4">
+        <button
+          className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+          onClick={
+            sessionData
+              ? () => void signOut()
+              : () => void signIn(undefined, { callbackUrl: '/workboard' })
+          }
+        >
+          {sessionData ? 'Sign out' : 'Sign in'}
+        </button>
+        <Link
+          href="/workboard"
+          className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+        >
+          <span>Workboard</span>
+          <ArrowRightIcon className="ml-2 inline-block w-5 h-5 text-white" />
+        </Link>
+      </div>
     </div>
   );
 };
@@ -60,7 +69,7 @@ const Home: NextPage = () => {
               <div className="text-lg">Learn more about DeepSirius.</div>
             </a>
           </div>
-          <div className="flex flex-col items-center gap-2">
+          <div>
             <AuthShowcase />
           </div>
         </div>

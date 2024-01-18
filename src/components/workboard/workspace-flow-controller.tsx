@@ -1,8 +1,8 @@
 import {
   ArrowBigLeft,
-  BrainIcon,
   CoffeeIcon,
   DatabaseIcon,
+  DumbbellIcon,
   PlusCircle,
 } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
@@ -207,7 +207,9 @@ function MiniMapNode({
   }
   if (node?.type === 'network') {
     return (
-      <BrainIcon
+      <DumbbellIcon
+        width={1.2 * width}
+        height={1.2 * height}
         size={300}
         x={x}
         y={y}
@@ -220,6 +222,8 @@ function MiniMapNode({
   if (node?.type === 'inference') {
     return (
       <CoffeeIcon
+        width={1.2 * width}
+        height={1.2 * height}
         size={300}
         x={x}
         y={y}

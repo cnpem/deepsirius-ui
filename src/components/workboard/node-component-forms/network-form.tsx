@@ -63,8 +63,8 @@ export const networkSchema = z.object({
   patchSize: z.enum(patchSizes),
 });
 
-export type NetworkFormType = z.infer<typeof networkSchema>;
-export type networkFormCallback = (data: NetworkFormType) => void;
+export type FormType = z.infer<typeof networkSchema>;
+export type networkFormCallback = (data: FormType) => void;
 
 type NetworkFormProps = {
   onSubmitHandler: networkFormCallback;
@@ -74,12 +74,12 @@ type NetworkFormProps = {
 
 export function useNetworkForm({
   networkUserLabel = '',
-  networkTypeName = 'unet2d',
+  networkTypeName = 'vnet',
 }: {
   networkUserLabel?: string;
   networkTypeName?: z.infer<typeof networkSchema>['networkTypeName'];
 }) {
-  const form = useForm<NetworkFormType>({
+  const form = useForm<FormType>({
     resolver: zodResolver(networkSchema),
     defaultValues: {
       networkUserLabel: networkUserLabel,
@@ -160,10 +160,13 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  className="flex justify-center pb-2"
+                  className="flex justify-center"
                 >
                   {networkOpts.map((option) => (
-                    <div key={option.value} className="items-center space-x-1">
+                    <div
+                      key={option.value}
+                      className="items-center space-x-1 mx-4"
+                    >
                       <FormLabel htmlFor={option.label}>
                         {option.label}
                       </FormLabel>
@@ -171,27 +174,6 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
                     </div>
                   ))}
                 </RadioGroup>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <FormField
-          name="dropClassifier"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem className="">
-              <FormControl>
-                <div className=" flex items-center space-x-4 py-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      Drop Classifier
-                    </p>
-                  </div>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </div>
               </FormControl>
             </FormItem>
           )}
@@ -223,33 +205,52 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
             )}
           />
         </div>
-        <FormField
-          name="optimizer"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Optimizer</FormLabel>
-              <FormControl>
-                <RadioGroup
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            name="optimizer"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Optimizer</FormLabel>
+                <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  className="flex justify-center pb-2"
                 >
-                  {optimizerOpts.map((option) => (
-                    <div
-                      key={option.value}
-                      className="flex items-center space-x-1"
-                    >
-                      <FormLabel id="optimizer">{option.label}</FormLabel>
-                      <RadioGroupItem value={option.value} />
-                    </div>
-                  ))}
-                </RadioGroup>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-2 grid-rows-2 gap-x-4 gap-y-1">
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {optimizerOpts.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="dropClassifier"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="grid grid-rows-2 py-0">
+                <FormLabel className="pt-1">Drop Classifier</FormLabel>
+                <FormControl>
+                  <div className="items-center justify-middle flex-row w-full h-full mt-0">
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </div>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 mb-2">
           <FormField
             name="lossFunction"
             control={form.control}
@@ -303,6 +304,8 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
               </FormItem>
             )}
           />
+        </div>
+        <footer className="grid grid-cols-3 gap-x-4 border border-dashed px-2">
           <FormField
             control={form.control}
             name="slurmOptions.partition"
@@ -361,9 +364,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
               </FormItem>
             )}
           />
-        </div>
-        <footer className="grid grid-cols-2 gap-4">
-          <Button className="my-2 mx-0 col-span-2" type="submit">
+          <Button className="my-2 mx-0" type="submit">
             Submit
           </Button>
         </footer>
@@ -390,22 +391,46 @@ export function PrefilledForm({
     <Form {...form}>
       <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
         <FormField
-          name="dropClassifier"
+          name="networkUserLabel"
           control={form.control}
           render={({ field }) => (
-            <FormItem className="">
+            <FormItem>
+              <FormLabel htmlFor={field.name}>Network Label</FormLabel>
               <FormControl>
-                <div className=" flex items-center space-x-4 py-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      Drop Classifier
-                    </p>
-                  </div>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </div>
+                <Input
+                  {...field}
+                  placeholder="MyFancyNetwork"
+                  value={networkUserLabel}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          name="networkTypeName"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="mt-2">
+              <FormLabel>Network Type</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={networkTypeName}
+                  className="flex justify-center"
+                >
+                  {networkOpts.map((option) => (
+                    <div
+                      key={option.value}
+                      className="items-center space-x-1 mx-4"
+                    >
+                      <FormLabel htmlFor={option.label}>
+                        {option.label}
+                      </FormLabel>
+                      <RadioGroupItem id={option.label} value={option.value} />
+                    </div>
+                  ))}
+                </RadioGroup>
               </FormControl>
             </FormItem>
           )}
@@ -430,46 +455,59 @@ export function PrefilledForm({
               <FormItem>
                 <FormLabel>Learning Rate</FormLabel>
                 <FormControl>
-                  <Input {...field} type="number" />
+                  <Input {...field} type="number" step={learningRateStep} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <FormField
-          name="optimizer"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem className="">
-              <FormControl>
-                <div className=" flex items-center space-x-4 rounded-md py-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      Optimizer
-                    </p>
-                  </div>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex justify-end"
-                  >
-                    {optimizerOpts.map((option) => (
-                      <div
-                        key={option.value}
-                        className="flex items-center space-x-1"
-                      >
-                        <FormLabel id="optimizer">{option.label}</FormLabel>
-                        <RadioGroupItem value={option.value} />
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-              </FormControl>
-            </FormItem>
-          )}
-        />
         <div className="grid grid-cols-2 gap-4">
+          <FormField
+            name="optimizer"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Optimizer</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {optimizerOpts.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+          <FormField
+            name="dropClassifier"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem className="grid grid-rows-2 py-0">
+                <FormLabel className="pt-1">Drop Classifier</FormLabel>
+                <FormControl>
+                  <div className="items-center justify-middle flex-row w-full h-full mt-0">
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </div>
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 mb-2">
           <FormField
             name="lossFunction"
             control={form.control}
@@ -482,7 +520,7 @@ export function PrefilledForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a verified email to display" />
+                      <SelectValue />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -508,7 +546,7 @@ export function PrefilledForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a verified email to display" />
+                      <SelectValue />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -524,8 +562,66 @@ export function PrefilledForm({
             )}
           />
         </div>
-        <footer className="flex py-4">
-          <Button className="w-full" type="submit">
+        <footer className="grid grid-cols-3 gap-x-4 border border-dashed px-2">
+          <FormField
+            control={form.control}
+            name="slurmOptions.partition"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="sr-only">Slurm Partition</FormLabel>
+                <Select onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Slurm Partition" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {slurmPartitionOptions.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription className="hidden">
+                  Please select a slurm partition assigned for your user for
+                  submitting this job.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="slurmOptions.nGPU"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="sr-only">Slurm gres GPUs</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Slurm GPUs" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {slurmGPUOptions.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {`GPUs: ${item.toString()}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription className="hidden">
+                  Please select the number of GPUs for this job.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button className="my-2 mx-0" type="submit">
             Submit
           </Button>
         </footer>

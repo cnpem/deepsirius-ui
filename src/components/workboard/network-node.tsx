@@ -1,592 +1,418 @@
-// import { useInterpret, useSelector } from '@xstate/react';
-// import { useState } from 'react';
-import { Handle, type NodeProps, Position } from 'reactflow';
-// import { State, type StateFrom, assign, createMachine } from 'xstate';
-// import { Button } from '~/components/ui/button';
-// import {
-//   Card,
-//   CardContent,
-//   CardDescription,
-//   CardFooter,
-//   CardHeader,
-//   CardTitle,
-// } from '~/components/ui/card';
-// import {
-//   Sheet,
-//   SheetContent,
-//   SheetHeader,
-//   SheetTitle,
-// } from '~/components/ui/sheet';
-// import { toast } from '~/components/ui/use-toast';
-// import {
-//   DefaultForm as NetworkForm,
-//   type NetworkFormType,
-//   PrefilledForm,
-// } from '~/components/workboard/node-component-forms/network-form';
+import dayjs from 'dayjs';
+import { AlertTriangleIcon, DumbbellIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import {
-  type NodeData,
-  type NodeStatus,
-  useStoreActions,
-} from '~/hooks/use-store';
-
-// import { api } from '~/utils/api';
-
-// import { type DatasetXState } from './dataset-node';
-
-// interface JobEvent {
-//   type: 'done.invoke';
-//   data: { jobId?: string; jobStatus?: string; formData?: NetworkFormType };
-// }
-
-// type FormSubmitEvent =
-//   | {
-//       type: 'create';
-//       data: { formData: NetworkFormType; connectedNodeName: string };
-//     }
-//   | {
-//       type: 'retry';
-//       data: { formData: NetworkFormType; connectedNodeName: string };
-//     }
-//   | {
-//       type: 'finetune';
-//       data: { formData: NetworkFormType; connectedNodeName: string };
-//     };
-
-// const networkMachine = createMachine({
-//   id: 'network',
-//   schema: {
-//     context: {} as {
-//       jobId: string;
-//       jobStatus: string;
-//       networkLabel: string;
-//       networkType: 'unet2d' | 'unet3d' | 'vnet';
-//     },
-//     events: {} as FormSubmitEvent | { type: 'cancel' },
-//   },
-//   initial: 'active',
-//   context: {
-//     jobId: '',
-//     jobStatus: '',
-//     networkLabel: 'network',
-//     networkType: 'unet2d',
-//   },
-//   states: {
-//     active: {
-//       on: {
-//         create: 'training',
-//       },
-//       tags: ['active'],
-//     },
-//     training: {
-//       initial: 'pending',
-//       tags: ['busy'],
-//       states: {
-//         pending: {
-//           invoke: {
-//             id: 'submitJob',
-//             src: 'submitJob',
-//             onDone: {
-//               target: 'running',
-//               actions: assign({
-//                 jobId: (_, event: JobEvent) => event.data.jobId ?? '',
-//                 networkLabel: (_, event: JobEvent) =>
-//                   event.data.formData?.networkUserLabel ?? 'network',
-//                 networkType: (_, event: JobEvent) =>
-//                   event.data.formData?.networkTypeName ?? 'unet2d',
-//               }),
-//             },
-//             onError: {
-//               target: 'error',
-//             },
-//           },
-//         },
-//         running: {
-//           invoke: {
-//             src: 'jobStatus',
-//             onDone: [
-//               {
-//                 target: '#network.success',
-//                 cond: 'isCompleted',
-//               },
-//               {
-//                 target: 'error',
-//                 cond: 'isFailed',
-//               },
-//               {
-//                 target: 'error',
-//                 cond: 'isCancelled',
-//               },
-//               {
-//                 target: 'running',
-//                 actions: assign({
-//                   jobStatus: (_, event: JobEvent) => event.data.jobStatus ?? '',
-//                 }),
-//               },
-//             ],
-//           },
-//           on: {
-//             cancel: {
-//               actions: 'cancelJob',
-//             },
-//           },
-//         },
-//         error: {
-//           tags: ['error'],
-//           on: {
-//             retry: {
-//               target: 'pending',
-//               actions: assign({ jobStatus: '', jobId: '' }),
-//             },
-//           },
-//         },
-//       },
-//     },
-//     success: {
-//       tags: ['success'],
-//       on: {
-//         finetune: {
-//           target: 'tuning',
-//           actions: assign({ jobStatus: '', jobId: '' }),
-//         },
-//       },
-//     },
-//     tuning: {
-//       initial: 'pending',
-//       tags: ['busy'],
-//       states: {
-//         pending: {
-//           invoke: {
-//             id: 'submitJob',
-//             src: 'submitJob',
-//             onDone: {
-//               target: 'running',
-//               actions: assign({
-//                 jobId: (_, event: JobEvent) => event.data.jobId ?? '',
-//                 networkLabel: (_, event: JobEvent) =>
-//                   event.data.formData?.networkUserLabel ?? 'network',
-//                 networkType: (_, event: JobEvent) =>
-//                   event.data.formData?.networkTypeName ?? 'unet2d',
-//               }),
-//             },
-//             onError: {
-//               target: 'error',
-//             },
-//           },
-//         },
-//         running: {
-//           invoke: {
-//             src: 'jobStatus',
-//             onDone: [
-//               {
-//                 target: '#network.success',
-//                 cond: 'isCompleted',
-//               },
-//               {
-//                 target: 'error',
-//                 cond: 'isFailed',
-//               },
-//               {
-//                 target: 'error',
-//                 cond: 'isCancelled',
-//               },
-//               {
-//                 target: 'running',
-//                 actions: assign({
-//                   jobStatus: (_, event: JobEvent) => event.data.jobStatus ?? '',
-//                 }),
-//               },
-//             ],
-//           },
-//           on: {
-//             cancel: {
-//               actions: 'cancelJob',
-//             },
-//           },
-//         },
-//         error: {
-//           tags: ['error'],
-//           on: {
-//             retry: {
-//               target: 'pending',
-//               actions: assign({ jobStatus: '', jobId: '' }),
-//             },
-//           },
-//         },
-//       },
-//     },
-//   },
-//   predictableActionArguments: true,
-// });
-// export type NetworkXState = StateFrom<typeof networkMachine>;
-
-// export function NetworkNode(nodeProps: NodeProps<NodeData>) {
-//   const submitJob = api.remoteProcess.submitNetwork.useMutation();
-//   const checkJob = api.remotejob.status.useMutation();
-//   const cancelJob = api.remotejob.cancel.useMutation();
-//   const { getSourceData } = useStoreActions();
-//   const { onUpdateNode } = useStoreActions();
-//   const [nodeStatus, setNodeStatus] = useState<NodeStatus>(
-//     nodeProps.data.status,
-//   );
-
-//   const prevXState = State.create(
-//     nodeProps.data.xState
-//       ? (JSON.parse(nodeProps.data.xState) as NetworkXState)
-//       : networkMachine.initialState,
-//   );
-
-//   const actor = useInterpret(
-//     networkMachine,
-//     {
-//       state: prevXState,
-//       guards: {
-//         isCompleted: (context) => {
-//           return context.jobStatus === 'COMPLETED';
-//         },
-//         isFailed: (context) => {
-//           return context.jobStatus === 'FAILED';
-//         },
-//         isCancelled: (context) => {
-//           return context.jobStatus === 'CANCELLED';
-//         },
-//       },
-//       actions: {
-//         cancelJob: (context) => {
-//           cancelJob.mutate({ jobId: context.jobId });
-//         },
-//       },
-//       services: {
-//         submitJob: (state, event) => {
-//           return new Promise((resolve, reject) => {
-//             const submitEvent = event as FormSubmitEvent;
-//             if (!submitEvent.data.formData)
-//               reject(new Error("This event shouldn't submit a job"));
-//             const formData = submitEvent.data.formData;
-//             const connectedNodeName = submitEvent.data.connectedNodeName;
-//             const submitType = submitEvent.type;
-//             submitJob
-//               .mutateAsync({
-//                 workspacePath: nodeProps.data.workspacePath,
-//                 datasetPath: connectedNodeName,
-//                 trainingType: submitType,
-//                 formData: formData,
-//               })
-//               .then((data) => {
-//                 resolve({ ...data, formData });
-//               })
-//               .catch((err) => reject(err));
-//           });
-//         },
-//         jobStatus: (context) => {
-//           return new Promise((resolve, reject) => {
-//             // wait 5 seconds before checking the job status
-//             setTimeout(() => {
-//               checkJob
-//                 .mutateAsync({ jobId: context.jobId })
-//                 .then((data) => {
-//                   resolve(data);
-//                 })
-//                 .catch((err) => reject(err));
-//             }, 5000);
-//           });
-//         },
-//       },
-//     },
-//     // observer
-//     (state) => {
-//       const newStatus = [...state.tags][0] as NodeStatus;
-//       if (newStatus !== nodeStatus) {
-//         // update the local state
-//         setNodeStatus(newStatus);
-//         // update the node data in the store
-//         onUpdateNode({
-//           id: nodeProps.id, // this is the component id from the react-flow
-//           data: {
-//             ...nodeProps.data,
-//             status: newStatus,
-//             xState: JSON.stringify(state),
-//           },
-//         });
-//       }
-//     },
-//   );
-
-//   const selector = (state: NetworkXState) => {
-//     return {
-//       stateValue: state.value,
-//       isTrainingError: state.matches({ training: 'error' }),
-//       isTuningError: state.matches({ tuning: 'error' }),
-//       jobId: state.context.jobId,
-//       jobStatus: state.context.jobStatus,
-//       networkLabel: state.context.networkLabel,
-//       networkType: state.context.networkType,
-//     };
-//   };
-
-//   const {
-//     stateValue,
-//     isTrainingError,
-//     isTuningError,
-//     jobId,
-//     jobStatus,
-//     networkLabel,
-//     networkType,
-//   } = useSelector(actor, selector);
-
-//   const getConnectedDatasetName = () => {
-//     const connectedNodeData = getSourceData(nodeProps.id);
-//     if (!connectedNodeData?.xState) return;
-//     const connectedXState = connectedNodeData.xState
-//       ? (JSON.parse(connectedNodeData.xState) as DatasetXState)
-//       : undefined;
-//     return connectedXState?.context.datasetName ?? undefined;
-//   };
-
-//   return (
-//     <>
-//       {nodeStatus === 'active' && (
-//         <Card className="w-[380px] bg-green-100 dark:bg-teal-800">
-//           <Handle type="target" position={Position.Left} />
-//           <CardHeader>
-//             <CardTitle>{networkLabel}</CardTitle>
-//             <CardDescription>{nodeStatus}</CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <Sheet open={nodeProps.selected} modal={false}>
-//               <SheetContent>
-//                 <SheetHeader>
-//                   <SheetTitle>Training</SheetTitle>
-//                 </SheetHeader>
-//                 <NetworkForm
-//                   onSubmitHandler={(data) => {
-//                     const connectedDatasetName = getConnectedDatasetName();
-//                     if (!connectedDatasetName) {
-//                       toast({
-//                         title: 'You need to connect a dataset first',
-//                         description: 'The network needs a dataset to train on.',
-//                       });
-//                       return;
-//                     }
-//                     actor.send({
-//                       type: 'create',
-//                       data: {
-//                         formData: data,
-//                         connectedNodeName: connectedDatasetName,
-//                       },
-//                     });
-//                     toast({
-//                       title: 'You submitted the following values:',
-//                       description: (
-//                         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-//                           <code className="text-white">
-//                             {JSON.stringify({ ...data }, null, 2)}
-//                           </code>
-//                         </pre>
-//                       ),
-//                     });
-//                   }}
-//                 />
-//               </SheetContent>
-//             </Sheet>
-//           </CardContent>
-//           <Handle type="source" position={Position.Right} />
-//         </Card>
-//       )}
-//       {nodeStatus === 'busy' && (
-//         <Card className="w-[380px] bg-yellow-100 dark:bg-amber-700">
-//           <Handle type="target" position={Position.Left} />
-//           <CardHeader>
-//             <CardTitle>{networkLabel}</CardTitle>
-//             <CardDescription>
-//               {Object.entries(stateValue)
-//                 .map(([key, value]) => `${key}: ${value as string}`)
-//                 .join('<br/>')}
-//             </CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <div className="flex flex-col">
-//               <p className="mb-2 text-3xl font-extrabold text-center">
-//                 {jobId}
-//               </p>
-//               <p className="text-gray-500 dark:text-gray-400 text-center">
-//                 {jobStatus}
-//               </p>
-//             </div>
-//           </CardContent>
-//           <CardFooter className="flex justify-between">
-//             <Button
-//               onClick={() => {
-//                 actor.send('cancel');
-//                 toast({
-//                   title: 'Canceling job...',
-//                 });
-//               }}
-//             >
-//               cancel
-//             </Button>
-//           </CardFooter>
-//           <Handle type="source" position={Position.Right} />
-//         </Card>
-//       )}
-//       {nodeStatus === 'error' && (
-//         <Card className="w-[380px] bg-red-100 dark:bg-rose-700">
-//           <Handle type="target" position={Position.Left} />
-//           <CardHeader>
-//             <CardTitle>{networkLabel}</CardTitle>
-//             <CardDescription>
-//               {Object.entries(stateValue)
-//                 .map(([key, value]) => `${key}: ${value as string}`)
-//                 .join('<br/>')}
-//             </CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <div className="flex flex-col">
-//               <p className="mb-2 text-3xl font-extrabold text-center">
-//                 {jobId}
-//               </p>
-//               <p className="text-gray-500 dark:text-gray-400 text-center">
-//                 {jobStatus}
-//               </p>
-//             </div>
-//             <Sheet open={nodeProps.selected} modal={false}>
-//               <SheetContent>
-//                 <SheetHeader>
-//                   <SheetTitle>Retry</SheetTitle>
-//                 </SheetHeader>
-//                 {isTrainingError && (
-//                   <NetworkForm
-//                     onSubmitHandler={(data) => {
-//                       const connectedDatasetName = getConnectedDatasetName();
-//                       if (!connectedDatasetName) {
-//                         toast({
-//                           title: 'You need to connect a dataset first',
-//                           description:
-//                             'The network needs a dataset to train on.',
-//                         });
-//                         return;
-//                       }
-//                       actor.send({
-//                         type: 'retry',
-//                         data: {
-//                           formData: data,
-//                           connectedNodeName: connectedDatasetName,
-//                         },
-//                       });
-//                       toast({
-//                         title: 'You submitted the following values:',
-//                         description: (
-//                           <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-//                             <code className="text-white">
-//                               {JSON.stringify(data, null, 2)}
-//                             </code>
-//                           </pre>
-//                         ),
-//                       });
-//                     }}
-//                   />
-//                 )}
-//                 {isTuningError && (
-//                   <PrefilledForm
-//                     networkTypeName={networkType}
-//                     networkUserLabel={networkLabel}
-//                     onSubmitHandler={(data) => {
-//                       const connectedDatasetName = getConnectedDatasetName();
-//                       if (!connectedDatasetName) {
-//                         toast({
-//                           title: 'You need to connect a dataset first',
-//                           description:
-//                             'The network needs a dataset to train on.',
-//                         });
-//                         return;
-//                       }
-//                       actor.send({
-//                         type: 'retry',
-//                         data: {
-//                           formData: data,
-//                           connectedNodeName: connectedDatasetName,
-//                         },
-//                       });
-//                       toast({
-//                         title: 'You submitted the following values:',
-//                         description: (
-//                           <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-//                             <code className="text-white">
-//                               {JSON.stringify(data, null, 2)}
-//                             </code>
-//                           </pre>
-//                         ),
-//                       });
-//                     }}
-//                   />
-//                 )}
-//               </SheetContent>
-//             </Sheet>
-//           </CardContent>
-//           <Handle type="source" position={Position.Right} />
-//         </Card>
-//       )}
-//       {nodeStatus === 'success' && (
-//         <Card className="w-[380px] bg-blue-100 dark:bg-cyan-700">
-//           <Handle type="target" position={Position.Left} />
-//           <CardHeader>
-//             <CardTitle>{networkLabel}</CardTitle>
-//             <CardDescription>{nodeStatus}</CardDescription>
-//           </CardHeader>
-//           <CardContent>
-//             <div className="flex flex-col">
-//               <p className="mb-2 text-3xl font-extrabold text-center">
-//                 {jobId}
-//               </p>
-//               <p className="text-gray-500 dark:text-gray-400 text-center">
-//                 {jobStatus}
-//               </p>
-//             </div>
-//             <Sheet open={nodeProps.selected} modal={false}>
-//               <SheetContent>
-//                 <SheetHeader>
-//                   <SheetTitle>Finetune</SheetTitle>
-//                 </SheetHeader>
-//                 <PrefilledForm
-//                   networkTypeName={networkType}
-//                   networkUserLabel={networkLabel}
-//                   onSubmitHandler={(data) => {
-//                     const connectedDatasetName = getConnectedDatasetName();
-//                     if (!connectedDatasetName) {
-//                       toast({
-//                         title: 'You need to connect a dataset first',
-//                         description: 'The network needs a dataset to train on.',
-//                       });
-//                       return;
-//                     }
-//                     actor.send({
-//                       type: 'finetune',
-//                       data: {
-//                         formData: data,
-//                         connectedNodeName: connectedDatasetName,
-//                       },
-//                     });
-//                     toast({
-//                       title: 'You submitted the following values:',
-//                       description: (
-//                         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-//                           <code className="text-white">
-//                             {JSON.stringify(data, null, 2)}
-//                           </code>
-//                         </pre>
-//                       ),
-//                     });
-//                   }}
-//                 />
-//               </SheetContent>
-//             </Sheet>
-//           </CardContent>
-//           <Handle type="source" position={Position.Right} />
-//         </Card>
-//       )}
-//     </>
-//   );
-// }
+  Handle,
+  type NodeProps,
+  Position,
+  useUpdateNodeInternals,
+} from 'reactflow';
+import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent } from '~/components/ui/card';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '~/components/ui/sheet';
+import { toast } from '~/components/ui/use-toast';
+import {
+  type FormType,
+  DefaultForm as NetworkForm,
+  PrefilledForm,
+} from '~/components/workboard/node-component-forms/network-form';
+import { type NodeData, useStoreActions } from '~/hooks/use-store';
+import { api } from '~/utils/api';
 
 export function NetworkNode(nodeProps: NodeProps<NodeData>) {
+  const [open, setOpen] = useState(false);
+
+  const formEditState =
+    nodeProps.selected &&
+    ['active', 'error', 'success'].includes(nodeProps.data.status);
+
+  useEffect(() => {
+    setOpen(formEditState);
+  }, [formEditState]);
+
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  const checkStatusQuery = api.remotejob.checkStatus.useQuery(
+    { jobId: nodeProps.data.jobId as string },
+    {
+      enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
+      refetchInterval: 5000,
+      refetchIntervalInBackground: true,
+      refetchOnWindowFocus: true,
+      onSuccess: (data) => {
+        console.log('checkJob.onSuccess', data);
+        // TODO: the enabled flag should be enough to prevent this from happening
+        // check why it's not
+        if (!nodeProps.data.jobId) {
+          console.error('checkJob.onSuccess', 'no job id', data);
+        }
+        const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
+        if (data.jobStatus === 'COMPLETED') {
+          toast({
+            title: 'Job finished',
+            description: 'The job has finished successfully',
+          });
+          onUpdateNode({
+            id: nodeProps.id,
+            data: {
+              ...nodeProps.data,
+              status: 'success',
+              jobId: nodeProps.data.jobId,
+              jobStatus: data.jobStatus,
+              message: `Job ${
+                nodeProps.data.jobId ?? 'aa'
+              } finished successfully in ${date}`,
+              updatedAt: date,
+            },
+          });
+          updateNodeInternals(nodeProps.id);
+        } else if (data.jobStatus === 'FAILED') {
+          toast({
+            title: 'Job failed',
+            description: 'The job has failed',
+          });
+          onUpdateNode({
+            id: nodeProps.id,
+            data: {
+              ...nodeProps.data,
+              status: 'error',
+              jobId: nodeProps.data.jobId,
+              jobStatus: data.jobStatus,
+              message: `Job ${nodeProps.data.jobId ?? 'aa'} failed in ${date}`,
+              updatedAt: date,
+            },
+          });
+          updateNodeInternals(nodeProps.id);
+        } else {
+          console.log('checkJob.onSuccess', data.jobStatus);
+          onUpdateNode({
+            id: nodeProps.id,
+            data: {
+              ...nodeProps.data,
+              status: 'busy',
+              jobId: nodeProps.data.jobId,
+              jobStatus: data.jobStatus,
+              message: `Job ${nodeProps.data.jobId ?? 'aa'} is ${
+                data.jobStatus?.toLocaleLowerCase() ?? 'aa'
+              }, last checked at ${date}`,
+              updatedAt: date,
+            },
+          });
+          updateNodeInternals(nodeProps.id);
+        }
+      },
+    },
+  );
+  const { mutateAsync: cancelJob } = api.remotejob.cancel.useMutation();
+  const { mutateAsync: submitJob } =
+    api.remoteProcess.submitNetwork.useMutation();
+  const { onUpdateNode, getSourceData } = useStoreActions();
+
+  const [formData, setFormData] = useState<FormType | undefined>(undefined);
+
+  type NetworkFormSubmitType = 'create' | 'retry' | 'finetune';
+
+  const handleSubmit = (
+    formData: FormType,
+    submitType: NetworkFormSubmitType,
+  ) => {
+    console.log('handleSubmitJob');
+    const connectedNodeData = getSourceData(nodeProps.id);
+    if (!connectedNodeData || !connectedNodeData.remotePath) {
+      toast({
+        title: 'You need to connect a dataset first',
+        description: 'The network needs a dataset to train on.',
+      });
+      return;
+    }
+    submitJob({
+      datasetPath: connectedNodeData.remotePath
+        .split('/')
+        .pop()
+        ?.replace('.h5', '') as string, // should be dataset name?
+      trainingType: submitType,
+      workspacePath: nodeProps.data.workspacePath,
+      formData,
+    })
+      .then(({ jobId }) => {
+        console.log('handleSubmitJob then?', 'jobId', jobId);
+        if (!jobId) {
+          console.error('handleSubmitJob then?', 'no jobId');
+          toast({
+            title: 'Error submitting job',
+            description: 'Something went wrong',
+          });
+          return;
+        }
+        setFormData(formData);
+        onUpdateNode({
+          id: nodeProps.id,
+          data: {
+            ...nodeProps.data,
+            status: 'busy',
+            remotePath: `${nodeProps.data.workspacePath}/networks/${formData.networkUserLabel}/`,
+            jobId: jobId,
+            message: `Job ${jobId} submitted in ${dayjs().format(
+              'YYYY-MM-DD HH:mm:ss',
+            )}`,
+          },
+        });
+        updateNodeInternals(nodeProps.id);
+        setOpen(!open);
+      })
+      .catch((error) => {
+        toast({
+          title: 'Error submitting job',
+          description: (error as Error).message,
+        });
+      });
+  };
+
+  if (nodeProps.data.status === 'active') {
+    return (
+      <Card
+        data-selected={nodeProps.selected}
+        className="w-fit bg-green-100 text-green-800 data-[selected=true]:border-green-500 border-green-800 dark:bg-muted dark:text-green-400"
+      >
+        <CardContent className="p-4 pr-8">
+          <div className=" flex flex-row items-center gap-4">
+            <DumbbellIcon className="inline-block" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-medium leading-none text-green-800 dark:text-green-400">
+                {'new network'}
+              </p>
+              <p className="text-sm text-green-600 dark:text-green-500">
+                {'Click to create a job'}
+              </p>
+            </div>
+          </div>
+          <Sheet open={nodeProps.selected} modal={false}>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Create</SheetTitle>
+              </SheetHeader>
+              <NetworkForm
+                onSubmitHandler={(formData) => handleSubmit(formData, 'create')}
+              />
+            </SheetContent>
+          </Sheet>
+        </CardContent>
+        <Handle type="target" position={Position.Left} />
+        <Handle type="source" position={Position.Right} />
+      </Card>
+    );
+  }
+
+  if (nodeProps.data.status === 'busy') {
+    return (
+      <Card
+        data-selected={nodeProps.selected}
+        className="w-fit bg-yellow-100 text-yellow-800 data-[selected=true]:border-yellow-600 border-yellow-800 dark:bg-muted dark:text-yellow-400"
+      >
+        <CardContent className="p-4 pr-8">
+          <div className=" flex flex-row items-center gap-4">
+            <DumbbellIcon className="inline-block" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-semibold leading-none text-yellow-800 dark:text-yellow-400">
+                {nodeProps.data?.remotePath?.split('/').pop()}
+              </p>
+              <p className="text-sm text-yellow-600 lowercase">
+                {`${nodeProps.data.jobId || 'jobId'} -- ${
+                  nodeProps.data.jobStatus || 'checking status..'
+                }`}
+              </p>
+            </div>
+            <Sheet open={nodeProps.selected} modal={false}>
+              <SheetContent className="flex flex-col gap-4">
+                <Alert>
+                  <AlertDescription>{nodeProps.data.message}</AlertDescription>
+                </Alert>
+                <SheetHeader>
+                  <SheetTitle>Details</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
+                  <div className="flex flex-row items-center justify-between gap-1">
+                    <p className="font-medium">id</p>
+                    <p className="text-violet-600">{nodeProps.data.jobId}</p>
+                  </div>
+                  <div className="flex flex-row items-center justify-between gap-1">
+                    <p className="font-medium">status</p>
+                    <p className="text-violet-600 lowercase">
+                      {nodeProps.data.jobStatus}
+                    </p>
+                  </div>
+                  <div className="flex flex-row items-center justify-between gap-1">
+                    <p className="font-medium">updated at</p>
+                    <p className="text-violet-600 text-end">
+                      {nodeProps.data.updatedAt}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <Button
+                  onClick={() => {
+                    //   actor.send('cancel');
+                    cancelJob({ jobId: nodeProps.data.jobId as string })
+                      .then(() => {
+                        const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
+                        toast({
+                          title: 'Job canceled',
+                          description: 'The job has been canceled',
+                        });
+                        onUpdateNode({
+                          id: nodeProps.id,
+                          data: {
+                            ...nodeProps.data,
+                            status: 'error',
+                            jobId: nodeProps.data.jobId,
+                            jobStatus: 'CANCELLED',
+                            message: `Job ${
+                              nodeProps.data.jobId ?? 'aa'
+                            } canceled in ${date}`,
+                            updatedAt: date,
+                          },
+                        });
+                        updateNodeInternals(nodeProps.id);
+                      })
+                      .catch((error) => {
+                        toast({
+                          title: 'Error canceling job',
+                          description: (error as Error).message,
+                        });
+                      });
+                    toast({
+                      title: 'Canceling job...',
+                    });
+                  }}
+                >
+                  cancel
+                </Button>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </CardContent>
+        <Handle type="target" position={Position.Left} />
+        <Handle type="source" position={Position.Right} />
+      </Card>
+    );
+  }
+
+  if (nodeProps.data.status === 'success') {
+    return (
+      <Card
+        data-selected={nodeProps.selected}
+        className="w-fit bg-blue-100 text-blue-800 data-[selected=true]:border-blue-500 border-blue-800 dark:bg-muted dark:text-blue-400"
+      >
+        <CardContent className="p-4 pr-8">
+          <div className=" flex flex-row items-center gap-4">
+            <DumbbellIcon className="inline-block" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-semibold leading-none text-blue-800 dark:text-blue-400">
+                {nodeProps.data?.remotePath?.split('/').pop()}
+              </p>
+              <p className="text-sm text-blue-600 lowercase">
+                {`${nodeProps.data.jobId || 'jobId'} -- ${
+                  nodeProps.data.jobStatus || 'jobStatus'
+                }`}
+              </p>
+            </div>
+          </div>
+          <Sheet open={nodeProps.selected} modal={false}>
+            <SheetContent className="flex flex-col gap-4">
+              <Alert>
+                <AlertDescription>{nodeProps.data.message}</AlertDescription>
+              </Alert>
+              <SheetHeader>
+                <SheetTitle>Details</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">id</p>
+                  <p className="text-violet-600">{nodeProps.data.jobId}</p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">status</p>
+                  <p className="text-violet-600 lowercase">
+                    {nodeProps.data.jobStatus}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">updated at</p>
+                  <p className="text-violet-600 text-end">
+                    {nodeProps.data.updatedAt}
+                  </p>
+                </div>
+              </div>
+              <PrefilledForm
+                networkTypeName={formData?.networkTypeName || 'vnet'}
+                networkUserLabel={formData?.networkUserLabel || 'network'}
+                onSubmitHandler={(data) => {
+                  handleSubmit(data, 'retry');
+                }}
+              />
+              <hr />
+            </SheetContent>
+          </Sheet>
+        </CardContent>
+        <Handle type="target" position={Position.Left} />
+        <Handle type="source" position={Position.Right} />
+      </Card>
+    );
+  }
+
+  if (nodeProps.data.status === 'error') {
+    return (
+      <Card
+        data-selected={nodeProps.selected}
+        className="w-fit bg-red-100 text-red-800 data-[selected=true]:border-red-500 border-red-800 dark:bg-muted dark:text-red-400"
+      >
+        <CardContent className="p-4 relative pr-8">
+          <div className=" flex flex-row items-center gap-4">
+            <DumbbellIcon className="inline-block" />
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-semibold leading-none text-red-800 dark:text-red-400">
+                {nodeProps.data?.remotePath?.split('/').pop()}
+              </p>
+              <p className="text-sm text-red-600 lowercase">
+                {`${nodeProps.data.jobId || 'jobId'} -- ${
+                  nodeProps.data.jobStatus || 'jobStatus'
+                }`}
+              </p>
+            </div>
+          </div>
+          <Sheet open={nodeProps.selected} modal={false}>
+            <SheetContent className="flex flex-col gap-4">
+              <Alert variant="destructive">
+                <AlertTriangleIcon className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  {nodeProps.data.message || 'Something went wrong'}
+                </AlertDescription>
+              </Alert>
+              <SheetHeader>
+                <SheetTitle>Retry</SheetTitle>
+              </SheetHeader>
+              <PrefilledForm
+                networkTypeName={formData?.networkTypeName || 'vnet'}
+                networkUserLabel={formData?.networkUserLabel || 'network'}
+                onSubmitHandler={(data) => {
+                  handleSubmit(data, 'retry');
+                }}
+              />
+            </SheetContent>
+          </Sheet>
+        </CardContent>
+        <Handle type="target" position={Position.Left} />
+        <Handle type="source" position={Position.Right} />
+      </Card>
+    );
+  }
+
   return null;
 }

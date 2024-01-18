@@ -90,11 +90,12 @@ export const remoteProcessRouter = createTRPCRouter({
       const partition = input.formData.slurmOptions.partition;
       // parsing args ssc-deepsirius package cli args
       const argsString = `${input.workspacePath} ${input.formData.datasetName}`;
-      const defaultKwargs = {
-        'n-samples': 2,
-        'sampling-size': '64 64 64',
+      const samplingKwargs = {
+        'n-classes': input.formData.classes,
+        'n-samples': input.formData.sampleSize,
+        'sampling-size': `${input.formData.patchSize} `.repeat(3),
       };
-      const defaultKwargsString = Object.entries(defaultKwargs)
+      const samplingKwargsString = Object.entries(samplingKwargs)
         .map(([key, value]) => `--${key} ${value as string}`)
         .join(' ');
       const inputImgagesKwArgs = input.formData.data
@@ -103,43 +104,44 @@ export const remoteProcessRouter = createTRPCRouter({
       const inputLabelsKwArgs = input.formData.data
         .map(({ label }) => `--input-labels ${label}`)
         .join(' ');
-      // search if theres a true value in the augmentation object
-      // and map the values to a new object with the keys that are used on the cli
-      const augmentationParams = Object.values(
-        input.formData.augmentation,
-      ).includes(true)
-        ? {
-            flip_vertical: input.formData.augmentation.vflip,
-            flip_horizontal: input.formData.augmentation.hflip,
-            rot90: input.formData.augmentation.rotateCClock,
-            rot270: input.formData.augmentation.rotateClock,
-            contrast: input.formData.augmentation.contrast,
-            linearContrast: input.formData.augmentation.linearContrast,
-            dropout: input.formData.augmentation.dropout,
-            gaussian_blur: input.formData.augmentation.gaussianBlur,
-            average_blur: input.formData.augmentation.averageBlur,
-            poisson_noise: input.formData.augmentation.poissonNoise,
-            elastic: input.formData.augmentation.elasticDeformation,
-          }
-        : {};
-      // filter object keys that are true and join them with a space in a single string
-      const augmentationParamsString = Object.values(
-        input.formData.augmentation,
-      ).includes(true)
-        ? Object.entries(augmentationParams)
-            .map(([key, value]) => {
-              if (value) {
-                return `--aug-params ${key}`;
-              }
-            })
-            .join(' ')
-        : '';
       // creating the full command line script
-      const cliScript = `ssc-deepsirius create_dataset ${argsString} ${defaultKwargsString} ${augmentationParamsString} ${inputImgagesKwArgs} ${inputLabelsKwArgs}`;
+      const cliScript = `ssc-deepsirius create_dataset ${argsString} ${samplingKwargsString} ${inputImgagesKwArgs} ${inputLabelsKwArgs}`;
+      // append augmentation cli args to the cli script if any of the augmentation options are true
+      // augmentation is not working properly in the cli so it is disabled for now
+      const isAugmented = false; //Object.values(input.formData.augmentation).includes(true);
+      const augmentationScript = () => {
+        if (!isAugmented) return '';
+        // if any of the augmentation options are true create a second script for augment a dataset after the creation of the dataset
+        // and map the values to a new object with the keys that are used on the cli
+        const augmentationParams = {
+          flip_vertical: input.formData.augmentation.vflip,
+          flip_horizontal: input.formData.augmentation.hflip,
+          rotate_90: input.formData.augmentation.rotateCClock,
+          'rotate_-90': input.formData.augmentation.rotateClock,
+          contrast: input.formData.augmentation.contrast,
+          linear_contrast: input.formData.augmentation.linearContrast,
+          dropout: input.formData.augmentation.dropout,
+          gaussian_blur: input.formData.augmentation.gaussianBlur,
+          avg_blur: input.formData.augmentation.averageBlur,
+          additive_poisson: input.formData.augmentation.poissonNoise,
+          elastic_deformation: input.formData.augmentation.elasticDeformation,
+        };
+        // filter object keys that are true and join them with a space in a single string
+        const augmentationParamsString = Object.entries(augmentationParams)
+          .map(([key, value]) => {
+            if (value) return `--aug-params ${key}`;
+          })
+          .join(' ');
+        // augmentation script takes the form: ssc-deepsirius augmented_dataset [OPTIONS] workspace_path dataset_name
+        return `ssc-deepsirius augmented_dataset ${augmentationParamsString} ${argsString}`;
+      };
       // defining the container script
       const containerScript = `singularity run --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       // defining the full command
-      const command = `${containerScript} ${cliScript}`;
+      // if there are two or more scripts to run, the command for runningh the two scripts needs to be is piped to the container initialization script
+      const command = isAugmented
+        ? `echo '${cliScript} && ${augmentationScript()}' | ${containerScript}`
+        : `${containerScript} ${cliScript}`;
       console.log(command);
       const sbatchContent = [
         '#!/bin/bash',

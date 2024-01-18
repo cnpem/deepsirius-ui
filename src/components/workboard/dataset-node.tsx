@@ -34,17 +34,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     setOpen(formEditState);
   }, [formEditState]);
 
-  const [formData, setFormData] = useState({
-    datasetName:
-      nodeProps.data?.remotePath?.split('/').pop()?.replace('.h5', '') ??
-      'NewDataset',
-    data: [
-      {
-        image: '/path/to/image',
-        label: '/path/to/label',
-      },
-    ],
-  });
+  const [formData, setFormData] = useState<FormType | undefined>(undefined);
 
   const updateNodeInternals = useUpdateNodeInternals();
 
@@ -124,7 +114,6 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   const { onUpdateNode } = useStoreActions();
 
   const handleSubmitJob = (formData: FormType) => {
-    console.log('handleSubmitJob');
     submitJob({
       formData,
       workspacePath: nodeProps.data.workspacePath,
@@ -187,8 +176,13 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                 <SheetTitle>Create</SheetTitle>
               </SheetHeader>
               <DatasetForm
-                name={formData.datasetName}
-                data={formData.data}
+                name={'New Dataset'}
+                data={[
+                  {
+                    image: '/path/to/image',
+                    label: '/path/to/label',
+                  },
+                ]}
                 onSubmitHandler={handleSubmitJob}
               />
             </SheetContent>
@@ -392,8 +386,8 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                 <SheetTitle>Retry</SheetTitle>
               </SheetHeader>
               <DatasetForm
-                name={formData.datasetName}
-                data={formData.data}
+                name={formData?.datasetName || ''}
+                data={formData?.data || []}
                 onSubmitHandler={handleSubmitJob}
               />
             </SheetContent>

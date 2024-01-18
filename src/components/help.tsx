@@ -1,201 +1,184 @@
-import { Book, Bug, HelpCircle } from 'lucide-react';
+import {
+  CoffeeIcon,
+  DatabaseIcon,
+  DumbbellIcon,
+  ExternalLinkIcon,
+} from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { ControlButton } from 'reactflow';
+import { cn } from '~/lib/utils';
 
-import { Button } from './ui/button';
+import { buttonVariants } from './ui/button';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from './ui/dialog';
-import { Label } from './ui/label';
-
-function WorkboardShortcuts() {
-  const shortcuts = [
-    {
-      key: 'H',
-      description: 'Help',
-    },
-    {
-      key: 'Drag',
-      description: 'Pan',
-    },
-    {
-      key: 'Scroll',
-      description: 'Zoom',
-    },
-    {
-      key: 'Shift+Drag',
-      description: 'Group Selection',
-    },
-    {
-      key: 'Shift+Alt+D',
-      description: 'Toggle Theme',
-    },
-  ];
-  return (
-    <div>
-      <div className="relative flex flex-col gap-2 border-2 rounded-sm p-6 min-w-[256px] divide-y divide-muted divide-dashed">
-        <Label className="absolute rounded-full p-1 text-sm scale-75 -translate-y-4 border-2 inset-x-0 top-0 text-center bg-muted ">
-          View
-        </Label>
-        {shortcuts
-          .filter((s) => s.key !== 'H')
-          .map((shortcut) => (
-            <div className="flex justify-between" key={shortcut.key}>
-              <span className="text-blue-600 dark:text-blue-200 font-semibold">
-                {shortcut.description}
-              </span>
-              <div className="flex flex-row gap-1">
-                {shortcut.key.split('+').map((key) => (
-                  <span
-                    key={key}
-                    className="mt-1 text-xs text-blue-600 border-0 bg-sky-200 dark:bg-sky-700 dark:text-blue-200 rounded-md px-2 py-1"
-                  >
-                    {key}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-      </div>
-    </div>
-  );
-}
-
-function NodeCaption() {
-  // handmade array to represent the nodes
-  const array = new Array(25).fill('');
-  array[8] = 'network';
-  array[12] = 'dataset';
-  array[21] = 'inference';
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="text-lg font-semibold">Minimap</span>
-      <div className="flex flex-row gap-2">
-        <div className="border bg-slate-200 dark:bg-slate-400 h-32">
-          <div className="border bg-muted w-32 h-16 mt-8 mx-1 object-center">
-            <div className="grid grid-cols-5 gap-1">
-              {array.map((_, i) =>
-                array[i] === 'network' ? (
-                  <div
-                    key={i}
-                    className="col-span-2 row-span-3 p-1 m-1 bg-[#3162c4]"
-                  />
-                ) : array[i] === 'dataset' ? (
-                  <div
-                    key={i}
-                    className="col-span-2 row-span-3 p-1 m-1 bg-[#6ede87]"
-                  />
-                ) : array[i] === 'inference' ? (
-                  <div
-                    key={i}
-                    className="col-span-2 row-span-3 p-1 m-1 bg-[#eb870e]"
-                  />
-                ) : (
-                  <div key={i} />
-                ),
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="border-0 rounded-sm h-32 w-36 p-6 bg-muted">
-          <div className="flex flex-col gap-2">
-            <div>
-              <div className="w-6 h-4 bg-[#3162c4] inline-block mr-2 translate-y-0.5" />
-              <span className="text-md font-semibold text-[#3162c4]">
-                Network
-              </span>
-            </div>
-            <div>
-              <div className="w-6 h-4 bg-[#6ede87] inline-block mr-2 translate-y-0.5" />
-              <span className="text-md font-semibold text-[#6ede87]">
-                Dataset
-              </span>
-            </div>
-            <div>
-              <div className="w-6 h-4 bg-[#eb870e] inline-block mr-2 translate-y-0.5" />
-              <span className="text-md font-semibold text-[#eb870e]">
-                Inference
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ExternalLinks() {
   return (
-    <div className="flex flex-row gap-2">
-      <a
-        target="_blank"
+    <div className="flex flex-row items-start justify-between gap-1">
+      <Link
+        className={cn(buttonVariants({ variant: 'outline' }), '')}
+        href="https://github.com/cnpem/deepsirius-ui/blob/main/README.md"
         rel="noopener noreferrer"
-        href="/docs"
-        className="hover:underline"
-      >
-        <Button variant={'outline'}>
-          <Book className="mr-2 w-4 h-4" />
-          <span>Documentation</span>
-        </Button>
-      </a>
-      <a
         target="_blank"
-        rel="noopener noreferrer"
-        href="https://lnls.atlassian.net/browse/SWC-3887"
-        className="hover:underline"
+        title="help"
       >
-        <Button variant={'outline'}>
-          <Bug className="mr-2 w-4 h-4" />
-          <span>Report a bug</span>
-        </Button>
-      </a>
+        Documentation
+        <ExternalLinkIcon className="ml-1" size={16} />
+      </Link>
+      <p className="mt-1 text-xl text-input"> | </p>
+      <Link
+        className={cn(buttonVariants({ variant: 'outline' }), '')}
+        href="https://github.com/cnpem/deepsirius-ui/issues"
+        rel="noopener noreferrer"
+        target="_blank"
+        title="help"
+      >
+        Report an issue
+        <ExternalLinkIcon className="ml-1" size={16} />
+      </Link>
     </div>
   );
 }
 
-export function HelpDialog() {
-  const [open, setOpen] = useState(false);
-  useHotkeys('h', () => setOpen((s) => !s));
+function MinimapCaption() {
+  const nodeColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return '#4CAF50';
+      case 'busy':
+        return '#FFC107';
+      case 'error':
+        return '#F44336';
+      case 'success':
+        return '#2196F3';
+      default:
+        return '#9E9E9E';
+    }
+  };
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size={'icon'} variant={'ghost'} title="need help?">
-          <HelpCircle className="dark:text-slate-400 dark:hover:text-slate-100" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:w-full sm:max-w-[625px]" forceMount>
-        <DialogHeader>
-          <DialogTitle>
-            Help{' '}
-            <span className="ml-2 text-xs text-blue-600 border-0 bg-sky-200 dark:bg-sky-700 dark:text-blue-200 rounded-md px-2 py-1 ">
+    <>
+      <p className="text-sm font-semibold">Minimap</p>
+      <div className="flex flex-row items-center justify-between gap-1 rounded-md border border-input p-2">
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-row items-center gap-1">
+            <DatabaseIcon className="w-4 h-4" />
+            <p className="text-xs">Dataset</p>
+          </div>
+          <div className="flex flex-row items-center gap-1">
+            <DumbbellIcon className="w-4 h-4" />
+            <p className="text-xs">Network</p>
+          </div>
+          <div className="flex flex-row items-center gap-1">
+            <CoffeeIcon className="w-4 h-4" />
+            <p className="text-xs">Inference</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-row items-center gap-1">
+            <div
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: nodeColor('active') }}
+            />
+            <p className="text-xs">Active</p>
+          </div>
+          <div className="flex flex-row items-center gap-1">
+            <div
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: nodeColor('busy') }}
+            />
+            <p className="text-xs">Busy</p>
+          </div>
+          <div className="flex flex-row items-center gap-1">
+            <div
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: nodeColor('error') }}
+            />
+            <p className="text-xs">Error</p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function KeyboardShortcuts() {
+  return (
+    <>
+      <p className="text-sm font-semibold">Keyboard shortcuts</p>
+      <div className="flex flex-col gap-2 rounded-md border border-input p-2">
+        <div className="flex flex-row items-center justify-between gap-1">
+          <p className="text-sm">Pan</p>
+          <div className="flex flex-row items-center gap-1">
+            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+              Drag
+            </kbd>
+          </div>
+        </div>
+        <div className="flex flex-row items-center justify-between gap-1">
+          <p className="text-sm">Zoom</p>
+          <div className="flex flex-row items-center gap-1">
+            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+              Scroll
+            </kbd>
+          </div>
+        </div>
+
+        <div className="flex flex-row items-center justify-between gap-1">
+          <p className="text-sm">Help</p>
+          <div className="flex flex-row items-center gap-1">
+            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
               H
-            </span>
-          </DialogTitle>
-          <span className="w-full p-0.5 bg-muted"></span>
-          <DialogDescription>
-            <div className="flex flex-col gap-6">
-              <ExternalLinks />
-              <NodeCaption />
-              <span className="text-lg font-semibold">Shortcuts</span>
-              <div className="grid grid-cols-2 gap-4">
-                <WorkboardShortcuts />
-              </div>
-            </div>
-          </DialogDescription>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
+            </kbd>
+          </div>
+        </div>
+        <div className="flex flex-row items-center justify-between gap-1">
+          <p className="text-sm">Toggle Theme</p>
+          <div className="flex flex-row items-center gap-1">
+            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+              Shift
+            </kbd>
+            <p className="text-xs">+</p>
+            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+              Alt
+            </kbd>
+            <p className="text-xs">+</p>
+            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+              D
+            </kbd>
+          </div>
+        </div>
+        <div className="flex flex-row items-center justify-between gap-1">
+          <p className="text-sm">Sign in/out</p>
+          <div className="flex flex-row items-center gap-1">
+            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+              Shift
+            </kbd>
+            <p className="text-xs">+</p>
+            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+              Alt
+            </kbd>
+            <p className="text-xs">+</p>
+            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+              L
+            </kbd>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
 export function ControlHelpButton() {
   const [open, setOpen] = useState(false);
+  useHotkeys('h', () => setOpen((s) => !s));
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -206,25 +189,23 @@ export function ControlHelpButton() {
           ?
         </ControlButton>
       </DialogTrigger>
-      <DialogContent className="sm:w-full sm:max-w-[625px]" forceMount>
+      <DialogContent className="sm:w-full sm:max-w-[425px]" forceMount>
         <DialogHeader>
           <DialogTitle>
-            Help{' '}
-            <span className="ml-2 text-xs text-blue-600 border-0 bg-sky-200 dark:bg-sky-700 dark:text-blue-200 rounded-md px-2 py-1 ">
-              H
-            </span>
-          </DialogTitle>
-          <span className="w-full p-0.5 bg-muted"></span>
-          <DialogDescription>
-            <div className="flex flex-col gap-6">
-              <ExternalLinks />
-              <NodeCaption />
-              <span className="text-lg font-semibold">Shortcuts</span>
-              <div className="grid grid-cols-2 gap-4">
-                <WorkboardShortcuts />
+            <div className="flex flex-row items-center gap-2">
+              <p>Help</p>
+              <div className="flex flex-row items-center gap-1">
+                <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+                  H
+                </kbd>
               </div>
             </div>
-          </DialogDescription>
+          </DialogTitle>
+          <div className="flex flex-col gap-4">
+            <ExternalLinks />
+            <KeyboardShortcuts />
+            <MinimapCaption />
+          </div>
         </DialogHeader>
       </DialogContent>
     </Dialog>

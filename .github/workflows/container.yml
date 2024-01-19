@@ -1,0 +1,36 @@
+# build and publish docker image to ghcr
+name: deepsirius-ui
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - no-xstate
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      TAG: ${{ github.ref_name }}
+      REGISTRY: ghcr.io/${{ github.repository_owner }}
+      IMAGE_NAME: ${{ github.repository }}
+      HOSTNAME: localhost
+      TREE_PATH: /ibira
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build image
+        run: docker build -t $REGISTRY/$IMAGE_NAME:$TAG --build-arg NEXT_PUBLIC_TREE_PATH=$TREE_PATH .
+
+      - name: Login to ghcr
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        run: docker push $REGISTRY/$IMAGE_NAME:$TAG

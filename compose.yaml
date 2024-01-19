@@ -1,11 +1,8 @@
 version: '3.8'
 services:
   app:
+    container_name: deepsirius-ui
     platform: 'linux/amd64'
-    network_mode: 'host'
-    depends_on:
-      db:
-        condition: service_healthy
     build:
       context: .
       dockerfile: Dockerfile
@@ -27,12 +24,13 @@ services:
       #   - ca-certificate
     working_dir: /app
     volumes:
+      - ./dev.sqlite:/app/prisma/db.sqlite:rw
       - type: bind
         source: ${DOCKER_HOST_TREE_PATH}
         target: ${NEXT_PUBLIC_TREE_PATH}
     ports:
       - '3000:3000'
-    image: deepsirius-ui
+    image: deepsirius-ui/latest
     environment:
       # run time variables
       - NEXTAUTH_URL=${NEXTAUTH_URL}
@@ -45,24 +43,3 @@ services:
       - NEXT_PUBLIC_TREE_PATH=${NEXT_PUBLIC_TREE_PATH}
       - PROCESSING_CONTAINER_PATH=${PROCESSING_CONTAINER_PATH}
       - PROCESSING_CONTAINER_STORAGE_BIND=${PROCESSING_CONTAINER_STORAGE_BIND}
-
-  db:
-    image: postgres:15.0
-    restart: always
-    environment:
-      - POSTGRES_USER=fofo
-      - POSTGRES_PASSWORD=fofinho
-    volumes:
-      - type: volume
-        source: postgres
-        target: /var/lib/postgresql/data
-    ports:
-      - '5432:5432'
-    healthcheck:
-      test: ['CMD', 'pg_isready', '-U', 'fofo']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres:

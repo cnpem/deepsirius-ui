@@ -136,13 +136,16 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
+      >
         <FormField
           name="networkUserLabel"
           control={form.control}
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor={field.name}>Network Label</FormLabel>
+              <FormLabel>Network Label</FormLabel>
               <FormControl>
                 <Input {...field} placeholder="MyFancyNetwork" />
               </FormControl>
@@ -154,23 +157,27 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
           name="networkTypeName"
           control={form.control}
           render={({ field }) => (
-            <FormItem className="mt-2">
+            <FormItem className="flex flex-row items-center justify-between">
               <FormLabel>Network Type</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  className="flex justify-center"
+                  className="flex justify-center gap-1"
                 >
                   {networkOpts.map((option) => (
-                    <div
-                      key={option.value}
-                      className="items-center space-x-1 mx-4"
-                    >
-                      <FormLabel htmlFor={option.label}>
+                    <div key={option.value} className="flex">
+                      <RadioGroupItem
+                        className="peer sr-only"
+                        id={option.label}
+                        value={option.value}
+                      />
+                      <FormLabel
+                        htmlFor={option.label}
+                        className="cursor-pointer border p-2 rounded-sm peer-data-[state=checked]:border-violet-600 peer-data-[state=checked]:bg-violet-400 dark:peer-data-[state=checked]:bg-violet-800 peer-data-[state=checked]:[&>p]:text-violet-700"
+                      >
                         {option.label}
                       </FormLabel>
-                      <RadioGroupItem id={option.label} value={option.value} />
                     </div>
                   ))}
                 </RadioGroup>
@@ -178,7 +185,22 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <FormField
+          name="dropClassifier"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between">
+              <FormLabel>Drop Classifier</FormLabel>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <div className="flex flex-row gap-1 items-center">
           <FormField
             name="iterations"
             control={form.control}
@@ -204,8 +226,36 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="patchSize"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Patch Size</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="px-4">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {patchSizes.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+
+        <div className="flex flex-row gap-1 items-center justify-start">
           <FormField
             name="optimizer"
             control={form.control}
@@ -233,25 +283,6 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
             )}
           />
           <FormField
-            name="dropClassifier"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="grid grid-rows-2 py-0">
-                <FormLabel className="pt-1">Drop Classifier</FormLabel>
-                <FormControl>
-                  <div className="items-center justify-middle flex-row w-full h-full mt-0">
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-x-4 mb-2">
-          <FormField
             name="lossFunction"
             control={form.control}
             render={({ field }) => (
@@ -277,35 +308,8 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="patchSize"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Patch Size</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {patchSizes.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
-        <footer className="grid grid-cols-3 gap-x-4 border border-dashed px-2">
+        <footer className="flex flex-row items-center gap-1.5">
           <FormField
             control={form.control}
             name="slurmOptions.partition"
@@ -364,7 +368,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
               </FormItem>
             )}
           />
-          <Button className="my-2 mx-0" type="submit">
+          <Button className="mt-2 px-6" size="sm" type="submit">
             Submit
           </Button>
         </footer>

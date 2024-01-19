@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react';
 import { nanoid } from 'nanoid';
 import { type Node, type XYPosition } from 'reactflow';
+import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
@@ -10,8 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { ToastAction } from '~/components/ui/toast';
-import { useToast } from '~/components/ui/use-toast';
 import {
   type AllowedNodeTypes,
   AllowedNodeTypesList,
@@ -27,22 +26,15 @@ export function PlusOneNode() {
     nodes: state.nodes,
   }));
   const { addNode } = useStoreActions();
-  const { toast } = useToast();
 
   const onNodeAdd = (nodeType: AllowedNodeTypes) => {
     if (!workspacePath) {
-      toast({
-        variant: 'destructive',
-        title: 'Uh oh! Something went wrong.',
+      toast.error('uh oh! something went wrong', {
         description: 'Looks like the workspace was not loaded properly.',
-        action: (
-          <ToastAction
-            altText="Reload the view"
-            onClick={() => window.location.reload()}
-          >
-            Reload the view
-          </ToastAction>
-        ),
+        action: {
+          label: 'Reload the view',
+          onClick: () => window.location.reload(),
+        },
       });
       return;
     }
@@ -61,8 +53,6 @@ export function PlusOneNode() {
       data: {
         workspacePath,
         status: 'active',
-        xState: '',
-        remoteFsDataPath: '',
       },
     };
     // now that the node is created in the database, we can add it to the store with an always defined registryId

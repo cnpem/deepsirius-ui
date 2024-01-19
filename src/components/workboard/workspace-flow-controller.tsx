@@ -17,6 +17,7 @@ import ReactFlow, {
   Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import CustomConnectionLine from '~/components/workboard/connection-line';
 import { PlusOneNode } from '~/components/workboard/plusone-node';
@@ -32,7 +33,6 @@ import { api } from '~/utils/api';
 import { AvatarDrop } from '../avatar-dropdown';
 import { ControlHelpButton } from '../help';
 import { ControlThemeButton } from '../theme-toggle';
-import { useToast } from '../ui/use-toast';
 
 /**
  * The Geppetto component is the main component for the workspace flow
@@ -68,8 +68,6 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     });
   }, [updateDbState, stateSnapshot, workspacePath]);
 
-  const { toast } = useToast();
-
   const handleNodesDelete = useCallback(() => {
     const [deletableNodes, protectedNodes] = nodes.reduce(
       (acc, node) => {
@@ -87,10 +85,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     // show error message if some nodes should not be deleted
     if (protectedNodes.length > 0) {
       console.log('cannot delete busy nodes', protectedNodes);
-      toast({
-        title: 'Error',
-        description: 'Cannot delete busy nodes',
-      });
+      toast.error('Cannot delete busy nodes');
     }
     if (deletableNodes.length === 0) return;
     // delete remote files
@@ -102,7 +97,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
       });
     // remove nodes from the store
     onNodesDelete(deletableNodes);
-  }, [deleteFiles, nodes, onNodesDelete, toast]);
+  }, [deleteFiles, nodes, onNodesDelete]);
 
   const handleEdgesDelete = useCallback(() => {
     const nodeIsBusy = (nodeId: string) =>
@@ -123,15 +118,12 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     // show error message if some edges should not be deleted
     if (protectedEdges.length > 0) {
       console.log('cannot delete edges to busy nodes', protectedEdges);
-      toast({
-        title: 'Error',
-        description: 'Cannot delete edges to busy nodes',
-      });
+      toast.error('Cannot delete edges to busy nodes');
     }
     if (deletableEdges.length === 0) return;
     // remove edges from the store
     onEdgesDelete(deletableEdges);
-  }, [edges, nodes, onEdgesDelete, toast]);
+  }, [edges, nodes, onEdgesDelete]);
 
   useHotkeys(['backspace', 'del', 'Delete'], () => {
     console.log('i will survive!');

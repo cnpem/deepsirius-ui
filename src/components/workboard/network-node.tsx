@@ -7,6 +7,7 @@ import {
   Position,
   useUpdateNodeInternals,
 } from 'reactflow';
+import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
@@ -16,7 +17,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '~/components/ui/sheet';
-import { toast } from '~/components/ui/use-toast';
 import {
   type FormType,
   DefaultForm as NetworkForm,
@@ -38,7 +38,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
 
   const updateNodeInternals = useUpdateNodeInternals();
 
-  const checkStatusQuery = api.remotejob.checkStatus.useQuery(
+  const {} = api.remotejob.checkStatus.useQuery(
     { jobId: nodeProps.data.jobId as string },
     {
       enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
@@ -54,10 +54,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
         }
         const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
         if (data.jobStatus === 'COMPLETED') {
-          toast({
-            title: 'Job finished',
-            description: 'The job has finished successfully',
-          });
+          toast.success('Job completed');
           onUpdateNode({
             id: nodeProps.id,
             data: {
@@ -73,10 +70,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
           });
           updateNodeInternals(nodeProps.id);
         } else if (data.jobStatus === 'FAILED') {
-          toast({
-            title: 'Job failed',
-            description: 'The job has failed',
-          });
+          toast.error('Job failed');
           onUpdateNode({
             id: nodeProps.id,
             data: {
@@ -125,10 +119,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     console.log('handleSubmitJob');
     const connectedNodeData = getSourceData(nodeProps.id);
     if (!connectedNodeData || !connectedNodeData.remotePath) {
-      toast({
-        title: 'You need to connect a dataset first',
-        description: 'The network needs a dataset to train on.',
-      });
+      toast.info('Please connect a dataset');
       return;
     }
     submitJob({
@@ -144,10 +135,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
         console.log('handleSubmitJob then?', 'jobId', jobId);
         if (!jobId) {
           console.error('handleSubmitJob then?', 'no jobId');
-          toast({
-            title: 'Error submitting job',
-            description: 'Something went wrong',
-          });
+          toast.error('Error submitting job');
           return;
         }
         setFormData(formData);
@@ -166,11 +154,8 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
         updateNodeInternals(nodeProps.id);
         setOpen(!open);
       })
-      .catch((error) => {
-        toast({
-          title: 'Error submitting job',
-          description: (error as Error).message,
-        });
+      .catch(() => {
+        toast.error('Error submitting job');
       });
   };
 
@@ -269,10 +254,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
                     cancelJob({ jobId: nodeProps.data.jobId as string })
                       .then(() => {
                         const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-                        toast({
-                          title: 'Job canceled',
-                          description: 'The job has been canceled',
-                        });
+                        toast.success('Job canceled');
                         onUpdateNode({
                           id: nodeProps.id,
                           data: {
@@ -288,15 +270,10 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
                         });
                         updateNodeInternals(nodeProps.id);
                       })
-                      .catch((error) => {
-                        toast({
-                          title: 'Error canceling job',
-                          description: (error as Error).message,
-                        });
+                      .catch(() => {
+                        toast.error('Error canceling job');
                       });
-                    toast({
-                      title: 'Canceling job...',
-                    });
+                    toast.info('Canceling job..');
                   }}
                 >
                   cancel

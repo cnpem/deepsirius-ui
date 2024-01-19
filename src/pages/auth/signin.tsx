@@ -1,10 +1,10 @@
+import { FishIcon } from 'lucide-react';
 import type { GetServerSidePropsContext } from 'next';
 import { signIn } from 'next-auth/react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
-import { Icons } from '~/components/icons';
 import { Layout } from '~/components/layout';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -53,7 +53,7 @@ function Form() {
       onSubmit={(...args) => void handleSubmit(onSubmit)(...args)}
     >
       <div className="grid items-center justify-center">
-        <Icons.logo />
+        <FishIcon />
       </div>
       <h1 className="mb-2 flex justify-center text-xl font-semibold">
         <span className="text-fuchsia-600 dark:text-fuchsia-500">Deep</span>

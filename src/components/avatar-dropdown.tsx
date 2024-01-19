@@ -1,11 +1,10 @@
-import { ArrowLeftIcon } from 'lucide-react';
+import { ArrowLeftIcon, FolderXIcon, LogOutIcon, UserIcon } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useCallback } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { toast } from 'sonner';
-import { Icons } from '~/components/icons';
 import { Button } from '~/components/ui/button';
 import {
   DropdownMenu,
@@ -61,7 +60,7 @@ export function AvatarDrop() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-fit" align="end" forceMount>
         <DropdownMenuItem>
-          <Icons.user className="mr-2 h-4 w-4" />
+          <UserIcon className="mr-2 h-4 w-4" />
           <div className="flex flex-col gap-2">
             <p className="text-sm font-medium leading-none">
               {sessionData.user?.name}
@@ -84,7 +83,7 @@ export function AvatarDrop() {
             className="cursor-pointer"
             onClick={() => leaveWorkspace()}
           >
-            <Icons.folderx className="mr-2 h-4 w-4" />
+            <FolderXIcon className="mr-2 h-4 w-4" />
             <span>
               Leave{' '}
               <span className="text-purple-500 dark:text-purple-400 font-semibold">
@@ -95,7 +94,7 @@ export function AvatarDrop() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => void logOut()}>
-          <Icons.logout className="mr-2 h-4 w-4" />
+          <LogOutIcon className="mr-2 h-4 w-4" />
           <span>Sign Out</span>
           <DropdownMenuShortcut>Shift+Alt+L</DropdownMenuShortcut>
         </DropdownMenuItem>

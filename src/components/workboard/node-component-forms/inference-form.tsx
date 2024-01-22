@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { X } from 'lucide-react';
+import { PlusIcon, TreeDeciduousIcon, X } from 'lucide-react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { FsTreeDialog } from '~/components/fs-treeview';
@@ -25,7 +25,6 @@ import {
 } from '~/components/ui/select';
 import { Switch } from '~/components/ui/switch';
 import { slurmGPUOptions, slurmPartitionOptions } from '~/lib/constants';
-import { cn } from '~/lib/utils';
 
 const slurmOptions = z.object({
   partition: z.enum(slurmPartitionOptions),
@@ -118,28 +117,16 @@ export function InferenceForm({
     form.setValue('outputDir', path);
   };
 
+  const toUnixPath = (path: string) =>
+    path.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '');
+
   return (
     <Form {...form}>
-      <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
-        <div>
-          <FormField
-            control={form.control}
-            name="outputDir"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className={'sr-only'}>Output Directory</FormLabel>
-                <FormDescription className={'sr-only'}>
-                  Select the output directory.
-                </FormDescription>
-                <FormControl>
-                  <div className="flex w-full max-w-sm items-center space-x-2">
-                    {!!field.value && <Input {...field} disabled />}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
+      >
+        <div className="flex flex-row gap-1 items-center">
           <FsTreeDialog
             handleSelect={onOutputDirSelect}
             message={{
@@ -148,10 +135,36 @@ export function InferenceForm({
                 'Select the path to a valid output directory or paste it down below.',
             }}
           >
-            <Button type="button" variant="link" size="sm" className="mt-1">
-              Select output dir
+            <Button
+              className="mt-2"
+              type="button"
+              variant="outline"
+              size="icon"
+            >
+              <TreeDeciduousIcon className="w-4 h-4" />
             </Button>
           </FsTreeDialog>
+          <FormField
+            control={form.control}
+            name="outputDir"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel className={'sr-only'}>Output Directory</FormLabel>
+                <FormDescription className={'sr-only'}>
+                  Select the output directory.
+                </FormDescription>
+                <FormControl>
+                  <Input
+                    {...field}
+                    className="text-ellipsis"
+                    placeholder="Output directory"
+                    value={toUnixPath(field.value ?? '')}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
         <div>
           {fields.map((field, index) => (
@@ -161,17 +174,15 @@ export function InferenceForm({
               name={`inputImages.${index}.name`}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                    Images
-                  </FormLabel>
-                  <FormDescription className={cn(index !== 0 && 'sr-only')}>
-                    Add images to run inference on.
-                  </FormDescription>
                   <FormControl>
-                    <div className="flex w-full max-w-sm items-center space-x-2">
-                      <Input {...field} disabled />
-                      <Button onClick={() => remove(index)} size={'icon'}>
-                        <X className="w-4 h-4" />
+                    <div className="flex items-center">
+                      <Input {...field} className="text-ellipsis" disabled />
+                      <Button
+                        onClick={() => remove(index)}
+                        size={'icon'}
+                        variant="ghost"
+                      >
+                        <X className="w-[14px] h-[14px]" />
                       </Button>
                     </div>
                   </FormControl>
@@ -188,29 +199,35 @@ export function InferenceForm({
                 'Select the path to a valid image file or paste it down below.',
             }}
           >
-            <Button type="button" variant="link" size="sm" className="mt-1">
-              Add img
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="mt-1"
+              >
+                <PlusIcon className="w-4 h-4" />
+              </Button>
+              <span className="text-xs text-muted-foreground">Add images</span>
+            </div>
           </FsTreeDialog>
         </div>
         <FormField
           name="normalize"
           control={form.control}
           render={({ field }) => (
-            <FormItem className="">
-              <FormControl>
-                <div className=" flex items-center space-x-4 py-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      Normalize Images
-                    </p>
-                  </div>
+            <FormItem>
+              <div className="flex flex-row items-center justify-between">
+                <FormLabel className="text-sm font-medium leading-none">
+                  Normalize Images
+                </FormLabel>
+                <FormControl>
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
-                </div>
-              </FormControl>
+                </FormControl>
+              </div>
             </FormItem>
           )}
         />
@@ -218,24 +235,22 @@ export function InferenceForm({
           name="saveProbMap"
           control={form.control}
           render={({ field }) => (
-            <FormItem className="">
-              <FormControl>
-                <div className=" flex items-center space-x-4 py-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      Save as Probabilty Map
-                    </p>
-                  </div>
+            <FormItem>
+              <div className="flex flex-row items-center justify-between">
+                <FormLabel className="text-sm font-medium leading-none">
+                  Save as Probabilty Map
+                </FormLabel>
+                <FormControl>
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
-                </div>
-              </FormControl>
+                </FormControl>
+              </div>
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-1.5">
           <FormField
             control={form.control}
             name="paddingSize"
@@ -291,7 +306,7 @@ export function InferenceForm({
             )}
           />
         </div>
-        <footer className="grid grid-cols-2 grid-rows-2 gap-4">
+        <footer className="flex flex-row items-center justify-end gap-1.5">
           <FormField
             control={form.control}
             name="slurmOptions.partition"
@@ -301,7 +316,11 @@ export function InferenceForm({
                 <Select onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Slurm Partition" />
+                      <SelectValue
+                        placeholder={
+                          <span className="text-xs">Slurm Partition</span>
+                        }
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -331,14 +350,19 @@ export function InferenceForm({
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="px-4">
                       <SelectValue placeholder="Slurm GPUs" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {slurmGPUOptions.map((item) => (
                       <SelectItem key={item} value={item}>
-                        {`GPUs: ${item.toString()}`}
+                        <p className="flex flex-row items-center gap-1">
+                          <span className="text-xs text-muted-foreground mr-2">
+                            GPUs:{' '}
+                          </span>
+                          <span>{item.toString()}</span>
+                        </p>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -350,7 +374,7 @@ export function InferenceForm({
               </FormItem>
             )}
           />
-          <Button className="my-2 mx-0 col-span-2" type="submit">
+          <Button className="grow mt-2 px-6" size="sm" type="submit">
             Submit
           </Button>
         </footer>

@@ -2,7 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { HoverCardTrigger } from '@radix-ui/react-hover-card';
-import { Image, Plus, Tag, X } from 'lucide-react';
+import {
+  BookmarkIcon,
+  BookmarkPlusIcon,
+  ImageIcon,
+  ImagePlusIcon,
+  PlusIcon,
+  XIcon,
+} from 'lucide-react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { FsTreeDialog } from '~/components/fs-treeview';
@@ -148,28 +155,29 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
+      >
         <FormField
           control={form.control}
           name="datasetName"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Dataset Name</FormLabel>
-              <Input {...field} placeholder="my_dataset" />
+              <FormControl>
+                <Input {...field} placeholder="my_dataset" />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div
-          className={'relative border p-2 rounded-md border-dashed mt-6 mb-1'}
-        >
-          <div className="relative">
-            <Label className="absolute rounded-full p-1 text-sm scale-50 -translate-y-6 border-2 inset-x-0 top-0 text-center bg-muted ">
-              Data
-            </Label>
-          </div>
+        <div className="border p-2 rounded-md border-dashed">
           {fields.map((field, index) => (
-            <div key={field.id} className="grid gap-4 py-2 grid-cols-3">
+            <div
+              key={field.id}
+              className="flex flex-row gap-1 py-1 items-center justify-center"
+            >
               <FormField
                 control={form.control}
                 name={`data.${index}.image`}
@@ -185,40 +193,33 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                         handleSelect={(path) => onSelectImage(path, index)}
                       >
                         <HoverCardTrigger asChild>
-                          {field.value.split('/').slice(-1)[0] === 'image' ? (
-                            <Button size={'sm'}>
-                              <Image className="mr-2 h-4 w-4" /> {`# ${index}`}
-                            </Button>
-                          ) : (
-                            <Button className="relative" size={'sm'}>
-                              <div className="absolute top-0 right-0 translate-x-1 -translate-y-1">
-                                <span className="relative flex h-3 w-3">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                                  <span className=" relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
-                                </span>
-                              </div>
-                              <Image className="mr-2 h-4 w-4" /> {`# ${index}`}
-                            </Button>
-                          )}
+                          <Button
+                            className="data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
+                            data-img={!!field.value}
+                            variant={'outline'}
+                            size={'icon'}
+                          >
+                            {!!field.value ? (
+                              <ImageIcon className="h-4 w-4" />
+                            ) : (
+                              <ImagePlusIcon className="h-4 w-4" />
+                            )}
+                          </Button>
                         </HoverCardTrigger>
                       </FsTreeDialog>
-                      <HoverCardContent className="w-80">
-                        <div className="flex justify-between space-x-4">
-                          <div className="space-y-1">
-                            <h4 className="text-sm font-semibold">@image</h4>
-                            <p className="text-sm">
-                              {field.value.split('/').slice(-1)[0]}
-                            </p>
-                            <div className="flex items-center pt-2">
-                              <span className="text-xs text-muted-foreground">
-                                {field.value}
-                              </span>
-                            </div>
-                          </div>
+                      <HoverCardContent className="w-fit">
+                        <div className="flex flex-col gap-2">
+                          <h4 className="text-sm font-semibold">@image</h4>
+                          <p className="font-medium text-xs text-violet-600 dark:text-violet-400">
+                            {field.value.split('/').slice(-1)[0]}
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {field.value}
+                          </span>
                         </div>
                       </HoverCardContent>
                     </HoverCard>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -237,77 +238,67 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                         }}
                       >
                         <HoverCardTrigger asChild>
-                          {field.value.split('/').slice(-1)[0] === 'label' ? (
-                            <Button size={'sm'}>
-                              <Tag className="mr-2 h-4 w-4" /> {`# ${index}`}
-                            </Button>
-                          ) : (
-                            <Button className="relative" size={'sm'}>
-                              <div className="absolute top-0 right-0 translate-x-1 -translate-y-1">
-                                <span className="relative flex h-3 w-3">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                                  <span className=" relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
-                                </span>
-                              </div>
-                              <Tag className="mr-2 h-4 w-4" /> {`# ${index}`}
-                            </Button>
-                          )}
+                          <Button
+                            className="data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
+                            data-img={!!field.value}
+                            variant={'outline'}
+                            size={'icon'}
+                          >
+                            {!!field.value ? (
+                              <BookmarkIcon className="h-4 w-4" />
+                            ) : (
+                              <BookmarkPlusIcon className="h-4 w-4" />
+                            )}
+                          </Button>
                         </HoverCardTrigger>
                       </FsTreeDialog>
-                      <HoverCardContent className="w-80">
-                        <div className="flex justify-between space-x-4">
-                          <div className="space-y-1">
-                            <h4 className="text-sm font-semibold">@label</h4>
-                            <p className="text-sm">
-                              {field.value.split('/').slice(-1)[0]}
-                            </p>
-                            <div className="flex items-center pt-2">
-                              <span className="text-xs text-muted-foreground">
-                                {field.value}
-                              </span>
-                            </div>
-                          </div>
+                      <HoverCardContent className="w-fit">
+                        <div className="flex flex-col gap-2">
+                          <h4 className="text-sm font-semibold">@label</h4>
+                          <p className="font-medium text-xs text-violet-600 dark:text-violet-400">
+                            {field.value.split('/').slice(-1)[0]}
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {field.value}
+                          </span>
                         </div>
                       </HoverCardContent>
                     </HoverCard>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
               <Button
-                className="absolute mr-2 end-0"
+                className="rounded-full h-6 w-6"
                 variant={'destructive'}
                 onClick={() => remove(index)}
                 size={'icon'}
               >
-                <X className="h-4 w-4" />
+                <XIcon className="h-4 w-4" />
               </Button>
             </div>
           ))}
-          <Button
-            className="w-full"
-            variant={'outline'}
-            type="button"
-            onClick={() =>
-              append({
-                image: '/path/to/my/image',
-                label: '/path/to/my/label',
-              })
-            }
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        <div
-          className={
-            'relative border p-2 rounded-md border-dashed mt-3 mb-1 text-center'
-          }
-        >
-          <div className="relative">
-            <Label className="absolute rounded-full p-1 text-sm scale-50 -translate-y-6 border-2 inset-x-0 top-0 text-center bg-muted ">
-              Sampling Params
+          <div className="flex items-center gap-2">
+            <Button
+              id="add-data"
+              variant={'outline'}
+              size={'icon'}
+              type="button"
+              onClick={() =>
+                append({
+                  image: '',
+                  label: '',
+                })
+              }
+            >
+              <PlusIcon className="h-4 w-4" />
+            </Button>
+            <Label htmlFor="add-data" className="text-xs text-muted-foreground">
+              Add data
             </Label>
           </div>
+        </div>
+        <div className={'border p-2 rounded-md border-dashed text-xs'}>
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -315,7 +306,9 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Classes</FormLabel>
-                  <Input {...field} placeholder="2" type="number" min={2} />
+                  <FormControl>
+                    <Input {...field} placeholder="2" type="number" min={2} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -326,7 +319,9 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Sample Size</FormLabel>
-                  <Input {...field} placeholder="100" type="number" min={1} />
+                  <FormControl>
+                    <Input {...field} placeholder="100" type="number" min={1} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -388,7 +383,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
             />
           </div>
         </div>
-        <footer className="grid grid-cols-2 gap-4">
+        <footer className="flex flex-row justify-between items-center">
           <FormField
             control={form.control}
             name="slurmOptions.partition"
@@ -417,7 +412,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
               </FormItem>
             )}
           />
-          <Button className="my-2 mx-0" type="submit">
+          <Button className="mt-2" type="submit">
             Create
           </Button>
         </footer>

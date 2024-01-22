@@ -163,16 +163,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               <SheetHeader>
                 <SheetTitle>Create</SheetTitle>
               </SheetHeader>
-              <DatasetForm
-                name={'New Dataset'}
-                data={[
-                  {
-                    image: '/path/to/image',
-                    label: '/path/to/label',
-                  },
-                ]}
-                onSubmitHandler={handleSubmitJob}
-              />
+              <DatasetForm onSubmitHandler={handleSubmitJob} />
             </SheetContent>
           </Sheet>
         </CardContent>

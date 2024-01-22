@@ -43,8 +43,6 @@ RUN SKIP_ENV_VALIDATION=1 npm run build
 # ----
 # Production image, copy all the files and run next
 FROM base AS runner
-ARG CA_CERT
-ARG CA_CERT_HOST
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 # Install openssh-keygen for writing the ssh host key in remotejob
@@ -52,7 +50,7 @@ RUN apk update && apk add --no-cache openssh-keygen
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 WORKDIR /app
-COPY --chown=nextjs:nodejs $CA_CERT_HOST $CA_CERT
+
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
@@ -60,13 +58,16 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/.next/server/edge-chunks ./.next/server/edge-chunks
 
-# # for being able to run migrations
+# for being able to run migrations
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 USER nextjs
+
+# Create the ssh directory avoid double login 1st time
+RUN mkdir -p /home/nextjs/.ssh
+
 EXPOSE 3000
 ENV PORT 3000
 
 CMD ["node", "server.js"]
-# CMD ["npm", "run", "start:migrate:prod"]

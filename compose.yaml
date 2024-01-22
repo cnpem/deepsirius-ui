@@ -13,6 +13,7 @@ services:
     working_dir: /app
     volumes:
       - ./dev.sqlite:/app/prisma/db.sqlite:rw
+      - ./abtlus-AD1-CA.cer:${CA_CERT}:ro
       - type: bind
         source: ${DOCKER_HOST_TREE_PATH}
         target: ${NEXT_PUBLIC_TREE_PATH}

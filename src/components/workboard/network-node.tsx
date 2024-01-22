@@ -144,7 +144,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
           data: {
             ...nodeProps.data,
             status: 'busy',
-            remotePath: `${nodeProps.data.workspacePath}/networks/${formData.networkUserLabel}/`,
+            remotePath: `${nodeProps.data.workspacePath}/networks/${formData.networkUserLabel}`,
             jobId: jobId,
             message: `Job ${jobId} submitted in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
@@ -214,7 +214,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             <DumbbellIcon className="inline-block" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-none text-yellow-800 dark:text-yellow-400">
-                {nodeProps.data?.remotePath?.split('/').slice(-2)}
+                {nodeProps.data?.remotePath?.split('/').pop()}
               </p>
               <p className="text-sm text-yellow-600 lowercase">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
@@ -307,7 +307,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             <DumbbellIcon className="inline-block" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-none text-blue-800 dark:text-blue-400">
-                {nodeProps.data?.remotePath?.split('/').slice(-2)}
+                {nodeProps.data?.remotePath?.split('/').pop()}
               </p>
               <p className="text-sm text-blue-600 lowercase">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
@@ -378,7 +378,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             <DumbbellIcon className="inline-block" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-none text-red-800 dark:text-red-400">
-                {nodeProps.data?.remotePath?.split('/').slice(-2)}
+                {nodeProps.data?.remotePath?.split('/').pop()}
               </p>
               <p className="text-sm text-red-600 lowercase">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${

@@ -15,6 +15,7 @@ import {
   applyEdgeChanges,
   applyNodeChanges,
 } from 'reactflow';
+import { toast } from 'sonner';
 import {
   // type StateCreator,
   // type StoreMutatorIdentifier,
@@ -207,14 +208,14 @@ export const useStore = create<RFStore>()(
           }
           console.log('Store.OnConnect: Trying to connect', params);
           if (get().actions.isValidConnection(params)) {
-            console.log('Store.OnConnect: Valid connection');
+            toast.success('Connected');
             get().actions.addEdge({
               id: nanoid(), // testing using the same id for tb and storeand creating it here
               source: params.source,
               target: params.target,
             });
           } else {
-            console.log('Store.OnConnect: Invalid connection');
+            toast.error('Invalid connection');
           }
         },
         checkSourceIsConnected: (targetId: string) => {

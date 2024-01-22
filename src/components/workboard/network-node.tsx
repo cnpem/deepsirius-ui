@@ -19,8 +19,7 @@ import {
 } from '~/components/ui/sheet';
 import {
   type FormType,
-  DefaultForm as NetworkForm,
-  PrefilledForm,
+  NetworkForm,
 } from '~/components/workboard/node-component-forms/network-form';
 import { type NodeData, useStoreActions } from '~/hooks/use-store';
 import { api } from '~/utils/api';
@@ -139,6 +138,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
           return;
         }
         setFormData(formData);
+        console.log();
         onUpdateNode({
           id: nodeProps.id,
           data: {
@@ -180,9 +180,10 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
           <Sheet open={nodeProps.selected} modal={false}>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>Create</SheetTitle>
+                <SheetTitle>Training</SheetTitle>
               </SheetHeader>
               <NetworkForm
+                jobType="create"
                 onSubmitHandler={(formData) => handleSubmit(formData, 'create')}
               />
             </SheetContent>
@@ -213,7 +214,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             <DumbbellIcon className="inline-block" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-none text-yellow-800 dark:text-yellow-400">
-                {nodeProps.data?.remotePath?.split('/').pop()}
+                {nodeProps.data?.remotePath?.split('/').slice(-2)}
               </p>
               <p className="text-sm text-yellow-600 lowercase">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
@@ -250,7 +251,6 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
                 <hr />
                 <Button
                   onClick={() => {
-                    //   actor.send('cancel');
                     cancelJob({ jobId: nodeProps.data.jobId as string })
                       .then(() => {
                         const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
@@ -307,7 +307,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             <DumbbellIcon className="inline-block" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-none text-blue-800 dark:text-blue-400">
-                {nodeProps.data?.remotePath?.split('/').pop()}
+                {nodeProps.data?.remotePath?.split('/').slice(-2)}
               </p>
               <p className="text-sm text-blue-600 lowercase">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
@@ -322,7 +322,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
                 <AlertDescription>{nodeProps.data.message}</AlertDescription>
               </Alert>
               <SheetHeader>
-                <SheetTitle>Details</SheetTitle>
+                <SheetTitle>Finetune</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
                 <div className="flex flex-row items-center justify-between gap-1">
@@ -342,14 +342,14 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
                   </p>
                 </div>
               </div>
-              <PrefilledForm
+              <NetworkForm
                 networkTypeName={formData?.networkTypeName || 'vnet'}
                 networkUserLabel={formData?.networkUserLabel || 'network'}
+                jobType="finetune"
                 onSubmitHandler={(data) => {
-                  handleSubmit(data, 'retry');
+                  handleSubmit(data, 'finetune');
                 }}
               />
-              <hr />
             </SheetContent>
           </Sheet>
         </CardContent>
@@ -378,7 +378,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             <DumbbellIcon className="inline-block" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-none text-red-800 dark:text-red-400">
-                {nodeProps.data?.remotePath?.split('/').pop()}
+                {nodeProps.data?.remotePath?.split('/').slice(-2)}
               </p>
               <p className="text-sm text-red-600 lowercase">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
@@ -399,9 +399,10 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
               <SheetHeader>
                 <SheetTitle>Retry</SheetTitle>
               </SheetHeader>
-              <PrefilledForm
+              <NetworkForm
                 networkTypeName={formData?.networkTypeName || 'vnet'}
                 networkUserLabel={formData?.networkUserLabel || 'network'}
+                jobType="retry"
                 onSubmitHandler={(data) => {
                   handleSubmit(data, 'retry');
                 }}

@@ -70,6 +70,7 @@ type NetworkFormProps = {
   onSubmitHandler: networkFormCallback;
   networkUserLabel?: string;
   networkTypeName?: z.infer<typeof networkSchema>['networkTypeName'];
+  jobType: 'create' | 'retry' | 'finetune';
 };
 
 export function useNetworkForm({
@@ -127,8 +128,13 @@ const lossOpts: FormFieldItems = [
   { label: 'Cross Entropy + Dice', value: 'xent_dice' },
 ];
 
-export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
-  const form = useNetworkForm({});
+export function NetworkForm({
+  networkUserLabel,
+  networkTypeName,
+  jobType,
+  onSubmitHandler,
+}: NetworkFormProps) {
+  const form = useNetworkForm({ networkUserLabel, networkTypeName });
 
   const onSubmit = () => {
     onSubmitHandler(form.getValues());
@@ -147,7 +153,11 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
             <FormItem>
               <FormLabel>Network Label</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="MyFancyNetwork" />
+                <Input
+                  {...field}
+                  placeholder="MyFancyNetwork"
+                  disabled={jobType === 'finetune'}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -161,6 +171,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
               <FormLabel>Network Type</FormLabel>
               <FormControl>
                 <RadioGroup
+                  disabled={jobType === 'finetune'}
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                   className="flex justify-center gap-1"
@@ -255,7 +266,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
           />
         </div>
 
-        <div className="flex flex-row gap-1 items-center justify-start">
+        <div className="flex flex-row gap-1 items-center">
           <FormField
             name="optimizer"
             control={form.control}
@@ -286,7 +297,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
             name="lossFunction"
             control={form.control}
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="grow">
                 <FormLabel>Loss Function</FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -309,7 +320,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
             )}
           />
         </div>
-        <footer className="flex flex-row items-center gap-1.5">
+        <footer className="flex flex-row items-center justify-end gap-1.5">
           <FormField
             control={form.control}
             name="slurmOptions.partition"
@@ -319,7 +330,11 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
                 <Select onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Slurm Partition" />
+                      <SelectValue
+                        placeholder={
+                          <span className="text-xs">Slurm Partition</span>
+                        }
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -349,14 +364,19 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="px-4">
                       <SelectValue placeholder="Slurm GPUs" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {slurmGPUOptions.map((item) => (
                       <SelectItem key={item} value={item}>
-                        {`GPUs: ${item.toString()}`}
+                        <p className="flex flex-row items-center gap-1">
+                          <span className="text-xs text-muted-foreground mr-2">
+                            GPUs:{' '}
+                          </span>
+                          <span>{item.toString()}</span>
+                        </p>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -368,264 +388,7 @@ export function DefaultForm({ onSubmitHandler }: NetworkFormProps) {
               </FormItem>
             )}
           />
-          <Button className="mt-2 px-6" size="sm" type="submit">
-            Submit
-          </Button>
-        </footer>
-      </form>
-    </Form>
-  );
-}
-
-export function PrefilledForm({
-  networkUserLabel,
-  networkTypeName,
-  onSubmitHandler,
-}: NetworkFormProps) {
-  const form = useNetworkForm({
-    networkUserLabel,
-    networkTypeName,
-  });
-
-  const onSubmit = () => {
-    onSubmitHandler(form.getValues());
-  };
-
-  return (
-    <Form {...form}>
-      <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>
-        <FormField
-          name="networkUserLabel"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor={field.name}>Network Label</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="MyFancyNetwork"
-                  value={networkUserLabel}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          name="networkTypeName"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem className="mt-2">
-              <FormLabel>Network Type</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={networkTypeName}
-                  className="flex justify-center"
-                >
-                  {networkOpts.map((option) => (
-                    <div
-                      key={option.value}
-                      className="items-center space-x-1 mx-4"
-                    >
-                      <FormLabel htmlFor={option.label}>
-                        {option.label}
-                      </FormLabel>
-                      <RadioGroupItem id={option.label} value={option.value} />
-                    </div>
-                  ))}
-                </RadioGroup>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            name="iterations"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Iterations</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="learningRate"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Learning Rate</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" step={learningRateStep} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            name="optimizer"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Optimizer</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {optimizerOpts.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="dropClassifier"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="grid grid-rows-2 py-0">
-                <FormLabel className="pt-1">Drop Classifier</FormLabel>
-                <FormControl>
-                  <div className="items-center justify-middle flex-row w-full h-full mt-0">
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-x-4 mb-2">
-          <FormField
-            name="lossFunction"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Loss Function</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {lossOpts.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="patchSize"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Patch Size</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {patchSizes.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <footer className="grid grid-cols-3 gap-x-4 border border-dashed px-2">
-          <FormField
-            control={form.control}
-            name="slurmOptions.partition"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="sr-only">Slurm Partition</FormLabel>
-                <Select onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Slurm Partition" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {slurmPartitionOptions.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription className="hidden">
-                  Please select a slurm partition assigned for your user for
-                  submitting this job.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="slurmOptions.nGPU"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="sr-only">Slurm gres GPUs</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Slurm GPUs" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {slurmGPUOptions.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {`GPUs: ${item.toString()}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription className="hidden">
-                  Please select the number of GPUs for this job.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button className="my-2 mx-0" type="submit">
+          <Button className="grow mt-2 px-6" size="sm" type="submit">
             Submit
           </Button>
         </footer>

@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import CustomConnectionLine from '~/components/workboard/connection-line';
 import { PlusOneNode } from '~/components/workboard/plusone-node';
-import WorkspaceSelectDialog from '~/components/workboard/workspace-select-dialog';
+import { WorkspaceSelector } from '~/components/workboard/workspace-select';
 import {
   type NodeData,
   nodeTypes,
@@ -296,10 +296,9 @@ function AlertDemo() {
 export default function Flow() {
   const { workspacePath } = useStore();
 
-  return (
-    <>
-      <WorkspaceSelectDialog open={!workspacePath} />
-      {!!workspacePath && <Geppetto workspacePath={workspacePath} />}
-    </>
-  );
+  if (!workspacePath) {
+    return <WorkspaceSelector />;
+  }
+
+  return <Geppetto workspacePath={workspacePath} />;
 }

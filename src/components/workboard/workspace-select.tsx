@@ -1,8 +1,10 @@
+import { ArrowLeftIcon, FolderIcon } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { type Edge, type Node } from 'reactflow';
 import { toast } from 'sonner';
-import { Button } from '~/components/ui/button';
+import { Button, buttonVariants } from '~/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -12,10 +14,116 @@ import {
 } from '~/components/ui/dialog';
 import { env } from '~/env.mjs';
 import { type NodeData, useStoreActions } from '~/hooks/use-store';
+import { cn } from '~/lib/utils';
 import { api } from '~/utils/api';
 
 import { FsTree } from '../fs-treeview';
+import { NautilusDialog } from '../nautilus';
+import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
+
+export function WorkspaceSelector() {
+  const { setWorkspacePath } = useStoreActions();
+  const [path, setPath] = useState(env.NEXT_PUBLIC_TREE_PATH);
+  const [jobId, setJobId] = useState('');
+  const [disabled, setDisabled] = useState(false);
+
+  const { mutate: registerWorkspaceInDb } =
+    api.workspaceDbState.createWorkspace.useMutation({
+      onSuccess: (data) => {
+        toast.success('New workspace registered');
+        // finally, set the workspace path in the store if the db registration was successful
+        setWorkspacePath(data.path);
+      },
+      onError: () => {
+        toast.error('Error registering workspace');
+        setDisabled(false);
+      },
+    });
+
+  const { mutate: submitNewWorkspace } =
+    api.remoteProcess.submitNewWorkspace.useMutation({
+      onSuccess: (data) => {
+        setJobId(data.jobId);
+      },
+      onError: () => {
+        toast.error('Error creating workspace');
+        setDisabled(false);
+      },
+    });
+
+  const {} = api.remotejob.checkStatus.useQuery(
+    { jobId },
+    {
+      refetchOnMount: false,
+      enabled: !!jobId,
+      refetchInterval: 5000,
+      refetchIntervalInBackground: true,
+      onSuccess: (data) => {
+        console.log('checkStatus.onSuccess', data);
+        if (data.jobStatus === 'COMPLETED' && !!path) {
+          // disable refetching until there is a new job
+          setJobId('');
+          registerWorkspaceInDb({ path: path });
+          toast.success('Workspace created');
+        } else if (data.jobStatus === 'FAILED') {
+          toast.error('Error creating workspace');
+          setDisabled(false);
+        }
+      },
+    },
+  );
+
+  const handleNewWorkspace = (path: string) => {
+    setDisabled(true);
+    setPath(path);
+    submitNewWorkspace({ workspacePath: path });
+    toast.info('Creating workspace...');
+  };
+
+  return (
+    <div className="flex h-screen w-screen items-center justify-center">
+      <Link
+        href="/"
+        className={cn(
+          buttonVariants({ variant: 'link' }),
+          'absolute left-2 top-2',
+        )}
+      >
+        <ArrowLeftIcon className="w-4 h-4 mr-2" />
+        Home
+      </Link>
+
+      <div className="rounded-sm p-8 shadow-xl border">
+        <div className="flex flex-col gap-4">
+          <span className="font-semibold">Select workspace</span>
+          <span className="text-sm text-muted-foreground">
+            Enter a folder to create a new workspace or select an existing one.
+          </span>
+          <div className="flex flex-row items-center justify-center gap-1">
+            <NautilusDialog
+              onSelect={setPath}
+              trigger={
+                <Button size="icon" variant="outline">
+                  <FolderIcon className="w-4 h-4" />
+                </Button>
+              }
+            />
+            <Input value={path} onChange={(e) => setPath(e.target.value)} />
+            <Button
+              disabled={disabled}
+              size="sm"
+              onClick={() => handleNewWorkspace(path)}
+            >
+              New
+            </Button>
+          </div>
+          <SelectUserWorkspaces disabled={disabled} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function WorkspaceSelectDialog({ open }: { open: boolean }) {
   const { push } = useRouter();
@@ -114,15 +222,23 @@ export default function WorkspaceSelectDialog({ open }: { open: boolean }) {
   );
 }
 
+function Skeleton() {
+  return (
+    <>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i}>
+          <div className="h-8 rounded-sm bg-muted animate-pulse" />
+        </div>
+      ))}
+    </>
+  );
+}
+
 function SelectUserWorkspaces({ disabled }: { disabled: boolean }) {
   // db interactions via tRPC
   // getting the workspaces for the user
-  const {
-    data: userWorkspaces,
-    isError,
-    isLoading,
-    error,
-  } = api.workspaceDbState.getUserWorkspaces.useQuery();
+  const { data: userWorkspaces, isLoading } =
+    api.workspaceDbState.getUserWorkspaces.useQuery();
   const { setWorkspacePath, initNodes, initEdges, updateStateSnapshot } =
     useStoreActions();
 
@@ -144,15 +260,13 @@ function SelectUserWorkspaces({ disabled }: { disabled: boolean }) {
     }
     // sets the workspace path to the store which will trigger the workspace to be loaded
     setWorkspacePath(props.path);
+    toast.success('Workspace loaded');
   };
 
   if (isLoading) {
-    return <></>;
+    return <Skeleton />;
   }
-  if (isError) {
-    console.log('error', error);
-    return <></>;
-  }
+
   if (userWorkspaces) {
     return (
       <>
@@ -161,17 +275,18 @@ function SelectUserWorkspaces({ disabled }: { disabled: boolean }) {
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
+            <div className="relative flex justify-center text-xs lowercase">
               <span className="bg-background px-2 text-muted-foreground">
                 Or continue with
               </span>
             </div>
           </div>
         )}
-        <ScrollArea className="h-[200px] w-[780px] p-4">
+        <ScrollArea className="h-[200px] p-4">
           <div className="flex flex-col gap-1">
             {userWorkspaces.map((workspace) => (
               <Button
+                className="text-xs text-muted-foreground"
                 disabled={disabled}
                 key={workspace.path}
                 variant="outline"

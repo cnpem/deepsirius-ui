@@ -1,10 +1,10 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { PlusIcon, TreeDeciduousIcon, X } from 'lucide-react';
+import { FolderIcon, PlusIcon, X } from 'lucide-react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { FsTreeDialog } from '~/components/fs-treeview';
+import { NautilusDialog } from '~/components/nautilus';
 import { Button } from '~/components/ui/button';
 import {
   Form,
@@ -126,46 +126,37 @@ export function InferenceForm({
         className="flex flex-col gap-4"
         onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
       >
-        <div className="flex flex-row gap-1 items-center">
-          <FsTreeDialog
-            handleSelect={onOutputDirSelect}
-            message={{
-              title: 'Select output directory',
-              description:
-                'Select the path to a valid output directory or paste it down below.',
-            }}
-          >
-            <Button
-              className="mt-2"
-              type="button"
-              variant="outline"
-              size="icon"
-            >
-              <TreeDeciduousIcon className="w-4 h-4" />
-            </Button>
-          </FsTreeDialog>
-          <FormField
-            control={form.control}
-            name="outputDir"
-            render={({ field }) => (
-              <FormItem className="w-full">
-                <FormLabel className={'sr-only'}>Output Directory</FormLabel>
-                <FormDescription className={'sr-only'}>
-                  Select the output directory.
-                </FormDescription>
-                <FormControl>
+        <FormField
+          control={form.control}
+          name="outputDir"
+          render={({ field }) => (
+            <FormItem className="w-full">
+              <FormLabel className={'sr-only'}>Output Directory</FormLabel>
+              <FormDescription className={'sr-only'}>
+                Select the output directory.
+              </FormDescription>
+              <FormControl>
+                <div className="flex flex-row items-center gap-1">
+                  <NautilusDialog
+                    onSelect={onOutputDirSelect}
+                    trigger={
+                      <Button size="icon" variant="outline">
+                        <FolderIcon className="w-4 h-4" />
+                      </Button>
+                    }
+                  />
                   <Input
                     {...field}
                     className="text-ellipsis"
                     placeholder="Output directory"
                     value={toUnixPath(field.value ?? '')}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div>
           {fields.map((field, index) => (
             <FormField
@@ -191,26 +182,24 @@ export function InferenceForm({
               )}
             />
           ))}
-          <FsTreeDialog
-            handleSelect={onSelect}
-            message={{
-              title: 'Select images',
-              description:
-                'Select the path to a valid image file or paste it down below.',
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="mt-1"
-              >
-                <PlusIcon className="w-4 h-4" />
-              </Button>
-              <span className="text-xs text-muted-foreground">Add images</span>
-            </div>
-          </FsTreeDialog>
+          <NautilusDialog
+            onSelect={onSelect}
+            trigger={
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="mt-1"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Add images
+                </span>
+              </div>
+            }
+          />
         </div>
         <FormField
           name="normalize"

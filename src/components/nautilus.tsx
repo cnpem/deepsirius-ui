@@ -1,8 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { on } from 'events';
 import { ArrowLeftIcon, FileIcon, FolderIcon } from 'lucide-react';
 import { ArrowRightIcon } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -62,8 +61,10 @@ const Skeleton = () => {
 };
 
 export const NautilusDialog = ({
+  trigger,
   onSelect,
 }: {
+  trigger: React.ReactNode;
   onSelect: (p: string) => void;
 }) => {
   const [open, setOpen] = useState(false);
@@ -74,11 +75,7 @@ export const NautilusDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="icon" variant="outline">
-          <FolderIcon className="w-4 h-4" />
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="pt-12">
         <Nautilus onSelect={handleSelect} />
       </DialogContent>

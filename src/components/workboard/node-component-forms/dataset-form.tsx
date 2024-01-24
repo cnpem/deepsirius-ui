@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { FsTreeDialog } from '~/components/fs-treeview';
+import { NautilusDialog } from '~/components/nautilus';
 import { Button } from '~/components/ui/button';
 import {
   Form,
@@ -185,28 +185,25 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <HoverCard>
-                      <FsTreeDialog
-                        message={{
-                          title: 'Select image',
-                          description: 'Select the path to a valid image file.',
-                        }}
-                        handleSelect={(path) => onSelectImage(path, index)}
-                      >
-                        <HoverCardTrigger asChild>
-                          <Button
-                            className="data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
-                            data-img={!!field.value}
-                            variant={'outline'}
-                            size={'icon'}
-                          >
-                            {!!field.value ? (
-                              <ImageIcon className="h-4 w-4" />
-                            ) : (
-                              <ImagePlusIcon className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </HoverCardTrigger>
-                      </FsTreeDialog>
+                      <NautilusDialog
+                        trigger={
+                          <HoverCardTrigger asChild>
+                            <Button
+                              className="data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
+                              data-img={!!field.value}
+                              variant={'outline'}
+                              size={'icon'}
+                            >
+                              {!!field.value ? (
+                                <ImageIcon className="h-4 w-4" />
+                              ) : (
+                                <ImagePlusIcon className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </HoverCardTrigger>
+                        }
+                        onSelect={(path) => onSelectImage(path, index)}
+                      />
                       <HoverCardContent className="w-fit">
                         <div className="flex flex-col gap-2">
                           <h4 className="text-sm font-semibold">@image</h4>
@@ -230,28 +227,25 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <HoverCard>
-                      <FsTreeDialog
-                        handleSelect={(path) => onSelectLabel(path, index)}
-                        message={{
-                          title: 'Select label',
-                          description: 'Select the path to a valid label file.',
-                        }}
-                      >
-                        <HoverCardTrigger asChild>
-                          <Button
-                            className="data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
-                            data-img={!!field.value}
-                            variant={'outline'}
-                            size={'icon'}
-                          >
-                            {!!field.value ? (
-                              <BookmarkIcon className="h-4 w-4" />
-                            ) : (
-                              <BookmarkPlusIcon className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </HoverCardTrigger>
-                      </FsTreeDialog>
+                      <NautilusDialog
+                        trigger={
+                          <HoverCardTrigger asChild>
+                            <Button
+                              className="data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
+                              data-img={!!field.value}
+                              variant={'outline'}
+                              size={'icon'}
+                            >
+                              {!!field.value ? (
+                                <BookmarkIcon className="h-4 w-4" />
+                              ) : (
+                                <BookmarkPlusIcon className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </HoverCardTrigger>
+                        }
+                        onSelect={(path) => onSelectLabel(path, index)}
+                      />
                       <HoverCardContent className="w-fit">
                         <div className="flex flex-col gap-2">
                           <h4 className="text-sm font-semibold">@label</h4>

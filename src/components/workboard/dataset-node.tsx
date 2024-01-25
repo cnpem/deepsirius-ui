@@ -340,7 +340,6 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                 </div>
               </div>
               <hr />
-              <p className="text-sm font-semibold">Data</p>
               <div className="flex flex-col gap-1">
                 <ScrollArea className="h-[125px]">
                   {formData?.data.map((d, i) => (

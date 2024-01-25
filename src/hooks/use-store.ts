@@ -25,6 +25,9 @@ import { persist } from 'zustand/middleware';
 import { DatasetNode } from '~/components/workboard/dataset-node';
 import { InferenceNode } from '~/components/workboard/inference-node';
 import { NetworkNode } from '~/components/workboard/network-node';
+import type { FormType as DatasetForm } from '~/components/workboard/node-component-forms/dataset-form';
+import type { FormType as InferenceForm } from '~/components/workboard/node-component-forms/inference-form';
+import type { FormType as NetworkForm } from '~/components/workboard/node-component-forms/network-form';
 import { PlusOneNode } from '~/components/workboard/plusone-node';
 
 export const nodeTypes: NodeTypes = {
@@ -55,6 +58,7 @@ export type NodeData = {
   jobStatus?: string;
   message?: string;
   updatedAt?: string;
+  form?: InferenceForm | NetworkForm | DatasetForm;
 };
 
 type RFState = {

@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent } from '~/components/ui/card';
+import { ScrollArea } from '~/components/ui/scroll-area';
 import {
   Sheet,
   SheetContent,
@@ -34,7 +35,9 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     setOpen(formEditState);
   }, [formEditState]);
 
-  const [formData, setFormData] = useState<FormType | undefined>(undefined);
+  const [formData, setFormData] = useState<FormType | undefined>(
+    nodeProps.data.form as FormType,
+  );
 
   const updateNodeInternals = useUpdateNodeInternals();
 
@@ -130,6 +133,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             message: `Job ${jobId} submitted in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
             )}`,
+            form: formData,
           },
         });
         updateNodeInternals(nodeProps.id);
@@ -310,8 +314,47 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                     {nodeProps.data.updatedAt}
                   </p>
                 </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">classes</p>
+                  <p className="text-violet-600 text-end">
+                    {formData?.classes}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">sample size</p>
+                  <p className="text-violet-600 text-end">
+                    {formData?.sampleSize}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">strategy</p>
+                  <p className="text-violet-600 text-end">
+                    {formData?.strategy}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">patch size</p>
+                  <p className="text-violet-600 text-end">
+                    {formData?.patchSize}
+                  </p>
+                </div>
               </div>
               <hr />
+              <p className="text-sm font-semibold">Data</p>
+              <div className="flex flex-col gap-1">
+                <ScrollArea className="h-[125px]">
+                  {formData?.data.map((d, i) => (
+                    <div key={i} className="flex flex-col items-start">
+                      <p className="font-medium text-sm text-ellipsis bg-muted px-2 py-1 w-full">
+                        {d.image.split('/').slice(-1)}
+                      </p>
+                      <p className="font-medium  text-sm text-ellipsis bg-violet-200 dark:bg-violet-900 px-2 py-1 w-full">
+                        {d.label.split('/').slice(-1)}
+                      </p>
+                    </div>
+                  ))}
+                </ScrollArea>
+              </div>
             </SheetContent>
           </Sheet>
         </CardContent>
@@ -357,8 +400,8 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                 <SheetTitle>Retry</SheetTitle>
               </SheetHeader>
               <DatasetForm
-                name={formData?.datasetName || ''}
-                data={formData?.data || []}
+                name={formData?.datasetName ?? ''}
+                data={formData?.data ?? []}
                 onSubmitHandler={handleSubmitJob}
               />
             </SheetContent>

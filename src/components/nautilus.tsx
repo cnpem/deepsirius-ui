@@ -1,5 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeftIcon, FileIcon, FolderIcon } from 'lucide-react';
+import {
+  ArrowLeftIcon,
+  FileIcon,
+  FolderIcon,
+  LayoutGridIcon,
+  LayoutListIcon,
+} from 'lucide-react';
 import { ArrowRightIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -15,6 +21,7 @@ import {
   FormMessage,
 } from '~/components/ui/form';
 import { env } from '~/env.mjs';
+import { cn, toUnixPath } from '~/lib/utils';
 import { api } from '~/utils/api';
 
 import { Button } from './ui/button';
@@ -38,15 +45,14 @@ const shortcuts: Shortcut[] = [
   },
 ];
 
-const toUnixPath = (path: string) =>
-  path.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '');
-
 const FormSchema = z.object({
   path: z
     .string()
     .nonempty()
     .transform((v) => toUnixPath(v)),
 });
+
+type Display = 'grid' | 'list';
 
 const Skeleton = () => {
   return (
@@ -88,10 +94,12 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
   const [history, setHistory] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState('');
+  const [display, setDisplay] = useState<Display>('grid');
 
   const { data, isLoading } = api.filesystem.ls.useQuery(
     { path },
     {
+      retry: false,
       onSuccess: () => {
         form.setValue('path', path);
         setSearch('');
@@ -129,6 +137,9 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
     onSelect(p);
     toast.success(`Selected ${p}`);
   }
+
+  const gridClass = 'grid grid-flow-row grid-cols-5 gap-1 p-2';
+  const listClass = 'flex flex-col gap-1 p-2';
 
   return (
     <div className="flex flex-col gap-4">
@@ -204,16 +215,30 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
         </form>
       </Form>
       <hr />
-      <Input
-        value={search}
-        onChange={handleInput}
-        placeholder="Search files and folders"
-      />
+      <div className="flex flex-row gap-2">
+        <Input
+          value={search}
+          onChange={handleInput}
+          placeholder="Search files and folders"
+        />
+        <Button
+          title="Change layout"
+          size="icon"
+          variant="outline"
+          onClick={() => setDisplay(display === 'grid' ? 'list' : 'grid')}
+        >
+          {display === 'grid' ? (
+            <LayoutGridIcon className="w-4 h-4" />
+          ) : (
+            <LayoutListIcon className="w-4 h-4" />
+          )}
+        </Button>
+      </div>
       {isLoading ? (
         <Skeleton />
       ) : (
         <ScrollArea className="h-[35vh]">
-          <div className="grid grid-flow-row grid-cols-5 gap-1 p-2">
+          <div className={display === 'grid' ? gridClass : listClass}>
             {filteredData?.map((item) => (
               <div
                 data-selected={item.name === selected}
@@ -230,7 +255,10 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
                   }
                 }}
                 key={item.name}
-                className="flex flex-col items-center rounded-lg px-2 py-1 h-fit hover:bg-violet-100 data-[selected=true]:hover:bg-violet-100 data-[selected=true]:bg-violet-200 hover:cursor-pointer dark:hover:bg-violet-800 dark:data-[selected=true]:hover:bg-violet-800 dark:data-[selected=true]:bg-violet-900"
+                className={cn(
+                  'flex items-center rounded-lg px-2 py-1 h-fit hover:bg-violet-100 data-[selected=true]:hover:bg-violet-100 data-[selected=true]:bg-violet-200 hover:cursor-pointer dark:hover:bg-violet-800 dark:data-[selected=true]:hover:bg-violet-800 dark:data-[selected=true]:bg-violet-900',
+                  display === 'grid' ? 'flex-col' : 'flex-row gap-2',
+                )}
               >
                 {item.type === 'isDirectory' && (
                   <FolderIcon className="w-10 h-10 fill-muted stroke-1 dark:stroke-background" />

@@ -107,7 +107,9 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     api.remoteProcess.submitNetwork.useMutation();
   const { onUpdateNode, getSourceData } = useStoreActions();
 
-  const [formData, setFormData] = useState<FormType | undefined>(undefined);
+  const [formData, setFormData] = useState<FormType | undefined>(
+    nodeProps.data.form as FormType,
+  );
 
   type NetworkFormSubmitType = 'create' | 'retry' | 'finetune';
 
@@ -149,6 +151,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             message: `Job ${jobId} submitted in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
             )}`,
+            form: formData,
           },
         });
         updateNodeInternals(nodeProps.id);

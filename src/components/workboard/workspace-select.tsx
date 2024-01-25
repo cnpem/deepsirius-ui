@@ -94,7 +94,7 @@ export function WorkspaceSelector() {
         Home
       </Link>
 
-      <div className="rounded-sm p-8 shadow-xl border">
+      <div className="rounded-sm p-8 shadow-xl border h-fit">
         <div className="flex flex-col gap-4">
           <span className="font-semibold">Select workspace</span>
           <span className="text-sm text-muted-foreground">
@@ -271,37 +271,39 @@ function SelectUserWorkspaces({ disabled }: { disabled: boolean }) {
     return (
       <>
         {userWorkspaces.length > 0 && (
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+          <>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs lowercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-xs lowercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
+            <ScrollArea className="h-44 p-4">
+              <div className="flex flex-col gap-1">
+                {userWorkspaces.map((workspace) => (
+                  <Button
+                    className="text-xs text-muted-foreground"
+                    disabled={disabled}
+                    key={workspace.path}
+                    variant="outline"
+                    onClick={() =>
+                      void handleSelectWorkspace({
+                        path: workspace.path,
+                        state: workspace.state,
+                      })
+                    }
+                  >
+                    {workspace.path}
+                  </Button>
+                ))}
+              </div>
+            </ScrollArea>
+          </>
         )}
-        <ScrollArea className="h-[200px] p-4">
-          <div className="flex flex-col gap-1">
-            {userWorkspaces.map((workspace) => (
-              <Button
-                className="text-xs text-muted-foreground"
-                disabled={disabled}
-                key={workspace.path}
-                variant="outline"
-                onClick={() =>
-                  void handleSelectWorkspace({
-                    path: workspace.path,
-                    state: workspace.state,
-                  })
-                }
-              >
-                {workspace.path}
-              </Button>
-            ))}
-          </div>
-        </ScrollArea>
       </>
     );
   }

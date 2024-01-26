@@ -11,14 +11,11 @@ import {
 } from 'next-auth';
 import { type DefaultJWT } from 'next-auth/jwt';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import keygen from 'ssh-keygen-lite';
 import { env } from '~/env.mjs';
 
 import { prisma } from './db';
-import {
-  copyPublicKeyToRemote,
-  generateKeyPairPromise,
-  removePublicKeyByComment,
-} from './remote-job';
+import { ssh } from './ssh';
 
 // TODO: Auth is breaking when the user's credentials are ok but the service can't ssh into SSH_HOST.
 // This will happen when the user doesn't have a scheduled proposal for the day, so its group is not allowed to ssh into SSH_HOST.
@@ -84,20 +81,6 @@ export const authOptions: NextAuthOptions = {
         }
         const { email, password } = credentials;
         const name = email.substring(0, email.lastIndexOf('@'));
-        // // WARNING: BYPASS certificate validation if user e-mail is test@deepsirius
-        // if (email === 'test@deepsirius') {
-        //   return new Promise((resolve) => {
-        //     const user = {
-        //       id: name,
-        //       name: name,
-        //       email: email,
-        //       password: password,
-        //     } as User;
-        //     // for debugging, logs id name and email of the user
-        //     console.log('WARNING: bypassing LDAP authentication with test credentials:', {id: user.id, name: user.name, email: user.email});
-        //     resolve(user);
-        //   });
-        // }
         // You might want to pull this call out so we're not making a new LDAP client on every login attemp
         // tlsOption: https://stackoverflow.com/questions/31861109/tls-what-exactly-does-rejectunauthorized-mean-for-me
         const client = ldap
@@ -139,34 +122,55 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async jwt({ token, user }) {
-      // // WARNING: BYPASS ssh procedures if user e-mail is test@deepsirius
-      // if (user?.email === 'test@deepsirius') {
-      //   return token;
-      // }
       if (user && user.name && user.password) {
         const comment = `${user.name}@deepsirius`;
         const { name: username, password } = user;
         // clean up old public key
-        const removePromise = removePublicKeyByComment(
-          username,
-          env.SSH_HOST,
-          password,
-          comment,
-        );
-        const pairPromise = generateKeyPairPromise({
-          comment: comment,
-          passphrase: env.PRIVATE_KEY_PASSPHRASE,
+        const connection = await ssh.connect({
+          username: username,
+          password: password,
+          host: env.SSH_HOST,
         });
 
-        const [, pair] = await Promise.all([removePromise, pairPromise]);
+        const sftp = await connection.requestSFTP();
+
+        const keys = await new Promise<string>((resolve, reject) => {
+          sftp.readFile('.ssh/authorized_keys', (err, keys) => {
+            if (err) {
+              reject(err);
+            }
+            resolve(keys.toString());
+          });
+        });
+        const updatedKeys = keys
+          .split('\n')
+          .filter((key) => !key.includes(comment))
+          .join('\n');
+
+        //generate new key pair
+        const pair = await keygen({
+          // sshKeygenPath: 'ssh-keygen',
+          // location: path.join(homedir(), '.ssh', `${comment}_rsa`),
+          type: 'rsa',
+          read: true,
+          force: true,
+          destroy: false,
+          comment: comment,
+          password: env.PRIVATE_KEY_PASSPHRASE,
+          size: '2048',
+          format: 'PEM',
+        });
 
         // copy new public key
-        await copyPublicKeyToRemote(
-          pair.pubKey,
-          username,
-          env.SSH_HOST,
-          password,
-        );
+        const newKeys = updatedKeys + '\n' + pair.pubKey;
+        await new Promise<void>((resolve, reject) => {
+          sftp.writeFile('.ssh/authorized_keys', newKeys, (err) => {
+            if (err) {
+              reject(err);
+            }
+            resolve(console.log('authorized_keys updated'));
+          });
+        });
 
         token.privateKey = pair.key;
         token.email = user.email;

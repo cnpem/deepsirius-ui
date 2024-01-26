@@ -3,13 +3,14 @@
 // using slurm and ssh so they can be run with the user's credentials
 // some process require running apptainer/singularity containers on the server, while others can run simple bash scripts for creating and moving files and directories
 import { TRPCError } from '@trpc/server';
+import fs from 'fs';
 import { z } from 'zod';
 import { datasetSchema } from '~/components/workboard/node-component-forms/dataset-form';
 import { inferenceSchema } from '~/components/workboard/node-component-forms/inference-form';
 import { networkSchema } from '~/components/workboard/node-component-forms/network-form';
 import { env } from '~/env.mjs';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
-import { submitJob } from '~/server/remote-job';
+import { createTRPCRouter, protectedSSHProcedure } from '~/server/api/trpc';
+import { createTempScript } from '~/server/remote-job';
 
 const datasetJobSchema = z.object({
   workspacePath: z.string(),
@@ -30,12 +31,9 @@ const inferenceJobSchema = z.object({
 });
 
 export const remoteProcessRouter = createTRPCRouter({
-  submitNewWorkspace: protectedProcedure
+  submitNewWorkspace: protectedSSHProcedure
     .input(z.object({ workspacePath: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      // context info
-      const privateKey = ctx.privateKey ?? '';
-      const username = ctx.session.user.name ?? '';
       // job configuration
       const jobName = 'deepsirius-workspace';
       const ntasks = 1;
@@ -53,37 +51,32 @@ export const remoteProcessRouter = createTRPCRouter({
         `#SBATCH --partition=${partition}`,
         `${command}`,
       ].join('\n');
-      // submit the job and get the jobId
-      const jobId = await submitJob(
-        privateKey,
-        env.PRIVATE_KEY_PASSPHRASE,
-        username,
-        env.SSH_HOST,
-        sbatchContent,
-      )
-        .finally(() => {
-          console.log('finally');
-        })
-        .catch((err) => {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: `Failed to create Workspace. ${err as string}`,
-          });
-        });
-      if (!jobId) {
+
+      const connection = ctx.connection;
+
+      const { tempDir, scriptPath } = createTempScript(sbatchContent);
+      const scriptName = 'deepSirius-dataset.sbatch';
+
+      await connection.putFile(scriptPath, scriptName);
+      fs.rmdirSync(tempDir, { recursive: true });
+
+      const { stdout, stderr } = await connection.execCommand(
+        `sbatch --parsable ${scriptName}`,
+      );
+
+      if (stderr) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to create Workspace. Job wasnt created.`,
+          message: stderr,
         });
       }
+
+      const jobId = stdout.trim();
       return { jobId: jobId };
     }),
-  submitDataset: protectedProcedure
+  submitDataset: protectedSSHProcedure
     .input(datasetJobSchema)
     .mutation(async ({ ctx, input }) => {
-      // context info
-      const privateKey = ctx.privateKey ?? '';
-      const username = ctx.session.user.name ?? '';
       // job configuration
       const jobName = 'deepsirius-dataset';
       const ntasks = 1;
@@ -152,27 +145,32 @@ export const remoteProcessRouter = createTRPCRouter({
         `#SBATCH --partition=${partition}`,
         `${command}`,
       ].join('\n');
-      const jobId = await submitJob(
-        privateKey,
-        env.PRIVATE_KEY_PASSPHRASE,
-        username,
-        env.SSH_HOST,
-        sbatchContent,
-      ).catch((err) => {
-        console.log('catch on tRPC:', err);
+
+      const connection = ctx.connection;
+
+      const { tempDir, scriptPath } = createTempScript(sbatchContent);
+      const scriptName = 'deepSirius-dataset.sbatch';
+
+      await connection.putFile(scriptPath, scriptName);
+      fs.rmdirSync(tempDir, { recursive: true });
+
+      const { stdout, stderr } = await connection.execCommand(
+        `sbatch --parsable ${scriptName}`,
+      );
+
+      if (stderr) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to create Dataset. ${err as string}`,
+          message: stderr,
         });
-      });
+      }
+
+      const jobId = stdout.trim();
       return { jobId: jobId };
     }),
-  submitNetwork: protectedProcedure
+  submitNetwork: protectedSSHProcedure
     .input(networkJobSchema)
     .mutation(async ({ ctx, input }) => {
-      // context info
-      const privateKey = ctx.privateKey ?? '';
-      const username = ctx.session.user.name ?? '';
       // job configuration
       const jobName = 'deepsirius-network';
       const ntasks = 1;
@@ -210,21 +208,31 @@ export const remoteProcessRouter = createTRPCRouter({
         `#SBATCH --gres=gpu:${gpus}`,
         `${command}`,
       ].join('\n');
-      const jobId = await submitJob(
-        privateKey,
-        env.PRIVATE_KEY_PASSPHRASE,
-        username,
-        env.SSH_HOST,
-        sbatchContent,
+      const connection = ctx.connection;
+
+      const { tempDir, scriptPath } = createTempScript(sbatchContent);
+      const scriptName = 'deepSirius-network.sbatch';
+
+      await connection.putFile(scriptPath, scriptName);
+      fs.rmdirSync(tempDir, { recursive: true });
+
+      const { stdout, stderr } = await connection.execCommand(
+        `sbatch --parsable ${scriptName}`,
       );
+
+      if (stderr) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: stderr,
+        });
+      }
+
+      const jobId = stdout.trim();
       return { jobId: jobId };
     }),
-  submitInference: protectedProcedure
+  submitInference: protectedSSHProcedure
     .input(inferenceJobSchema)
     .mutation(async ({ ctx, input }) => {
-      // context info
-      const privateKey = ctx.privateKey ?? '';
-      const username = ctx.session.user.name ?? '';
       // job configuration
       const jobName = 'deepsirius-inference';
       const ntasks = 1;
@@ -265,13 +273,26 @@ export const remoteProcessRouter = createTRPCRouter({
         `#SBATCH --gres=gpu:${gpus}`,
         `${command}`,
       ].join('\n');
-      const jobId = await submitJob(
-        privateKey,
-        env.PRIVATE_KEY_PASSPHRASE,
-        username,
-        env.SSH_HOST,
-        sbatchContent,
+      const connection = ctx.connection;
+
+      const { tempDir, scriptPath } = createTempScript(sbatchContent);
+      const scriptName = 'deepSirius-dataset.sbatch';
+
+      await connection.putFile(scriptPath, scriptName);
+      fs.rmdirSync(tempDir, { recursive: true });
+
+      const { stdout, stderr } = await connection.execCommand(
+        `sbatch --parsable ${scriptName}`,
       );
+
+      if (stderr) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: stderr,
+        });
+      }
+
+      const jobId = stdout.trim();
       return { jobId: jobId };
     }),
 });

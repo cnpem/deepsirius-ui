@@ -62,7 +62,10 @@ export const filesystemRouter = createTRPCRouter({
         ] as DirentMethods[];
         for (const method of methods) {
           if (file[method]()) {
-            fileWithTypes.push({ name: file.name, type: method });
+            fileWithTypes.push({
+              name: file.name,
+              type: method,
+            });
             break;
           }
         }

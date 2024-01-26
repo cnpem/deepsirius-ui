@@ -111,6 +111,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
       },
     },
   );
+
   const filteredData = data?.files.filter((item) =>
     item.name.toLowerCase().includes(search),
   );

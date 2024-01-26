@@ -28,8 +28,10 @@ import { type Session } from 'next-auth';
 import { getToken } from 'next-auth/jwt';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
+import { env } from '~/env.mjs';
 import { getServerAuthSession } from '~/server/auth';
 import { prisma } from '~/server/db';
+import { ssh } from '~/server/ssh';
 
 type CreateContextOptions = {
   session: Session | null;
@@ -51,6 +53,7 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
     session: opts.session,
     privateKey: opts.privateKey,
     prisma,
+    ssh,
   };
 };
 
@@ -133,3 +136,39 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+
+const ensureSSHConnection = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.session || !ctx.session.user) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+
+  if (!ctx.privateKey) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+
+  if (!ctx.session.user.name) {
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  }
+
+  const connection = await ctx.ssh.connect({
+    username: ctx.session.user.name,
+    privateKey: ctx.privateKey,
+    host: env.SSH_HOST,
+    port: 22,
+    passphrase: env.PRIVATE_KEY_PASSPHRASE,
+  });
+
+  const res = await next({
+    ctx: {
+      username: ctx.session.user.name,
+      privateKey: ctx.privateKey,
+      connection,
+    },
+  });
+
+  connection.dispose();
+
+  return res;
+});
+
+export const protectedSSHProcedure = publicProcedure.use(ensureSSHConnection);

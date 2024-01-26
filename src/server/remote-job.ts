@@ -126,7 +126,7 @@ export function cancelJob(
 }
 
 // Function to create a temporary script file with sbatch content
-function createTempScript(sbatchContent: string) {
+export function createTempScript(sbatchContent: string) {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'deepsirius-'));
   const scriptPath = path.join(tempDir, 'temp_script.sbatch');
   fs.writeFileSync(scriptPath, sbatchContent, { mode: '0700' });

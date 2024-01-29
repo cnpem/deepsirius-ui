@@ -43,6 +43,7 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
   interface JWT extends DefaultJWT {
     privateKey?: string;
+    storageApiCookie?: string;
   }
 }
 
@@ -76,8 +77,7 @@ export const authOptions: NextAuthOptions = {
         try {
           certificate = fs.readFileSync(env.CA_CERT);
         } catch (err) {
-          console.log('Error: CA_CERT not found');
-          return null;
+          throw new Error('INTERNAL SERVER ERROR: CA certificate not found');
         }
         const { email, password } = credentials;
         const name = email.substring(0, email.lastIndexOf('@'));
@@ -88,16 +88,15 @@ export const authOptions: NextAuthOptions = {
             url: env.LDAP_URI,
             tlsOptions: { ca: [certificate] },
           })
-          .on('error', (error) => {
-            console.log('ldap.createClient error', error);
-            return new Error('Error ldap.createClient');
+          .on('error', () => {
+            throw new Error('INTERNAL SERVER ERROR: LDAP create client failed');
           });
+
         // Essentially promisify the LDAPJS client.bind function
         return new Promise((resolve, reject) => {
           client.bind(credentials.email, credentials.password, (error) => {
             if (error) {
-              console.log('client.bind error:', error);
-              reject(new Error('CredentialsSignin'));
+              reject(new Error('Invalid credentials'));
             } else {
               resolve({
                 id: name,
@@ -123,6 +122,31 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user }) {
       if (user && user.name && user.password) {
+        //storage api setup
+        const params = new URLSearchParams({ key: env.STORAGE_API_KEY });
+        const authUrl = `${
+          env.STORAGE_API_URL
+        }/api/session?${params.toString()}`;
+
+        const res = await fetch(authUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'sftp',
+            hostname: env.STORAGE_API_URL.split('//')[1],
+            path: '/ibira',
+            username: user.name,
+            password: user.password,
+          }),
+        });
+
+        const resCookie = res.headers.get('set-cookie');
+        const authCookie = resCookie?.split(';')[0];
+        token.storageApiCookie = authCookie;
+
+        //ssh setup
         const comment = `${user.name}@deepsirius`;
         const { name: username, password } = user;
         // clean up old public key

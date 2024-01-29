@@ -36,6 +36,7 @@ import { ssh } from '~/server/ssh';
 type CreateContextOptions = {
   session: Session | null;
   privateKey: string | undefined;
+  storageApiCookie: string | undefined;
 };
 
 /**
@@ -52,6 +53,7 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
   return {
     session: opts.session,
     privateKey: opts.privateKey,
+    storageApiCookie: opts.storageApiCookie,
     prisma,
     ssh,
   };
@@ -70,10 +72,12 @@ export const createTRPCContext = async (opts: CreateNextContextOptions) => {
   const session = await getServerAuthSession({ req, res });
   const token = await getToken({ req });
   const privateKey = token?.privateKey;
+  const storageApiCookie = token?.storageApiCookie;
 
   return createInnerTRPCContext({
     session,
     privateKey,
+    storageApiCookie,
   });
 };
 

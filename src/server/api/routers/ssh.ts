@@ -1,72 +1,73 @@
 import { TRPCError } from '@trpc/server';
-import { type FileEntryWithStats } from 'ssh2';
 import { z } from 'zod';
-import { createTRPCRouter, protectedSSHProcedure } from '~/server/api/trpc';
-import { type ErrnoException } from '~/server/remote-job';
-
-type DirentMethods =
-  | 'isBlockDevice'
-  | 'isCharacterDevice'
-  | 'isDirectory'
-  | 'isFIFO'
-  | 'isFile'
-  | 'isSocket'
-  | 'isSymbolicLink';
+import { env } from '~/env.mjs';
+import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 
 export const sshRouter = createTRPCRouter({
-  ls: protectedSSHProcedure
+  ls: protectedProcedure
     .input(
-      z.object({
-        path: z.string(),
-      }),
+      z
+        .object({
+          path: z.string(),
+        })
+        .transform((data) => {
+          return {
+            path: data.path.replace(/^\/ibira/, ''),
+          };
+        }),
     )
     .query(async ({ ctx, input }) => {
-      const connection = ctx.connection;
+      const cookie = ctx.storageApiCookie;
+      if (!cookie) throw new TRPCError({ code: 'UNAUTHORIZED' });
+
       const path = input.path;
+      const params = new URLSearchParams({
+        key: env.STORAGE_API_KEY,
+        path: path || '/',
+      });
+      const url = `${env.STORAGE_API_URL}/api/files/ls?${params.toString()}`;
 
-      const sftp = await connection.requestSFTP();
-
-      const files = await new Promise<FileEntryWithStats[]>(
-        (resolve, reject) => {
-          sftp.readdir(path, (err, list) => {
-            if (err) {
-              const error = err as ErrnoException;
-              connection.dispose();
-              reject(
-                new TRPCError({
-                  code: 'UNAUTHORIZED',
-                  message: error.message,
-                }),
-              );
-            }
-            resolve(list);
-          });
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Cookie: cookie,
         },
-      );
-      const noHiddenFiles = files.filter(
-        (file) => !file.filename.startsWith('.'),
-      );
-      const filesWithTypes: { name: string; type: DirentMethods }[] = [];
-      // get file types
-      for (const file of noHiddenFiles) {
-        const methods = [
-          'isBlockDevice',
-          'isCharacterDevice',
-          'isDirectory',
-          'isFIFO',
-          'isFile',
-          'isSocket',
-          'isSymbolicLink',
-        ] as DirentMethods[];
-        for (const method of methods) {
-          if (file.attrs[method]()) {
-            filesWithTypes.push({
-              name: file.filename,
-              type: method,
-            });
-          }
-        }
+      });
+
+      const data: unknown = await res.json();
+
+      if (!res.ok) {
+        const error = z
+          .object({
+            status: z.string(),
+            message: z.string(),
+          })
+          .parse(data);
+
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error.message,
+        });
       }
-      return { files: filesWithTypes };
+
+      const files = z
+        .object({
+          status: z.string(),
+          results: z.array(
+            z.object({
+              name: z.string(),
+              type: z.string(),
+              size: z.number(),
+              time: z.number(),
+            }),
+          ),
+        })
+        .parse(data);
+
+      const noHiddenFiles = files.results.filter(
+        (file) => !file.name.startsWith('.'),
+      );
+
+      return { files: noHiddenFiles };
     }),
 });

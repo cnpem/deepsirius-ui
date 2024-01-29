@@ -1,30 +1,21 @@
 import { ArrowLeftIcon, FolderIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { type Edge, type Node } from 'reactflow';
 import { toast } from 'sonner';
 import { Button, buttonVariants } from '~/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '~/components/ui/dialog';
 import { env } from '~/env.mjs';
 import { type NodeData, useStoreActions } from '~/hooks/use-store';
 import { cn } from '~/lib/utils';
 import { api } from '~/utils/api';
 
-import { FsTree } from '../fs-treeview';
 import { NautilusDialog } from '../nautilus';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 
 export function WorkspaceSelector() {
   const { setWorkspacePath } = useStoreActions();
-  const [path, setPath] = useState(env.NEXT_PUBLIC_TREE_PATH);
+  const [path, setPath] = useState(env.NEXT_PUBLIC_STORAGE_PATH);
   const [jobId, setJobId] = useState('');
   const [disabled, setDisabled] = useState(false);
 
@@ -122,103 +113,6 @@ export function WorkspaceSelector() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function WorkspaceSelectDialog({ open }: { open: boolean }) {
-  const { push } = useRouter();
-  const { setWorkspacePath } = useStoreActions();
-
-  const [path, setPath] = useState(env.NEXT_PUBLIC_TREE_PATH);
-  const [jobId, setJobId] = useState('');
-  const [disabled, setDisabled] = useState(false);
-
-  const { mutate: registerWorkspaceInDb } =
-    api.workspaceDbState.createWorkspace.useMutation({
-      onSuccess: (data) => {
-        toast.success('New workspace registered');
-        // finally, set the workspace path in the store if the db registration was successful
-        setWorkspacePath(data.path);
-        setDisabled(false);
-      },
-      onError: () => {
-        toast.error('Error registering workspace');
-        setDisabled(false);
-      },
-    });
-
-  const { mutate: submitNewWorkspace } =
-    api.remoteProcess.submitNewWorkspace.useMutation({
-      onSuccess: (data) => {
-        setJobId(data.jobId);
-      },
-      onError: () => {
-        toast.error('Error creating workspace');
-        setDisabled(false);
-      },
-    });
-
-  const {} = api.remotejob.checkStatus.useQuery(
-    { jobId },
-    {
-      refetchOnMount: false,
-      enabled: !!jobId,
-      refetchInterval: 5000,
-      refetchIntervalInBackground: true,
-      onSuccess: (data) => {
-        console.log('checkStatus.onSuccess', data);
-        if (data.jobStatus === 'COMPLETED' && !!path) {
-          // disable refetching until there is a new job
-          setJobId('');
-          registerWorkspaceInDb({ path: path });
-          toast.success('Workspace created');
-        } else if (data.jobStatus === 'FAILED') {
-          toast.error('Error creating workspace');
-          setDisabled(false);
-        }
-      },
-    },
-  );
-
-  const handleNewWorkspace = (path: string) => {
-    setPath(path);
-    setDisabled(true);
-    submitNewWorkspace({ workspacePath: path });
-    toast('Creating workspace...');
-  };
-
-  const handleOpenChange = async (open: boolean) => {
-    if (!open) {
-      await push('/');
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={(e) => void handleOpenChange(e)}>
-      <DialogContent className="sm:max-w-[825px]">
-        <DialogHeader>
-          <DialogTitle>Select workspace path</DialogTitle>
-          <DialogDescription>
-            Select an existing workspace or create a new one.
-          </DialogDescription>
-        </DialogHeader>
-        <FsTree
-          hidden={disabled}
-          path={path}
-          handlePathChange={setPath}
-          width={780}
-          height={250}
-        />
-        <Button
-          className="w-full"
-          onClick={() => handleNewWorkspace(path)}
-          disabled={disabled}
-        >
-          New
-        </Button>
-        <SelectUserWorkspaces disabled={disabled} />
-      </DialogContent>
-    </Dialog>
   );
 }
 

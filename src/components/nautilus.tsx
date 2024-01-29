@@ -7,7 +7,7 @@ import {
   LayoutListIcon,
 } from 'lucide-react';
 import { ArrowRightIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -37,7 +37,7 @@ type Shortcut = {
 const shortcuts: Shortcut[] = [
   {
     name: 'ibirá',
-    path: env.NEXT_PUBLIC_TREE_PATH,
+    path: env.NEXT_PUBLIC_STORAGE_PATH,
   },
   {
     name: 'home',
@@ -90,27 +90,20 @@ export const NautilusDialog = ({
 };
 
 const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
-  const [path, setPath] = useState(env.NEXT_PUBLIC_TREE_PATH);
+  const [path, setPath] = useState(env.NEXT_PUBLIC_STORAGE_PATH);
   const [history, setHistory] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState('');
   const [display, setDisplay] = useState<Display>('grid');
 
-  const { data, isLoading } = api.filesystem.ls.useQuery(
-    { path },
-    {
-      retry: false,
-      onSuccess: () => {
-        form.setValue('path', path);
-        setSearch('');
-        setSelected('');
-      },
-      onError: (error) => {
-        toast.error(error.message);
-        setPath(history.pop() ?? env.NEXT_PUBLIC_TREE_PATH);
-      },
-    },
-  );
+  const { data, isLoading, error } = api.ssh.ls.useQuery({ path });
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message);
+      setPath(history.pop() ?? env.NEXT_PUBLIC_STORAGE_PATH);
+    }
+  }, [error, history]);
 
   const filteredData = data?.files.filter((item) =>
     item.name.toLowerCase().includes(search),
@@ -126,6 +119,14 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
       path: path,
     },
   });
+
+  useEffect(() => {
+    if (data) {
+      form.setValue('path', path);
+      setSearch('');
+      setSelected('');
+    }
+  }, [data, form, path]);
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     if (data.path === path) return;
@@ -247,7 +248,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
                   setSelected(item.name);
                 }}
                 onDoubleClick={() => {
-                  if (item.type === 'isDirectory') {
+                  if (item.type === 'directory') {
                     const newPath = `${path}/${item.name}`;
                     setHistory((prev) => [...prev, path]);
                     setPath(newPath);
@@ -261,10 +262,10 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
                   display === 'grid' ? 'flex-col' : 'flex-row gap-2',
                 )}
               >
-                {item.type === 'isDirectory' && (
+                {item.type === 'directory' && (
                   <FolderIcon className="w-10 h-10 fill-muted stroke-1 dark:stroke-background" />
                 )}
-                {item.type === 'isFile' && (
+                {item.type === 'file' && (
                   <FileIcon className="w-10 h-10 fill-muted stroke-1 dark:stroke-background" />
                 )}
                 <span className="select-none text-xs text-muted-foreground text-center text-balance break-all">

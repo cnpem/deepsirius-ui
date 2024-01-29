@@ -1,14 +1,16 @@
-import { FishIcon } from 'lucide-react';
+import { ArrowLeftIcon } from 'lucide-react';
 import type { GetServerSidePropsContext } from 'next';
 import { signIn } from 'next-auth/react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { Layout } from '~/components/layout';
-import { Button } from '~/components/ui/button';
+import { Button, buttonVariants } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import { cn } from '~/lib/utils';
 import { getServerAuthSession } from '~/server/auth';
 
 type FormData = {
@@ -19,8 +21,6 @@ function Form() {
   const router = useRouter();
   const query = router.query;
   const callbackUrl = (query.callbackUrl as string) || '/workboard';
-  // const callbackUrl = '/workboard';
-  const [error, setError] = useState('');
 
   const {
     register,
@@ -28,20 +28,20 @@ function Form() {
     formState: { errors },
   } = useForm<FormData>();
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    try {
-      const res = await signIn('credentials', {
-        email: data.email,
-        password: data.password,
-        callbackUrl: callbackUrl,
-        redirect: false,
-      });
-      if (!res?.error) {
-        await router.push(callbackUrl);
-      } else {
-        setError('Invalid email or password!');
-      }
-    } catch (err) {
-      console.log(err);
+    toast.info('Signing in...');
+    const res = await signIn('credentials', {
+      email: data.email,
+      password: data.password,
+      callbackUrl: callbackUrl,
+      redirect: false,
+    });
+    if (res?.ok) {
+      toast.success('Sign in successfully!');
+      await router.push(callbackUrl);
+    }
+    if (!res?.ok) {
+      const error = res?.error;
+      toast.error(error);
     }
   };
 
@@ -52,18 +52,10 @@ function Form() {
       // See: https://github.com/orgs/react-hook-form/discussions/8020#discussioncomment-3362300
       onSubmit={(...args) => void handleSubmit(onSubmit)(...args)}
     >
-      <div className="grid items-center justify-center">
-        <FishIcon />
-      </div>
       <h1 className="mb-2 flex justify-center text-xl font-semibold">
         <span className="text-fuchsia-600 dark:text-fuchsia-500">Deep</span>
         Sirius
       </h1>
-      {error && (
-        <div className="flex w-full items-center justify-center rounded-sm bg-red-700 font-semibold text-white">
-          <p role="alert">{error}</p>
-        </div>
-      )}
       <div className="grid w-full items-center gap-1.5">
         <Label htmlFor="email">Email</Label>
         {errors.email && (
@@ -72,6 +64,7 @@ function Form() {
           </p>
         )}
         <Input
+          id="email"
           placeholder="user.name@example.com"
           {...register('email', { required: 'Email is required!' })}
         />
@@ -84,6 +77,7 @@ function Form() {
           </p>
         )}
         <Input
+          id="password"
           type="password"
           placeholder="Password"
           {...register('password', {
@@ -107,6 +101,16 @@ export default function SignIn() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="flex h-screen w-screen items-center justify-center">
+        <Link
+          href="/"
+          className={cn(
+            buttonVariants({ variant: 'link' }),
+            'absolute left-2 top-2',
+          )}
+        >
+          <ArrowLeftIcon className="w-4 h-4 mr-2" />
+          Home
+        </Link>
         <div className="space-y-12 rounded-xl px-8 pb-8 pt-12 dark:bg-slate-900 sm:shadow-xl">
           <Form />
         </div>

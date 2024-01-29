@@ -25,6 +25,8 @@ const server = z.object({
   PRIVATE_KEY_PASSPHRASE: z.string().min(1),
   PROCESSING_CONTAINER_STORAGE_BIND: z.string(),
   PROCESSING_CONTAINER_PATH: z.string(),
+  STORAGE_API_URL: z.string().url(),
+  STORAGE_API_KEY: z.string(),
 });
 
 /**
@@ -33,7 +35,7 @@ const server = z.object({
  */
 const client = z.object({
   // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
-  NEXT_PUBLIC_TREE_PATH: z.string(),
+  NEXT_PUBLIC_STORAGE_PATH: z.string(),
 });
 
 /**
@@ -52,11 +54,12 @@ const processEnv = {
   CA_CERT: process.env.CA_CERT,
   PRIVATE_KEY_PASSPHRASE: process.env.PRIVATE_KEY_PASSPHRASE,
 
-  NEXT_PUBLIC_TREE_PATH: process.env.NEXT_PUBLIC_TREE_PATH,
-  // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+  NEXT_PUBLIC_STORAGE_PATH: process.env.NEXT_PUBLIC_STORAGE_PATH,
   PROCESSING_CONTAINER_STORAGE_BIND:
     process.env.PROCESSING_CONTAINER_STORAGE_BIND,
   PROCESSING_CONTAINER_PATH: process.env.PROCESSING_CONTAINER_PATH,
+  STORAGE_API_URL: process.env.STORAGE_API_URL,
+  STORAGE_API_KEY: process.env.STORAGE_API_KEY,
 };
 
 // Don't touch the part below

@@ -3,16 +3,16 @@ export const slurmPartitionOptions = [
   'mnc',
   'imb',
   'mgn',
+  'mgn-staff',
   'cnb',
   'cat',
   'ipe',
   'diff',
-  'proc2',
-  'proc1',
-  'tepui',
-  'petro',
+  'tepui1',
+  'tepui2',
+  'dev',
   'power',
-  'fake',
+  // 'fake',
 ] as const;
 
 export const slurmGPUOptions = ['1', '2', '4'] as const;

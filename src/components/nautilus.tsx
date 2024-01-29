@@ -27,7 +27,7 @@ import { api } from '~/utils/api';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Input } from './ui/input';
-import { ScrollArea } from './ui/scroll-area';
+import { ScrollArea, ScrollBar } from './ui/scroll-area';
 
 type Shortcut = {
   name: string;
@@ -134,8 +134,12 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
     setPath(data.path);
   }
 
+  function formatPath(p: string) {
+    return p.endsWith('/') ? p.slice(0, -1) : p;
+  }
   function handleSelect() {
-    const p = `${path}/${selected}`;
+    let p = formatPath(path);
+    p = `${p}/${selected}`;
     onSelect(p);
     toast.success(`Selected ${p}`);
   }
@@ -145,6 +149,26 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-row gap-1 items-center justify-between">
+        <ScrollArea className="max-w-sm border rounded-sm p-2">
+          <p className="flex flex-row gap-1 text-xs text-muted-foreground">
+            <span className="text-purple-500 dark:text-purple-400">
+              selected:{' '}
+            </span>
+            <span>{`${formatPath(path)}/${selected}`}</span>
+          </p>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <Button
+          title="Select"
+          size="sm"
+          variant="default"
+          // className="px-2 py-1 text-xs h-6 rounded-sm w-full"
+          onClick={handleSelect}
+        >
+          Select
+        </Button>
+      </div>
       <div className="relative flex flex-row gap-0.5 items-center">
         <Button
           className="h-8"
@@ -177,14 +201,6 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
             {shortcut.name}
           </Button>
         ))}
-        <span className="text-input">|</span>
-        <Button
-          className="h-8 absolute end-0 "
-          title="Select"
-          onClick={handleSelect}
-        >
-          Select
-        </Button>
       </div>
       <Form {...form}>
         <form onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}>

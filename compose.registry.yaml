@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  app:
+    image: ghcr.io/cnpem/cnpem/deepsirius-ui:main
+    container_name: deepsirius-ui
+    volumes:
+      - ./dev.sqlite:/app/prisma/db.sqlite:rw
+      - ./abtlus-AD1-CA.cer:${CA_CERT}:ro
+    ports:
+      - '3000:3000'
+    environment:
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - LDAP_URI=${LDAP_URI}
+      - SSH_HOST=${SSH_HOST}
+      - CA_CERT=${CA_CERT}
+      - DATABASE_URL=${DATABASE_URL}
+      - PRIVATE_KEY_PASSPHRASE=${PRIVATE_KEY_PASSPHRASE}
+      - PROCESSING_CONTAINER_PATH=${PROCESSING_CONTAINER_PATH}
+      - PROCESSING_CONTAINER_STORAGE_BIND=${PROCESSING_CONTAINER_STORAGE_BIND}
+      - STORAGE_API_URL=${STORAGE_API_URL}
+      - STORAGE_API_KEY=${STORAGE_API_KEY}

@@ -21,6 +21,7 @@ import {
 import { type NodeData, useStoreActions } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 
+import { ScrollArea } from '../ui/scroll-area';
 import {
   type FormType,
   InferenceForm,
@@ -56,7 +57,9 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
       });
   }, []);
 
-  const [formData, setFormData] = useState<FormType | undefined>(undefined);
+  const [formData, setFormData] = useState<FormType | undefined>(
+    nodeProps.data.form as FormType,
+  );
 
   const updateNodeInternals = useUpdateNodeInternals();
 
@@ -156,6 +159,7 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
             message: `Job ${jobId} submitted in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
             )}`,
+            form: formData,
           },
         });
         updateNodeInternals(nodeProps.id);
@@ -336,8 +340,52 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
                     {nodeProps.data.updatedAt}
                   </p>
                 </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">output dir</p>
+                  <p className="text-violet-600 text-end">
+                    {formData?.outputDir}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">normalize</p>
+                  <p className="text-violet-600 text-end">
+                    {formData?.normalize ? 'yes' : 'no'}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">save prob map</p>
+                  <p className="text-violet-600 text-end">
+                    {formData?.saveProbMap ? 'yes' : 'no'}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">padding size</p>
+                  <p className="text-violet-600 text-end">
+                    {formData?.paddingSize}
+                  </p>
+                </div>
+                <div className="flex flex-row items-center justify-between gap-1">
+                  <p className="font-medium">patch size</p>
+                  <p className="text-violet-600 text-end">
+                    {formData?.patchSize}
+                  </p>
+                </div>
               </div>
               <hr />
+              <div className="flex flex-col gap-1">
+                <ScrollArea className="h-[125px]">
+                  {formData?.inputImages.map((d, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col items-start even:bg-muted odd:bg-violet-200 dark:odd:bg-violet-900"
+                    >
+                      <p className="font-medium text-sm text-ellipsis px-2 py-1 w-full">
+                        {d.name}
+                      </p>
+                    </div>
+                  ))}
+                </ScrollArea>
+              </div>
             </SheetContent>
           </Sheet>
         </CardContent>

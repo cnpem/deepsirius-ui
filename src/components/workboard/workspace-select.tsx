@@ -1,17 +1,37 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeftIcon, FolderIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { type Edge, type Node } from 'reactflow';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import { Button, buttonVariants } from '~/components/ui/button';
 import { env } from '~/env.mjs';
 import { type NodeData, useStoreActions } from '~/hooks/use-store';
+import { slurmPartitionOptions } from '~/lib/constants';
 import { cn } from '~/lib/utils';
 import { api } from '~/utils/api';
 
 import { NautilusDialog } from '../nautilus';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../ui/form';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 
 export function WorkspaceSelector() {
   const { setWorkspacePath } = useStoreActions();
@@ -65,11 +85,29 @@ export function WorkspaceSelector() {
     },
   );
 
-  const handleNewWorkspace = (path: string) => {
+  const handleNewWorkspace = (data: Form) => {
     setDisabled(true);
-    setPath(path);
-    submitNewWorkspace({ workspacePath: path });
+    setPath(data.workspacePath);
+    submitNewWorkspace({
+      workspacePath: data.workspacePath,
+      partition: data.slurmPartition,
+    });
     toast.info('Creating workspace...');
+  };
+
+  const schema = z.object({
+    workspacePath: z.string().nonempty(),
+    slurmPartition: z.enum(slurmPartitionOptions),
+  });
+  type Form = z.infer<typeof schema>;
+
+  const form = useForm<Form>({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = () => {
+    const data = form.getValues();
+    handleNewWorkspace(data);
   };
 
   return (
@@ -91,24 +129,70 @@ export function WorkspaceSelector() {
           <span className="text-sm text-muted-foreground">
             Enter a folder to create a new workspace or select an existing one.
           </span>
-          <div className="flex flex-row items-center justify-center gap-1">
-            <NautilusDialog
-              onSelect={setPath}
-              trigger={
-                <Button size="icon" variant="outline">
-                  <FolderIcon className="w-4 h-4" />
-                </Button>
-              }
-            />
-            <Input value={path} onChange={(e) => setPath(e.target.value)} />
-            <Button
-              disabled={disabled}
-              size="sm"
-              onClick={() => handleNewWorkspace(path)}
+          <Form {...form}>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
             >
-              New
-            </Button>
-          </div>
+              <FormField
+                control={form.control}
+                name="workspacePath"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Workspace path</FormLabel>
+                    <FormControl>
+                      <div className="flex flex-row gap-0.5">
+                        <NautilusDialog
+                          onSelect={(path) => field.onChange(path)}
+                          trigger={
+                            <Button size="icon" variant="outline">
+                              <FolderIcon className="w-4 h-4" />
+                            </Button>
+                          }
+                        />
+                        <Input {...field} placeholder="path/to/workspace" />
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      This is the path to the workspace.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="slurmPartition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Slurm Partition</FormLabel>
+                    <Select onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Slurm Partition" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {slurmPartitionOptions.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      This is the slurm partition to use for the workspace
+                      creation job.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button disabled={disabled} size="sm" type="submit">
+                New
+              </Button>
+            </form>
+          </Form>
           <SelectUserWorkspaces disabled={disabled} />
         </div>
       </div>

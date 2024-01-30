@@ -1,7 +1,11 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { env } from '~/env.mjs';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  protectedSSHProcedure,
+} from '~/server/api/trpc';
 
 export const sshRouter = createTRPCRouter({
   ls: protectedProcedure
@@ -69,5 +73,32 @@ export const sshRouter = createTRPCRouter({
       );
 
       return { files: noHiddenFiles };
+    }),
+  rmWorkspace: protectedSSHProcedure
+    .input(
+      z.object({
+        path: z.string().nonempty(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const prisma = ctx.prisma;
+      const connection = ctx.connection;
+      const path = input.path;
+
+      const { stderr } = await connection.execCommand(`rm -rf ${path}`);
+
+      if (!!stderr) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: stderr,
+        });
+      }
+
+      const workspace = await prisma.workspaceState.delete({
+        where: {
+          path: path,
+        },
+      });
+      return { workspace: workspace };
     }),
 });

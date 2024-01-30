@@ -342,7 +342,7 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">output dir</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-violet-600 text-end break-all">
                     {formData?.outputDir}
                   </p>
                 </div>

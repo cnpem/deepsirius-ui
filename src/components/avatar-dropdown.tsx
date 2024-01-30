@@ -1,8 +1,14 @@
-import { ArrowLeftIcon, FolderXIcon, LogOutIcon, UserIcon } from 'lucide-react';
+import {
+  ArrowLeftIcon,
+  FolderXIcon,
+  LogOutIcon,
+  TrashIcon,
+  UserIcon,
+} from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
@@ -15,15 +21,28 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { useStoreActions } from '~/hooks/use-store';
+import { useStore, useStoreActions } from '~/hooks/use-store';
+import { api } from '~/utils/api';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 export function AvatarDrop() {
+  const [open, setOpen] = useState(false);
   const { data: sessionData } = useSession();
   const router = useRouter();
 
   const { resetStore } = useStoreActions();
+  const workspacePath = useStore((state) => state.workspacePath);
 
   const logOut = useCallback(async () => {
     await signOut({ redirect: false });
@@ -42,7 +61,41 @@ export function AvatarDrop() {
       : void signIn(undefined, { callbackUrl: '/workboard' }),
   );
 
+  const { mutate: deleteWorkspace } = api.ssh.rmWorkspace.useMutation({
+    onSuccess: () => {
+      toast.success('Workspace deleted');
+      leaveWorkspace();
+    },
+    onError: () => {
+      toast.error('Error deleting workspace');
+    },
+  });
+
   if (!sessionData) return null;
+
+  if (open) {
+    return (
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              workspace and all its contents.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteWorkspace({ path: workspacePath || '' })}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
 
   return (
     <DropdownMenu>
@@ -85,15 +138,30 @@ export function AvatarDrop() {
           >
             <FolderXIcon className="mr-2 h-4 w-4" />
             <span>
-              Leave{' '}
               <span className="text-purple-500 dark:text-purple-400 font-semibold">
-                workspace
+                Leave{' '}
               </span>
+              workspace
+            </span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => setOpen(true)}
+          >
+            <TrashIcon className="mr-2 h-4 w-4" />
+            <span>
+              <span className="text-purple-500 dark:text-purple-400 font-semibold">
+                Delete{' '}
+              </span>
+              workspace
             </span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void logOut()}>
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => void logOut()}
+        >
           <LogOutIcon className="mr-2 h-4 w-4" />
           <span>Sign Out</span>
           <DropdownMenuShortcut>Shift+Alt+L</DropdownMenuShortcut>

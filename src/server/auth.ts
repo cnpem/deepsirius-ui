@@ -1,6 +1,7 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import fs from 'fs';
 import ldap from 'ldapjs';
+import { nanoid } from 'nanoid';
 import { type GetServerSidePropsContext } from 'next';
 import {
   type DefaultSession,
@@ -93,20 +94,44 @@ export const authOptions: NextAuthOptions = {
           });
 
         // Essentially promisify the LDAPJS client.bind function
-        return new Promise((resolve, reject) => {
-          client.bind(credentials.email, credentials.password, (error) => {
-            if (error) {
+        await new Promise((resolve, reject) => {
+          client.bind(email, password, (error) => {
+            if (!!error) {
               reject(new Error('Invalid credentials'));
             } else {
-              resolve({
-                id: name,
-                name: name,
-                email: email,
-                password: password,
-              });
+              resolve(console.log('LDAP bind successful'));
             }
           });
         });
+
+        // register user in database
+        const userInDb = await prisma.user.findUnique({
+          where: { email: email },
+        });
+
+        if (!userInDb) {
+          const user = {
+            id: nanoid(),
+            name: name,
+            email: email,
+            password: password,
+          };
+          await prisma.user.create({
+            data: {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+            },
+          });
+          return user;
+        }
+
+        return {
+          id: userInDb.id,
+          name: userInDb.name,
+          email: userInDb.email,
+          password,
+        };
       },
     }),
   ],
@@ -162,8 +187,9 @@ export const authOptions: NextAuthOptions = {
           sftp.readFile('.ssh/authorized_keys', (err, keys) => {
             if (err) {
               reject(err);
+            } else {
+              resolve(keys.toString());
             }
-            resolve(keys.toString());
           });
         });
         const updatedKeys = keys
@@ -191,8 +217,9 @@ export const authOptions: NextAuthOptions = {
           sftp.writeFile('.ssh/authorized_keys', newKeys, (err) => {
             if (err) {
               reject(err);
+            } else {
+              resolve(console.log('authorized_keys updated'));
             }
-            resolve(console.log('authorized_keys updated'));
           });
         });
 

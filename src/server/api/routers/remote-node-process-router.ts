@@ -32,12 +32,12 @@ const inferenceJobSchema = z.object({
 
 export const remoteProcessRouter = createTRPCRouter({
   submitNewWorkspace: protectedSSHProcedure
-    .input(z.object({ workspacePath: z.string() }))
+    .input(z.object({ workspacePath: z.string(), partition: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // job configuration
       const jobName = 'deepsirius-workspace';
       const ntasks = 1;
-      const partition = 'proc2';
+      const partition = input.partition;
       // defining the container script
       const containerScript = `singularity run --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       // defining the full command

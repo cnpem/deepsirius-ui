@@ -9,29 +9,8 @@ export const workspaceDbStateRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const uid = ctx.session.user.id ?? '';
-      if (uid === '') {
-        throw new Error('User not found');
-      }
-      // checking if the user is registered in the user table
-      const user = await ctx.prisma.user.findUnique({
-        where: {
-          id: uid,
-        },
-      });
-      // if the user is not registered, register the user
-      if (user === null) {
-        await ctx.prisma.user
-          .create({
-            data: {
-              id: uid,
-              name: uid,
-            },
-          })
-          .catch((err: ErrorOptions | undefined) => {
-            throw new Error("Coudn't register the user in the database", err);
-          });
-      }
+      const uid = ctx.session.user.id;
+
       // creating the workspace
       const newWorkspace = await ctx.prisma.workspaceState.create({
         data: {
@@ -54,10 +33,8 @@ export const workspaceDbStateRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const uid = ctx.session.user.id ?? '';
-      if (uid === '') {
-        throw new Error('User not found');
-      }
+      const uid = ctx.session.user.id;
+
       // checking if the user is registered in the user table
       const user = await ctx.prisma.user.findUnique({
         where: {
@@ -80,10 +57,7 @@ export const workspaceDbStateRouter = createTRPCRouter({
       return updatedWorkspace;
     }),
   getUserWorkspaces: protectedProcedure.query(async ({ ctx }) => {
-    const uid = ctx.session.user.id ?? '';
-    if (uid === '') {
-      throw new Error('User not found');
-    }
+    const uid = ctx.session.user.id;
     const userWorkspaces = await ctx.prisma.workspaceState.findMany({
       where: {
         userId: uid,

@@ -23,13 +23,15 @@ const AuthShowcase: React.FC = () => {
         >
           {sessionData ? 'Sign out' : 'Sign in'}
         </button>
-        <Link
-          href="/workboard"
-          className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        >
-          <span>Workboard</span>
-          <ArrowRightIcon className="ml-2 inline-block w-5 h-5 text-white" />
-        </Link>
+        {sessionData && (
+          <Link
+            href="/workboard"
+            className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+          >
+            <span>Workboard</span>
+            <ArrowRightIcon className="ml-2 inline-block w-5 h-5 text-white" />
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -48,30 +50,7 @@ const Home: NextPage = () => {
           <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
             <span className="text-[hsl(280,100%,70%)]">Deep</span>Sirius
           </h1>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <a
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              target="_blank"
-              rel="noopener noreferrer"
-              href="https://deepsirius-ui-docs.vercel.app/"
-            >
-              <h3 className="text-2xl font-bold">Quick Start →</h3>
-              <div className="text-lg">Just the basics.</div>
-            </a>
-            <a
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              target="_blank"
-              rel="noopener noreferrer"
-              href="https://deepsirius-ui-docs.vercel.app/user"
-            >
-              <h3 className="text-2xl font-bold">User Guide →</h3>
-              <div className="text-lg">Learn more about DeepSirius.</div>
-            </a>
-          </div>
-          <div>
-            <AuthShowcase />
-          </div>
+          <AuthShowcase />
         </div>
       </main>
     </Layout>

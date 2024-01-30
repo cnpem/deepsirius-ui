@@ -33,6 +33,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from './ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
@@ -76,6 +77,18 @@ export function AvatarDrop() {
   if (open) {
     return (
       <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogTrigger asChild>
+          <Button variant="outline" size="icon" title="user info">
+            <Avatar className="h-6 w-6">
+              <AvatarImage
+                src="https://source.boringavatars.com/bauhaus"
+                alt="@user"
+              />
+              <AvatarFallback>oi</AvatarFallback>
+            </Avatar>
+            <span className="sr-only">User info</span>
+          </Button>
+        </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>

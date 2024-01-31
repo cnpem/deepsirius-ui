@@ -77,7 +77,7 @@ export const sshRouter = createTRPCRouter({
   rmWorkspace: protectedSSHProcedure
     .input(
       z.object({
-        path: z.string().nonempty(),
+        path: z.string().min(1),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -85,7 +85,7 @@ export const sshRouter = createTRPCRouter({
       const connection = ctx.connection;
       const path = input.path;
 
-      const { stderr } = await connection.execCommand(`rm -rf ${path}`);
+      const { stderr } = await connection.execCommand(`rm -r ${path}`);
 
       if (!!stderr) {
         throw new TRPCError({

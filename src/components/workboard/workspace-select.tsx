@@ -96,7 +96,7 @@ export function WorkspaceSelector() {
   };
 
   const schema = z.object({
-    workspacePath: z.string().nonempty(),
+    workspacePath: z.string().endsWith('/'),
     slurmPartition: z.enum(slurmPartitionOptions),
   });
   type Form = z.infer<typeof schema>;
@@ -119,11 +119,11 @@ export function WorkspaceSelector() {
           'absolute left-2 top-2',
         )}
       >
-        <ArrowLeftIcon className="w-4 h-4 mr-2" />
+        <ArrowLeftIcon className="mr-2 h-4 w-4" />
         Home
       </Link>
 
-      <div className="rounded-sm p-8 shadow-xl border h-fit">
+      <div className="h-fit rounded-sm border p-8 shadow-xl">
         <div className="flex flex-col gap-4">
           <span className="font-semibold">Select workspace</span>
           <span className="text-sm text-muted-foreground">
@@ -146,7 +146,7 @@ export function WorkspaceSelector() {
                           onSelect={(path) => field.onChange(path)}
                           trigger={
                             <Button size="icon" variant="outline">
-                              <FolderIcon className="w-4 h-4" />
+                              <FolderIcon className="h-4 w-4" />
                             </Button>
                           }
                         />
@@ -205,7 +205,7 @@ function Skeleton() {
     <>
       {Array.from({ length: 3 }).map((_, i) => (
         <div key={i}>
-          <div className="h-8 rounded-sm bg-muted animate-pulse" />
+          <div className="h-8 animate-pulse rounded-sm bg-muted" />
         </div>
       ))}
     </>

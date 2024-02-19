@@ -114,6 +114,8 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     // delete remote files
     deletableNodes.forEach((node) => {
       if (!node.data.remotePath) return;
+      // deleting inference nodes should not delete remote files
+      if (node.type === 'inference') return;
       if (node.type === 'dataset') {
         rmFile({ path: node.data.remotePath });
       }
@@ -144,7 +146,6 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     );
     // show error message if some edges should not be deleted
     if (protectedEdges.length > 0) {
-      console.log('cannot delete edges to protected nodes', protectedEdges);
       toast.error('Cannot delete edges to protected nodes');
     }
     if (deletableEdges.length === 0) return;

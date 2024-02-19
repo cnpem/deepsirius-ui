@@ -63,7 +63,7 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
 
   const updateNodeInternals = useUpdateNodeInternals();
 
-  const {} = api.remotejob.checkStatus.useQuery(
+  const { isFetching } = api.remotejob.checkStatus.useQuery(
     { jobId: nodeProps.data.jobId as string },
     {
       enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
@@ -154,7 +154,7 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
           data: {
             ...nodeProps.data,
             status: 'busy',
-            remotePath: `${formData.outputDir}/${pokemon}`,
+            remotePath: `${formData.outputDir}`,
             jobId: jobId,
             message: `Job ${jobId} submitted in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
@@ -170,11 +170,15 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
       });
   };
 
+  const nodeName = isFetching
+    ? pokemon
+    : nodeProps.data?.remotePath?.split('/').slice(-2, -1);
+
   if (nodeProps.data.status === 'active') {
     return (
       <Card
         data-selected={nodeProps.selected}
-        className="w-fit bg-green-100 text-green-800 data-[selected=true]:border-green-500 border-green-800 dark:bg-muted dark:text-green-400"
+        className="w-fit border-green-800 bg-green-100 text-green-800 data-[selected=true]:border-green-500 dark:bg-muted dark:text-green-400"
       >
         <CardContent className="p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
@@ -210,16 +214,18 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
     return (
       <Card
         data-selected={nodeProps.selected}
-        className="w-fit bg-yellow-100 text-yellow-800 data-[selected=true]:border-yellow-600 border-yellow-800 dark:bg-muted dark:text-yellow-400"
+        className="w-fit border-yellow-800 bg-yellow-100 text-yellow-800 data-[selected=true]:border-yellow-600 dark:bg-muted dark:text-yellow-400"
       >
         <CardContent className="p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
             <CoffeeIcon className="inline-block" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-none text-yellow-800 dark:text-yellow-400">
-                {nodeProps.data?.remotePath?.split('/').pop()}
+                {nodeName}
+                {/* {nodeProps.data?.remotePath?.split('/').slice(-2, -1) ||
+                  pokemon} */}
               </p>
-              <p className="text-sm text-yellow-600 lowercase">
+              <p className="text-sm lowercase text-yellow-600">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
                   nodeProps.data.jobStatus || 'checking status..'
                 }`}
@@ -240,13 +246,13 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
                   </div>
                   <div className="flex flex-row items-center justify-between gap-1">
                     <p className="font-medium">status</p>
-                    <p className="text-violet-600 lowercase">
+                    <p className="lowercase text-violet-600">
                       {nodeProps.data.jobStatus}
                     </p>
                   </div>
                   <div className="flex flex-row items-center justify-between gap-1">
                     <p className="font-medium">updated at</p>
-                    <p className="text-violet-600 text-end">
+                    <p className="text-end text-violet-600">
                       {nodeProps.data.updatedAt}
                     </p>
                   </div>
@@ -299,16 +305,18 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
     return (
       <Card
         data-selected={nodeProps.selected}
-        className="w-fit bg-blue-100 text-blue-800 data-[selected=true]:border-blue-500 border-blue-800 dark:bg-muted dark:text-blue-400"
+        className="w-fit border-blue-800 bg-blue-100 text-blue-800 data-[selected=true]:border-blue-500 dark:bg-muted dark:text-blue-400"
       >
         <CardContent className="p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
             <CoffeeIcon className="inline-block" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-none text-blue-800 dark:text-blue-400">
-                {nodeProps.data?.remotePath?.split('/').pop()}
+                {nodeName}
+                {/* {nodeProps.data?.remotePath?.split('/').slice(-2, -1) ||
+                  pokemon} */}
               </p>
-              <p className="text-sm text-blue-600 lowercase">
+              <p className="text-sm lowercase text-blue-600">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
                   nodeProps.data.jobStatus || 'jobStatus'
                 }`}
@@ -330,43 +338,43 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">status</p>
-                  <p className="text-violet-600 lowercase">
+                  <p className="lowercase text-violet-600">
                     {nodeProps.data.jobStatus}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">updated at</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-end text-violet-600">
                     {nodeProps.data.updatedAt}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">output dir</p>
-                  <p className="text-violet-600 text-end break-all">
+                  <p className="break-all text-end text-violet-600">
                     {formData?.outputDir}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">normalize</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-end text-violet-600">
                     {formData?.normalize ? 'yes' : 'no'}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">save prob map</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-end text-violet-600">
                     {formData?.saveProbMap ? 'yes' : 'no'}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">padding size</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-end text-violet-600">
                     {formData?.paddingSize}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">patch size</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-end text-violet-600">
                     {formData?.patchSize}
                   </p>
                 </div>
@@ -377,9 +385,9 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
                   {formData?.inputImages.map((d, i) => (
                     <div
                       key={i}
-                      className="flex flex-col items-start even:bg-muted odd:bg-violet-200 dark:odd:bg-violet-900"
+                      className="flex flex-col items-start odd:bg-violet-200 even:bg-muted dark:odd:bg-violet-900"
                     >
-                      <p className="font-medium text-sm text-ellipsis px-2 py-1 w-full">
+                      <p className="w-full text-ellipsis px-2 py-1 text-sm font-medium">
                         {d.name}
                       </p>
                     </div>
@@ -402,16 +410,17 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
     return (
       <Card
         data-selected={nodeProps.selected}
-        className="w-fit bg-red-100 text-red-800 data-[selected=true]:border-red-500 border-red-800 dark:bg-muted dark:text-red-400"
+        className="w-fit border-red-800 bg-red-100 text-red-800 data-[selected=true]:border-red-500 dark:bg-muted dark:text-red-400"
       >
-        <CardContent className="p-4 relative pr-8">
+        <CardContent className="relative p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
             <CoffeeIcon className="inline-block" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-none text-red-800 dark:text-red-400">
-                {nodeProps.data?.remotePath?.split('/').pop()}
+                {nodeProps.data?.remotePath?.split('/').pop()?.slice(-2, -1) ||
+                  pokemon}
               </p>
-              <p className="text-sm text-red-600 lowercase">
+              <p className="text-sm lowercase text-red-600">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
                   nodeProps.data.jobStatus || 'jobStatus'
                 }`}

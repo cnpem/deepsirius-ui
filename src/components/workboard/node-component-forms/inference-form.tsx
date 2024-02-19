@@ -43,7 +43,9 @@ const powerSizes = [
 ] as const;
 export const inferenceSchema = z.object({
   slurmOptions: slurmOptions,
-  outputDir: z.string().nonempty({ message: 'Must have a valid output dir!' }),
+  outputDir: z
+    .string()
+    .endsWith('/', { message: 'Must be a valid directory!' }),
   inputImages: z
     .array(
       z.object({
@@ -141,7 +143,7 @@ export function InferenceForm({
                     onSelect={onOutputDirSelect}
                     trigger={
                       <Button size="icon" variant="outline">
-                        <FolderIcon className="w-4 h-4" />
+                        <FolderIcon className="h-4 w-4" />
                       </Button>
                     }
                   />
@@ -173,7 +175,7 @@ export function InferenceForm({
                         size={'icon'}
                         variant="ghost"
                       >
-                        <X className="w-[14px] h-[14px]" />
+                        <X className="h-[14px] w-[14px]" />
                       </Button>
                     </div>
                   </FormControl>
@@ -192,7 +194,7 @@ export function InferenceForm({
                   size="icon"
                   className="mt-1"
                 >
-                  <PlusIcon className="w-4 h-4" />
+                  <PlusIcon className="h-4 w-4" />
                 </Button>
                 <span className="text-xs text-muted-foreground">
                   Add images
@@ -347,7 +349,7 @@ export function InferenceForm({
                     {slurmGPUOptions.map((item) => (
                       <SelectItem key={item} value={item}>
                         <p className="flex flex-row items-center gap-1">
-                          <span className="text-xs text-muted-foreground mr-2">
+                          <span className="mr-2 text-xs text-muted-foreground">
                             GPUs:{' '}
                           </span>
                           <span>{item.toString()}</span>
@@ -363,7 +365,7 @@ export function InferenceForm({
               </FormItem>
             )}
           />
-          <Button className="grow mt-2 px-6" size="sm" type="submit">
+          <Button className="mt-2 grow px-6" size="sm" type="submit">
             Submit
           </Button>
         </footer>

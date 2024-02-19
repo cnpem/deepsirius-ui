@@ -85,10 +85,18 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
   }, [updateDbState, stateSnapshot, workspacePath]);
 
   const handleNodesDelete = useCallback(() => {
+    const nodeIsProtected = (node: Node<NodeData>) => {
+      if (node.data.status === 'busy') return true;
+      if (node.data.status === 'success') {
+        // check if there are edges connecting this node to a target
+        return edges.some((edge) => edge.source === node.id);
+      }
+      return false;
+    };
     const [protectedNodes, deletableNodes] = nodes.reduce(
       (acc, node) => {
         if (node.selected) {
-          if (node.data.status === 'busy') {
+          if (nodeIsProtected(node)) {
             acc[0].push(node);
           } else {
             acc[1].push(node);
@@ -100,7 +108,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     );
     // show error message if some nodes should not be deleted
     if (protectedNodes.length > 0) {
-      toast.error('Cannot delete busy nodes');
+      toast.error('Cannot delete protected nodes');
     }
     if (deletableNodes.length === 0) return;
     // delete remote files
@@ -114,7 +122,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
       }
     });
     onNodesDelete(deletableNodes);
-  }, [nodes, onNodesDelete, rmDir, rmFile]);
+  }, [edges, nodes, onNodesDelete, rmDir, rmFile]);
 
   const handleEdgesDelete = useCallback(() => {
     const nodeIsProtected = (nodeId: string) => {

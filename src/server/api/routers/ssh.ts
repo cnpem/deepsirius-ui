@@ -101,4 +101,44 @@ export const sshRouter = createTRPCRouter({
       });
       return { workspace: workspace };
     }),
+  rmFile: protectedSSHProcedure
+    .input(
+      z.object({
+        path: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const connection = ctx.connection;
+      const path = input.path;
+
+      const { stderr } = await connection.execCommand(`rm ${path}`);
+
+      if (!!stderr) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: stderr,
+        });
+      }
+      return { path: path };
+    }),
+  rmDir: protectedSSHProcedure
+    .input(
+      z.object({
+        path: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const connection = ctx.connection;
+      const path = input.path;
+
+      const { stderr } = await connection.execCommand(`rm -r ${path}`);
+
+      if (!!stderr) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: stderr,
+        });
+      }
+      return { path: path };
+    }),
 });

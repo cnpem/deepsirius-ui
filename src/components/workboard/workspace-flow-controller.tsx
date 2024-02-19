@@ -5,7 +5,7 @@ import {
   DumbbellIcon,
   PlusCircle,
 } from 'lucide-react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import ReactFlow, {
   Background,
@@ -33,6 +33,16 @@ import { api } from '~/utils/api';
 import { AvatarDrop } from '../avatar-dropdown';
 import { ControlHelpButton } from '../help';
 import { ControlThemeButton } from '../theme-toggle';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../ui/alert-dialog';
 
 /**
  * The Geppetto component is the main component for the workspace flow
@@ -40,6 +50,7 @@ import { ControlThemeButton } from '../theme-toggle';
  * It also uses the zustand store to manage the state of the nodes and edges
  */
 function Geppetto({ workspacePath }: { workspacePath: string }) {
+  const [alertOpen, setAlertOpen] = useState(false);
   const {
     onConnect,
     onNodeDragStop,
@@ -55,9 +66,14 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         console.log('dbstate update error', error);
       },
     });
-  const { mutate: deleteFiles } = api.remotefiles.remove.useMutation({
-    onError: (error) => {
-      console.log('node files delete error', error);
+  const { mutate: rmFile } = api.ssh.rmFile.useMutation({
+    onError: () => {
+      toast.error('Error deleting file');
+    },
+  });
+  const { mutate: rmDir } = api.ssh.rmDir.useMutation({
+    onError: () => {
+      toast.error('Error deleting directory');
     },
   });
 
@@ -69,13 +85,13 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
   }, [updateDbState, stateSnapshot, workspacePath]);
 
   const handleNodesDelete = useCallback(() => {
-    const [deletableNodes, protectedNodes] = nodes.reduce(
+    const [protectedNodes, deletableNodes] = nodes.reduce(
       (acc, node) => {
         if (node.selected) {
           if (node.data.status === 'busy') {
-            acc[1].push(node);
-          } else {
             acc[0].push(node);
+          } else {
+            acc[1].push(node);
           }
         }
         return acc;
@@ -84,31 +100,34 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     );
     // show error message if some nodes should not be deleted
     if (protectedNodes.length > 0) {
-      console.log('cannot delete busy nodes', protectedNodes);
       toast.error('Cannot delete busy nodes');
     }
     if (deletableNodes.length === 0) return;
     // delete remote files
-    deletableNodes
-      .map((node) => node.data.remotePath)
-      .filter(Boolean)
-      .forEach((p) => {
-        deleteFiles({ path: p as string }); // this type assertion is safe because we filter out nodes without remotePath
-      });
-    // remove nodes from the store
+    deletableNodes.forEach((node) => {
+      if (!node.data.remotePath) return;
+      if (node.type === 'dataset') {
+        rmFile({ path: node.data.remotePath });
+      }
+      if (node.type === 'network') {
+        rmDir({ path: node.data.remotePath });
+      }
+    });
     onNodesDelete(deletableNodes);
-  }, [deleteFiles, nodes, onNodesDelete]);
+  }, [nodes, onNodesDelete, rmDir, rmFile]);
 
   const handleEdgesDelete = useCallback(() => {
-    const nodeIsBusy = (nodeId: string) =>
-      nodes.find((node) => node.id === nodeId)?.data.status === 'busy';
-    const [deletableEdges, protectedEdges] = edges.reduce(
+    const nodeIsProtected = (nodeId: string) => {
+      const status = nodes.find((node) => node.id === nodeId)?.data.status;
+      return status === 'busy' || status === 'success';
+    };
+    const [protectedEdges, deletableEdges] = edges.reduce(
       (acc, edge) => {
         if (edge.selected) {
-          if (nodeIsBusy(edge.target)) {
-            acc[1].push(edge);
-          } else {
+          if (nodeIsProtected(edge.target)) {
             acc[0].push(edge);
+          } else {
+            acc[1].push(edge);
           }
         }
         return acc;
@@ -117,20 +136,19 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
     );
     // show error message if some edges should not be deleted
     if (protectedEdges.length > 0) {
-      console.log('cannot delete edges to busy nodes', protectedEdges);
-      toast.error('Cannot delete edges to busy nodes');
+      console.log('cannot delete edges to protected nodes', protectedEdges);
+      toast.error('Cannot delete edges to protected nodes');
     }
     if (deletableEdges.length === 0) return;
-    // remove edges from the store
+    // remove deletable edges from the store
     onEdgesDelete(deletableEdges);
   }, [edges, nodes, onEdgesDelete]);
 
   useHotkeys(['backspace', 'del', 'Delete'], () => {
-    console.log('i will survive!');
     // check if there are selected nodes
     const selectedNodes = nodes.filter((node) => node.selected);
     if (selectedNodes.length > 0) {
-      handleNodesDelete();
+      setAlertOpen(true);
     }
     const selectedEdges = edges.filter((edge) => edge.selected);
     if (selectedEdges.length > 0) {
@@ -157,7 +175,12 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
 
   //TODO: would be nice to change the height for full screen mode to h-[930px]
   return (
-    <div className="p-1 h-screen">
+    <div className="h-screen p-1">
+      <AlertDelete
+        open={alertOpen}
+        onOpenChange={setAlertOpen}
+        onConfirm={handleNodesDelete}
+      />
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -174,7 +197,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
           <PlusOneNode />
         </Panel>
         <Panel position="bottom-center">
-          <span className="flex w-fit text-xs font-semibold border rounded-sm p-2 bg-muted text-slate-500 dark:text-slate-400 ">
+          <span className="flex w-fit rounded-sm border bg-muted p-2 text-xs font-semibold text-slate-500 dark:text-slate-400 ">
             <span className="text-purple-500 dark:text-purple-400">
               Workspace:
             </span>{' '}
@@ -193,7 +216,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         <Controls
           showZoom={false}
           showInteractive={false}
-          className="bg-transparent px-1 dark:fill-slate-400 [&>button:hover]:dark:fill-slate-100 [&>button:hover]:dark:bg-slate-700 [&>button]:dark:bg-muted [&>button]:rounded-sm [&>button]:border-none [&>button]:my-2 [&>button]:h-6 [&>button]:w-6"
+          className="bg-transparent px-1 dark:fill-slate-400 [&>button:hover]:dark:bg-slate-700 [&>button:hover]:dark:fill-slate-100 [&>button]:my-2 [&>button]:h-6 [&>button]:w-6 [&>button]:rounded-sm [&>button]:border-none [&>button]:dark:bg-muted"
         >
           <ControlThemeButton />
           <ControlHelpButton />
@@ -201,7 +224,7 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
         <MiniMap
           nodeColor={nodeColor}
           nodeComponent={MiniMapNode}
-          className="border dark:bg-muted rounded-lg p-2 scale-90 -translate-y-8 translate-x-2"
+          className="-translate-y-8 translate-x-2 scale-90 rounded-lg border p-2 dark:bg-muted"
           pannable
           zoomable
         />
@@ -279,13 +302,38 @@ function AlertDemo() {
       <AlertTitle>Heads up!</AlertTitle>
       <AlertDescription>
         You can add{' '}
-        <span className="text-purple-500 dark:text-purple-400 font-semibold">
+        <span className="font-semibold text-purple-500 dark:text-purple-400">
           nodes
         </span>{' '}
         to your workspace by clicking on the{' '}
         <PlusCircle className="inline h-5 w-5" /> button on the top left corner.
       </AlertDescription>
     </Alert>
+  );
+}
+
+interface AlertDeleteProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}
+function AlertDelete({ open, onOpenChange, onConfirm }: AlertDeleteProps) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete your
+            files in your workspace.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>Continue</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 

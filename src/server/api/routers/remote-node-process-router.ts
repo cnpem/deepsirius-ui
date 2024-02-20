@@ -12,6 +12,9 @@ import { env } from '~/env.mjs';
 import { createTRPCRouter, protectedSSHProcedure } from '~/server/api/trpc';
 import { createTempScript } from '~/server/remote-job';
 
+const slurmOutFilename = 'log-%j-%x.out';
+const slurmErrFilename = 'log-%j-%x.err';
+
 const datasetJobSchema = z.object({
   workspacePath: z.string(),
   formData: datasetSchema,
@@ -45,8 +48,8 @@ export const remoteProcessRouter = createTRPCRouter({
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
-        `#SBATCH --output=${jobName}-output.txt`,
-        `#SBATCH --error=${jobName}-error.txt`,
+        `#SBATCH --output=${slurmOutFilename}`,
+        `#SBATCH --error=${slurmErrFilename}`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
         `${command}`,
@@ -139,8 +142,8 @@ export const remoteProcessRouter = createTRPCRouter({
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
-        `#SBATCH --output=${jobName}-output.txt`,
-        `#SBATCH --error=${jobName}-error.txt`,
+        `#SBATCH --output=${slurmOutFilename}`,
+        `#SBATCH --error=${slurmErrFilename}`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
         `${command}`,
@@ -201,8 +204,8 @@ export const remoteProcessRouter = createTRPCRouter({
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
-        `#SBATCH --output=${jobName}-output.txt`,
-        `#SBATCH --error=${jobName}-error.txt`,
+        `#SBATCH --output=${slurmOutFilename}`,
+        `#SBATCH --error=${slurmErrFilename}`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
         `#SBATCH --gres=gpu:${gpus}`,
@@ -266,8 +269,8 @@ export const remoteProcessRouter = createTRPCRouter({
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
-        `#SBATCH --output=${jobName}-output.txt`,
-        `#SBATCH --error=${jobName}-error.txt`,
+        `#SBATCH --output=${slurmOutFilename}`,
+        `#SBATCH --error=${slurmErrFilename}`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
         `#SBATCH --gres=gpu:${gpus}`,

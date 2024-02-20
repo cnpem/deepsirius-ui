@@ -5,7 +5,7 @@ import {
   ExternalLinkIcon,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { ControlButton } from 'reactflow';
 import { cn } from '~/lib/utils';
@@ -68,36 +68,36 @@ function MinimapCaption() {
       <div className="flex flex-row items-center justify-between gap-1 rounded-md border border-input p-2">
         <div className="flex flex-col gap-1">
           <div className="flex flex-row items-center gap-1">
-            <DatabaseIcon className="w-4 h-4" />
+            <DatabaseIcon className="h-4 w-4" />
             <p className="text-xs">Dataset</p>
           </div>
           <div className="flex flex-row items-center gap-1">
-            <DumbbellIcon className="w-4 h-4" />
+            <DumbbellIcon className="h-4 w-4" />
             <p className="text-xs">Network</p>
           </div>
           <div className="flex flex-row items-center gap-1">
-            <CoffeeIcon className="w-4 h-4" />
+            <CoffeeIcon className="h-4 w-4" />
             <p className="text-xs">Inference</p>
           </div>
         </div>
         <div className="flex flex-col gap-1">
           <div className="flex flex-row items-center gap-1">
             <div
-              className="w-4 h-4 rounded-full"
+              className="h-4 w-4 rounded-full"
               style={{ backgroundColor: nodeColor('active') }}
             />
             <p className="text-xs">Active</p>
           </div>
           <div className="flex flex-row items-center gap-1">
             <div
-              className="w-4 h-4 rounded-full"
+              className="h-4 w-4 rounded-full"
               style={{ backgroundColor: nodeColor('busy') }}
             />
             <p className="text-xs">Busy</p>
           </div>
           <div className="flex flex-row items-center gap-1">
             <div
-              className="w-4 h-4 rounded-full"
+              className="h-4 w-4 rounded-full"
               style={{ backgroundColor: nodeColor('error') }}
             />
             <p className="text-xs">Error</p>
@@ -116,7 +116,7 @@ function KeyboardShortcuts() {
         <div className="flex flex-row items-center justify-between gap-1">
           <p className="text-sm">Pan</p>
           <div className="flex flex-row items-center gap-1">
-            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+            <kbd className="rounded-sm bg-violet-200 px-2 py-1 text-xs dark:bg-violet-700">
               Drag
             </kbd>
           </div>
@@ -124,7 +124,7 @@ function KeyboardShortcuts() {
         <div className="flex flex-row items-center justify-between gap-1">
           <p className="text-sm">Zoom</p>
           <div className="flex flex-row items-center gap-1">
-            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+            <kbd className="rounded-sm bg-violet-200 px-2 py-1 text-xs dark:bg-violet-700">
               Scroll
             </kbd>
           </div>
@@ -133,7 +133,7 @@ function KeyboardShortcuts() {
         <div className="flex flex-row items-center justify-between gap-1">
           <p className="text-sm">Help</p>
           <div className="flex flex-row items-center gap-1">
-            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+            <kbd className="rounded-sm bg-violet-200 px-2 py-1 text-xs dark:bg-violet-700">
               H
             </kbd>
           </div>
@@ -141,15 +141,15 @@ function KeyboardShortcuts() {
         <div className="flex flex-row items-center justify-between gap-1">
           <p className="text-sm">Toggle Theme</p>
           <div className="flex flex-row items-center gap-1">
-            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+            <kbd className="rounded-sm bg-violet-200 px-2 py-1 text-xs dark:bg-violet-700">
               Shift
             </kbd>
             <p className="text-xs">+</p>
-            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+            <kbd className="rounded-sm bg-violet-200 px-2 py-1 text-xs dark:bg-violet-700">
               Alt
             </kbd>
             <p className="text-xs">+</p>
-            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+            <kbd className="rounded-sm bg-violet-200 px-2 py-1 text-xs dark:bg-violet-700">
               D
             </kbd>
           </div>
@@ -157,15 +157,15 @@ function KeyboardShortcuts() {
         <div className="flex flex-row items-center justify-between gap-1">
           <p className="text-sm">Sign in/out</p>
           <div className="flex flex-row items-center gap-1">
-            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+            <kbd className="rounded-sm bg-violet-200 px-2 py-1 text-xs dark:bg-violet-700">
               Shift
             </kbd>
             <p className="text-xs">+</p>
-            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+            <kbd className="rounded-sm bg-violet-200 px-2 py-1 text-xs dark:bg-violet-700">
               Alt
             </kbd>
             <p className="text-xs">+</p>
-            <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+            <kbd className="rounded-sm bg-violet-200 px-2 py-1 text-xs dark:bg-violet-700">
               L
             </kbd>
           </div>
@@ -181,21 +181,21 @@ export function ControlHelpButton() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <ControlButton
-          title="need help?"
-          className="font-medium dark:text-slate-400 dark:hover:text-slate-100"
-        >
-          ?
-        </ControlButton>
-      </DialogTrigger>
+      <DialogTrigger hidden />
+      <ControlButton
+        title="need help?"
+        className="font-medium dark:text-slate-400 dark:hover:text-slate-100"
+        onClick={() => setOpen(true)}
+      >
+        ?
+      </ControlButton>
       <DialogContent className="sm:w-full sm:max-w-[425px]" forceMount>
         <DialogHeader>
           <DialogTitle>
             <div className="flex flex-row items-center gap-2">
               <p>Help</p>
               <div className="flex flex-row items-center gap-1">
-                <kbd className="dark:bg-violet-700 rounded-sm bg-violet-200 px-2 py-1 text-xs">
+                <kbd className="rounded-sm bg-violet-200 px-2 py-1 text-xs dark:bg-violet-700">
                   H
                 </kbd>
               </div>

@@ -17,6 +17,7 @@ import { env } from '~/env.mjs';
 
 import { prisma } from './db';
 import { ssh } from './ssh';
+import type { ErrnoException } from './remote-job';
 
 // TODO: Auth is breaking when the user's credentials are ok but the service can't ssh into SSH_HOST.
 // This will happen when the user doesn't have a scheduled proposal for the day, so its group is not allowed to ssh into SSH_HOST.
@@ -183,10 +184,31 @@ export const authOptions: NextAuthOptions = {
 
         const sftp = await connection.requestSFTP();
 
+        // creating the .ssh directory if it doesn't exist
+        await new Promise<void>((resolve, reject) => {
+          sftp.mkdir('.ssh', (err) => {
+            const error = err as ErrnoException;
+            if (error) {
+              if (error.code === 4) {
+                resolve();
+              } else {
+                reject(error);
+              }
+            } else {
+              resolve();
+            }
+          });
+        });
+
         const keys = await new Promise<string>((resolve, reject) => {
           sftp.readFile('.ssh/authorized_keys', (err, keys) => {
             if (err) {
-              reject(err);
+              const error = err as ErrnoException;
+              if (error.code === 2) {
+                resolve('');
+              } else {
+                reject(error);
+              }
             } else {
               resolve(keys.toString());
             }

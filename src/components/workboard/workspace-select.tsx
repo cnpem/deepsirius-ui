@@ -86,17 +86,19 @@ export function WorkspaceSelector() {
   );
 
   const handleNewWorkspace = (data: Form) => {
+    const newPath = `${data.workspaceBasePath}${data.workspaceName}`;
     setDisabled(true);
-    setPath(data.workspacePath);
+    setPath(newPath);
     submitNewWorkspace({
-      workspacePath: data.workspacePath,
+      workspacePath: newPath,
       partition: data.slurmPartition,
     });
     toast.info('Creating workspace...');
   };
 
   const schema = z.object({
-    workspacePath: z.string().endsWith('/'),
+    workspaceBasePath: z.string().endsWith('/'),
+    workspaceName: z.string().min(1),
     slurmPartition: z.enum(slurmPartitionOptions),
   });
   type Form = z.infer<typeof schema>;
@@ -136,7 +138,7 @@ export function WorkspaceSelector() {
             >
               <FormField
                 control={form.control}
-                name="workspacePath"
+                name="workspaceBasePath"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Workspace path</FormLabel>
@@ -150,11 +152,27 @@ export function WorkspaceSelector() {
                             </Button>
                           }
                         />
-                        <Input {...field} placeholder="path/to/workspace" />
+                        <Input {...field} placeholder="/base/path/" />
                       </div>
                     </FormControl>
                     <FormDescription>
-                      This is the path to the workspace.
+                      This is the path where the workspace will be created into.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="workspaceName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Workspace name</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="workspace-name" />
+                    </FormControl>
+                    <FormDescription>
+                      This is the name of the workspace.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

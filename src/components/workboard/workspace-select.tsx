@@ -105,6 +105,10 @@ export function WorkspaceSelector() {
 
   const form = useForm<Form>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      workspaceBasePath: '',
+      workspaceName: '',
+    },
   });
 
   const onSubmit = () => {

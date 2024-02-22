@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeftIcon, FolderIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { type Edge, type Node } from 'reactflow';
 import { toast } from 'sonner';
@@ -35,7 +35,8 @@ import {
 
 export function WorkspaceSelector() {
   const { setWorkspacePath } = useStoreActions();
-  const [path, setPath] = useState(env.NEXT_PUBLIC_STORAGE_PATH);
+  const [basePath, setBasePath] = useState(env.NEXT_PUBLIC_STORAGE_PATH);
+  const [path, setPath] = useState('');
   const [jobId, setJobId] = useState('');
   const [disabled, setDisabled] = useState(false);
 
@@ -63,44 +64,77 @@ export function WorkspaceSelector() {
       },
     });
 
-  const {} = api.remotejob.checkStatus.useQuery(
+  const { data: checkStatusData } = api.remotejob.checkStatus.useQuery(
     { jobId },
     {
       refetchOnMount: false,
       enabled: !!jobId,
       refetchInterval: 5000,
       refetchIntervalInBackground: true,
-      onSuccess: (data) => {
-        console.log('checkStatus.onSuccess', data);
-        if (data.jobStatus === 'COMPLETED' && !!path) {
-          // disable refetching until there is a new job
-          setJobId('');
-          registerWorkspaceInDb({ path: path });
-          toast.success('Workspace created');
-        } else if (data.jobStatus === 'FAILED') {
-          toast.error('Error creating workspace');
-          setDisabled(false);
-        }
-      },
     },
   );
 
+  useEffect(() => {
+    if (checkStatusData?.jobStatus === 'COMPLETED' && !!path) {
+      // disable refetching until there is a new job
+      setJobId('');
+      registerWorkspaceInDb({ path: path });
+      toast.success('Workspace created');
+    } else if (checkStatusData?.jobStatus === 'FAILED') {
+      toast.error('Error creating workspace');
+      setDisabled(false);
+    }
+  }, [checkStatusData, path, registerWorkspaceInDb]);
+
   const handleNewWorkspace = (data: Form) => {
-    const newPath = `${data.workspaceBasePath}${data.workspaceName}`;
     setDisabled(true);
-    setPath(newPath);
+    const fullPath = `${data.workspaceBasePath}${data.workspaceName}`;
+    setPath(fullPath);
     submitNewWorkspace({
-      workspacePath: newPath,
+      workspacePath: fullPath,
       partition: data.slurmPartition,
     });
     toast.info('Creating workspace...');
   };
 
-  const schema = z.object({
-    workspaceBasePath: z.string().endsWith('/'),
-    workspaceName: z.string().min(1),
-    slurmPartition: z.enum(slurmPartitionOptions),
-  });
+  const {
+    data: pathData,
+    isLoading: loadingLsData,
+    error: errorLs,
+  } = api.ssh.ls.useQuery(
+    {
+      path: basePath,
+    },
+    {
+      enabled: !!basePath && !disabled,
+    },
+  );
+
+  const schema = z
+    .object({
+      workspaceBasePath: z.string().endsWith('/'),
+      workspaceName: z.string().min(1),
+      slurmPartition: z.enum(slurmPartitionOptions),
+    })
+    .superRefine(({ workspaceName }, ctx) => {
+      if (errorLs) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Error fetching base path data: ' + errorLs.message,
+          fatal: true,
+          path: ['workspaceBasePath'],
+        });
+        return z.NEVER;
+      }
+      if (pathData?.files.find((file) => file.name === workspaceName)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Workspace name already exists in the base directory :(',
+          path: ['workspaceName'],
+        });
+      }
+    });
+
   type Form = z.infer<typeof schema>;
 
   const form = useForm<Form>({
@@ -113,6 +147,7 @@ export function WorkspaceSelector() {
 
   const onSubmit = () => {
     const data = form.getValues();
+    setDisabled(true);
     handleNewWorkspace(data);
   };
 
@@ -146,7 +181,12 @@ export function WorkspaceSelector() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Workspace path</FormLabel>
-                    <FormControl>
+                    <FormControl
+                      onBlur={() => {
+                        // set the base path in the store so that the ls query can be triggered before the user submits the form
+                        setBasePath(field.value);
+                      }}
+                    >
                       <div className="flex flex-row gap-0.5">
                         <NautilusDialog
                           onSelect={(path) => field.onChange(path)}
@@ -210,8 +250,17 @@ export function WorkspaceSelector() {
                   </FormItem>
                 )}
               />
-              <Button disabled={disabled} size="sm" type="submit">
-                New
+              <Button
+                disabled={disabled || loadingLsData}
+                size="sm"
+                type="submit"
+              >
+                {!disabled && 'Submit New Workspace'}
+                {disabled && !jobId && 'Creating workspace...'}
+                {disabled && jobId && 'Creating workspace... Job ID: ' + jobId}
+                {disabled && (
+                  <div className="mx-2 h-4 w-4 animate-spin rounded-full border-t-2 border-secondary" />
+                )}
               </Button>
             </form>
           </Form>

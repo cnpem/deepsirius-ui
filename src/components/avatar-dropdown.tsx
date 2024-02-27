@@ -1,11 +1,13 @@
 import {
   ArrowLeftIcon,
-  FolderXIcon,
   LogOutIcon,
-  TrashIcon,
+  MoonIcon,
+  SquareStackIcon,
+  SunIcon,
   UserIcon,
 } from 'lucide-react';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useCallback, useState } from 'react';
@@ -18,7 +20,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { useStore, useStoreActions } from '~/hooks/use-store';
@@ -45,16 +46,26 @@ export function AvatarDrop() {
   const { resetStore } = useStoreActions();
   const workspacePath = useStore((state) => state.workspacePath);
 
+  const { theme, setTheme } = useTheme();
+
+  useHotkeys('shift+alt+d', () =>
+    setTheme(theme === 'light' ? 'dark' : 'light'),
+  );
+
   const logOut = useCallback(async () => {
     await signOut({ redirect: false });
     await router.push('/');
+    console.log('Logged out');
     toast.success('Logged out');
     resetStore();
   }, [resetStore, router]);
 
-  const leaveWorkspace = useCallback(() => {
-    resetStore();
-  }, [resetStore]);
+  const leaveWorkspace = useCallback(async () => {
+    const userName = sessionData?.user?.name || '';
+    await router.push('/users/' + userName).then(() => {
+      resetStore();
+    });
+  }, [resetStore, router, sessionData?.user?.name]);
 
   useHotkeys('shift+alt+l', () =>
     sessionData
@@ -63,9 +74,9 @@ export function AvatarDrop() {
   );
 
   const { mutate: deleteWorkspace } = api.ssh.rmWorkspace.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success('Workspace deleted');
-      leaveWorkspace();
+      await leaveWorkspace();
     },
     onError: () => {
       toast.error('Error deleting workspace');
@@ -78,12 +89,14 @@ export function AvatarDrop() {
     return (
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogTrigger asChild>
-          <Button variant="outline" size="icon" title="user info">
-            <Avatar className="h-6 w-6">
-              <AvatarImage
-                src="https://source.boringavatars.com/bauhaus"
-                alt="@user"
-              />
+          <Button
+            variant="ghost"
+            className="rounded-none"
+            size="icon"
+            title="user info"
+          >
+            <Avatar className="rounded-none">
+              <AvatarImage src="/icon.svg" alt="Deep Sirius" />
               <AvatarFallback>oi</AvatarFallback>
             </Avatar>
             <span className="sr-only">User info</span>
@@ -113,12 +126,14 @@ export function AvatarDrop() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" title="user info">
-          <Avatar className="h-6 w-6">
-            <AvatarImage
-              src="https://source.boringavatars.com/bauhaus"
-              alt="@user"
-            />
+        <Button
+          variant="ghost"
+          className="rounded-none"
+          size="icon"
+          title="user info"
+        >
+          <Avatar className="rounded-none">
+            <AvatarImage src="/icon.svg" alt="Deep Sirius" />
             <AvatarFallback>oi</AvatarFallback>
           </Avatar>
           <span className="sr-only">User info</span>
@@ -144,32 +159,22 @@ export function AvatarDrop() {
               <span>Home</span>
             </DropdownMenuItem>
           </Link>
-
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => leaveWorkspace()}
-          >
-            <FolderXIcon className="mr-2 h-4 w-4" />
-            <span>
-              <span className="text-purple-500 dark:text-purple-400 font-semibold">
-                Leave{' '}
-              </span>
-              workspace
-            </span>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => setOpen(true)}
-          >
-            <TrashIcon className="mr-2 h-4 w-4" />
-            <span>
-              <span className="text-purple-500 dark:text-purple-400 font-semibold">
-                Delete{' '}
-              </span>
-              workspace
-            </span>
-          </DropdownMenuItem>
+          <Link href={'/users/' + (sessionData.user.name || '')}>
+            <DropdownMenuItem className="cursor-pointer">
+              <SquareStackIcon className="mr-2 h-4 w-4" />
+              <span>My Workspaces</span>
+            </DropdownMenuItem>
+          </Link>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+        >
+          <MoonIcon className="h-4 w-4 rotate-0 scale-100 transition-all hover:text-slate-900 dark:-rotate-90 dark:scale-0 dark:text-slate-400 dark:hover:text-slate-100" />
+          <SunIcon className="h-4 w-4 absolute rotate-90 scale-0 transition-all hover:text-slate-900 dark:rotate-0 dark:scale-100 dark:text-slate-400 dark:hover:text-slate-100" />
+          <span className="ml-2">{theme === 'light' ? 'Dark' : 'Light'}</span>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer"
@@ -177,7 +182,6 @@ export function AvatarDrop() {
         >
           <LogOutIcon className="mr-2 h-4 w-4" />
           <span>Sign Out</span>
-          <DropdownMenuShortcut>Shift+Alt+L</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

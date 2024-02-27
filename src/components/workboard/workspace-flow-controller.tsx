@@ -227,7 +227,6 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
           showInteractive={false}
           className="bg-transparent px-1 dark:fill-slate-400 [&>button:hover]:dark:bg-slate-700 [&>button:hover]:dark:fill-slate-100 [&>button]:my-2 [&>button]:h-6 [&>button]:w-6 [&>button]:rounded-sm [&>button]:border-none [&>button]:dark:bg-muted"
         >
-          <ControlThemeButton />
           <ControlHelpButton />
         </Controls>
         <MiniMap

@@ -16,7 +16,7 @@ const Workboard: NextPage = () => {
       <Head>
         <title>Workboard</title>
         <meta name="description" content="Workboard" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/icon.svg" />
       </Head>
       <main>
         <NoSSRFlow />

@@ -16,8 +16,8 @@ import keygen from 'ssh-keygen-lite';
 import { env } from '~/env.mjs';
 
 import { prisma } from './db';
-import { ssh } from './ssh';
 import type { ErrnoException } from './remote-job';
+import { ssh } from './ssh';
 
 // TODO: Auth is breaking when the user's credentials are ok but the service can't ssh into SSH_HOST.
 // This will happen when the user doesn't have a scheduled proposal for the day, so its group is not allowed to ssh into SSH_HOST.
@@ -258,7 +258,7 @@ export const authOptions: NextAuthOptions = {
   theme: {
     colorScheme: 'auto', // "auto" | "dark" | "light"
     brandColor: '', // Hex color code
-    logo: '/favicon.ico', // Absolute URL to image
+    logo: '/icon.svg', // Absolute URL to image
     buttonText: '', // Hex color code
   },
 };

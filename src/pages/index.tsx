@@ -23,7 +23,7 @@ const AuthShowcase: React.FC = () => {
   return (
     <Link
       href={'/users/' + (sessionData.user.name || '')}
-      className="w-3/4 text-center rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+      className="w-3/4 text-center rounded-full bg-slate-300 bg-opacity-10 px-10 py-3 font-semibold text-slate-300 no-underline transition hover:bg-white/20"
     >
       <span>My Workspaces</span>
       <ArrowRightIcon className="ml-2 inline-block h-5 w-5 text-white" />
@@ -55,12 +55,8 @@ const Home: NextPage = () => {
           />
           <div className="flex flex-col items-center gap-12">
             <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem] text-center">
-              <span className="text-[hsl(0,0%,0%)] dark:text-slate-200">
-                Deep
-              </span>
-              <span className="text-slate-200 dark:text-[hsl(0,0%,0%)]">
-                Sirius
-              </span>
+              <span className="text-slate-900 dark:text-slate-300">Deep</span>
+              <span className="text-slate-300 dark:text-slate-900">Sirius</span>
             </h1>
             <AuthShowcase />
           </div>

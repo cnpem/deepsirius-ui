@@ -70,7 +70,9 @@ export function AvatarDrop() {
   useHotkeys('shift+alt+l', () =>
     sessionData
       ? void logOut()
-      : void signIn(undefined, { callbackUrl: '/workboard' }),
+      : void signIn(undefined, {
+          callbackUrl: '/',
+        }),
   );
 
   const { mutate: deleteWorkspace } = api.ssh.rmWorkspace.useMutation({

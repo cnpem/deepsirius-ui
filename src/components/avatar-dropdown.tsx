@@ -11,6 +11,7 @@ import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useCallback, useState } from 'react';
+import * as React from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
@@ -37,6 +38,28 @@ import {
   AlertDialogTrigger,
 } from './ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+
+const AvatarButton = React.forwardRef<HTMLButtonElement>((props, ref) => (
+  <Button
+    variant="ghost"
+    className="rounded-md border-2 border-slate-200 dark:border-slate-500 dark:bg-slate-500 dark:bg-opacity-50 dark:hover:bg-slate-500"
+    size="icon"
+    title="user info"
+    ref={ref}
+    {...props}
+  >
+    <Avatar>
+      <AvatarImage
+        src="/transp-icon-2023-10-28.svg"
+        alt="Deep Sirius"
+        className="rounded-inherit "
+      />
+      <AvatarFallback>oi</AvatarFallback>
+    </Avatar>
+    <span className="sr-only">User info</span>
+  </Button>
+));
+AvatarButton.displayName = 'AvatarButton';
 
 export function AvatarDrop() {
   const [open, setOpen] = useState(false);
@@ -91,18 +114,7 @@ export function AvatarDrop() {
     return (
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogTrigger asChild>
-          <Button
-            variant="ghost"
-            className="rounded-none"
-            size="icon"
-            title="user info"
-          >
-            <Avatar className="rounded-none">
-              <AvatarImage src="/icon.svg" alt="Deep Sirius" />
-              <AvatarFallback>oi</AvatarFallback>
-            </Avatar>
-            <span className="sr-only">User info</span>
-          </Button>
+          <AvatarButton />
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -128,18 +140,7 @@ export function AvatarDrop() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="rounded-none"
-          size="icon"
-          title="user info"
-        >
-          <Avatar className="rounded-none">
-            <AvatarImage src="/icon.svg" alt="Deep Sirius" />
-            <AvatarFallback>oi</AvatarFallback>
-          </Avatar>
-          <span className="sr-only">User info</span>
-        </Button>
+        <AvatarButton />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-fit" align="end" forceMount>
         <DropdownMenuItem>

@@ -14,7 +14,7 @@ const AuthShowcase: React.FC = () => {
     return (
       <button
         className=" w-3/4 rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={() => void signIn(undefined, { callbackUrl: '/workboard' })}
+        onClick={() => void signIn(undefined, { callbackUrl: '/' })}
       >
         {'Sign in'}
       </button>
@@ -22,10 +22,10 @@ const AuthShowcase: React.FC = () => {
 
   return (
     <Link
-      href="/workboard"
+      href={'/users/' + (sessionData.user.name || '')}
       className="w-3/4 text-center rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
     >
-      <span>Workboard</span>
+      <span>My Workspaces</span>
       <ArrowRightIcon className="ml-2 inline-block h-5 w-5 text-white" />
     </Link>
   );
@@ -42,7 +42,7 @@ const Home: NextPage = () => {
         />
         <link rel="icon" href="/icon.svg" />
       </Head>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#757cb3c7] via-[#5046bec7] to-[#2a1d40] dark:bg-gradient-to-b dark:from-[#2a1d40] dark:via-[#5046bec7] dark:to-[#757cb3c7]">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#757cb3c7] via-[#5046bec7] to-[#2a1d40] dark:bg-gradient-to-b dark:from-[#2a1d40] dark:via-[#5046bec7] dark:to-[#757cb3c7]">
         <div className="absolute top-5 right-5 ">
           <AvatarDrop />
         </div>
@@ -65,7 +65,7 @@ const Home: NextPage = () => {
             <AuthShowcase />
           </div>
         </div>
-      </main>
+      </div>
     </Layout>
   );
 };

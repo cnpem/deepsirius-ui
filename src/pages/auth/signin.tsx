@@ -95,7 +95,7 @@ function Form() {
 export default function SignIn() {
   return (
     <LayoutNav>
-      <div className="flex h-fit w-fit mx-auto rounded-sm items-center justify-center bg-white dark:bg-white">
+      <div className="flex h-fit w-fit mx-auto ">
         <Link
           href="/"
           className={cn(
@@ -106,7 +106,7 @@ export default function SignIn() {
           <ArrowLeftIcon className="w-4 h-4 mr-2" />
           Home
         </Link>
-        <div className="space-y-12 rounded-xl px-8 pb-8 pt-12 dark:bg-slate-900 sm:shadow-xl">
+        <div className="space-y-12 rounded-xl px-8 pb-8 pt-12 bg-white dark:bg-slate-900 sm:shadow-xl">
           <Form />
         </div>
       </div>

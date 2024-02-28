@@ -49,6 +49,7 @@ export default User;
 function UserWorkspaces() {
   const { data: userWorkspaces, isLoading } =
     api.workspaceDbState.getUserWorkspaces.useQuery();
+  const utils = api.useUtils();
   const { setWorkspacePath, initNodes, initEdges, updateStateSnapshot } =
     useStoreActions();
 
@@ -80,7 +81,8 @@ function UserWorkspaces() {
   );
 
   const { mutate: deleteWorkspace } = api.ssh.rmWorkspace.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
+      await utils.workspaceDbState.getUserWorkspaces.invalidate();
       toast.success('Workspace deleted');
     },
     onError: () => {

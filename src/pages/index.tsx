@@ -43,7 +43,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/icon.svg" />
       </Head>
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#757cb3c7] via-[#5046bec7] to-[#2a1d40] dark:bg-gradient-to-b dark:from-[#2a1d40] dark:via-[#5046bec7] dark:to-[#757cb3c7]">
-        <div className="absolute top-5 right-5 ">
+        <div className="absolute top-0 right-0 m-5 z-10">
           <AvatarDrop />
         </div>
         <div className="container flex lg:flex-row flex-col items-center justify-center lg:gap-12 px-4 py-16 ">

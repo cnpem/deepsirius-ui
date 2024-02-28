@@ -20,7 +20,7 @@ type FormData = {
 function Form() {
   const router = useRouter();
   const query = router.query;
-  const callbackUrl = (query.callbackUrl as string) || '/workboard';
+  const callbackUrl = (query.callbackUrl as string) || '/';
 
   const {
     register,
@@ -126,7 +126,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   // Note: Make sure not to redirect to the same page
   // To avoid an infinite loop!
   if (session) {
-    return { redirect: { destination: '/workboard' } };
+    if (!session.user.name) {
+      throw new Error('User name not found');
+    }
+    return { redirect: { destination: '/user/' + session.user.name } };
   }
 
   return {

@@ -2,6 +2,7 @@ import { HeartIcon, PlusSquareIcon, TrashIcon } from 'lucide-react';
 import { type NextPage } from 'next';
 import { useSession } from 'next-auth/react';
 import ErrorPage from 'next/error';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useCallback, useState } from 'react';
 import { type Edge, type Node } from 'reactflow';
@@ -108,6 +109,20 @@ function UserWorkspaces() {
   if (userWorkspaces) {
     return (
       <div className="flex flex-col mx-auto h-[80vh] md:w-1/2 w-full justify-center px-4">
+        <Image
+          className="mx-auto dark:hidden opacity-75"
+          src="/transp-top-2024-02-28.svg"
+          alt="DeepSirius Logo"
+          width={300}
+          height={300}
+        />
+        <Image
+          className="mx-auto hidden dark:block filter opacity-50"
+          src="/transp-dark-top-2024-02-28.svg"
+          alt="DeepSirius Logo"
+          width={300}
+          height={300}
+        />
         <div className="flex flex-row gap-4 py-4">
           <Input
             className="w-3/4 bg-white/10 border-white/10 border-b-2 text-white/90 focus:border-white/20 focus:ring-white/20 focus:ring-opacity-50 focus:ring-2 focus:outline-none transition-all duration-200 ease-in-out"
@@ -115,7 +130,10 @@ function UserWorkspaces() {
             placeholder="Search workspaces"
             onChange={handleSearch}
           />
-          <Button className="w-1/4 bg-green-700 gap-2" variant="default">
+          <Button
+            className="w-1/4 bg-green-700 gap-2 text-slate-800 dark:text-slate-300"
+            variant="default"
+          >
             <PlusSquareIcon className="h-5 w-5" />
             {'New'}
           </Button>
@@ -131,8 +149,11 @@ function UserWorkspaces() {
 
         <ScrollArea className="align-end">
           {filteredWorkspaces?.map((workspace) => (
-            <Card key={workspace.path} className="my-2">
-              <div className="grid grid-cols-2 justify-between gap-4 py-4 pl-8 pr-4">
+            <Card
+              key={workspace.path}
+              className="my-2 dark:bg-slate-500 dark:bg-opacity-50 bg-slate-300 bg-opacity-50 border-none"
+            >
+              <div className="grid grid-cols-2 justify-between gap-4 py-4 pl-8 pr-4 ">
                 <div className="mr-auto">
                   <CardHeader className="align-start p-0 text-start">
                     <CardTitle>

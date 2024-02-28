@@ -32,7 +32,6 @@ import { api } from '~/utils/api';
 
 import { AvatarDrop } from '../avatar-dropdown';
 import { ControlHelpButton } from '../help';
-import { ControlThemeButton } from '../theme-toggle';
 import {
   AlertDialog,
   AlertDialogAction,

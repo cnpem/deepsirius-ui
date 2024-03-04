@@ -6,11 +6,11 @@ import {
   SunIcon,
   UserIcon,
 } from 'lucide-react';
-import { signIn, signOut, useSession } from 'next-auth/react';
+import { signIn, signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import * as React from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { toast } from 'sonner';
@@ -24,19 +24,8 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import { useStore, useStoreActions } from '~/hooks/use-store';
-import { api } from '~/utils/api';
+import { useUser } from '~/hooks/use-user';
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from './ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const AvatarButton = React.forwardRef<HTMLButtonElement>((props, ref) => (
@@ -62,12 +51,11 @@ const AvatarButton = React.forwardRef<HTMLButtonElement>((props, ref) => (
 AvatarButton.displayName = 'AvatarButton';
 
 export function AvatarDrop() {
-  const [open, setOpen] = useState(false);
-  const { data: sessionData } = useSession();
+  const user = useUser();
   const router = useRouter();
 
   const { resetStore } = useStoreActions();
-  const workspacePath = useStore((state) => state.workspacePath);
+  const storeState = useStore();
 
   const { theme, setTheme } = useTheme();
 
@@ -76,66 +64,32 @@ export function AvatarDrop() {
   );
 
   const logOut = useCallback(async () => {
-    await signOut({ redirect: false });
     await router.push('/');
-    console.log('Logged out');
-    toast.success('Logged out');
     resetStore();
+    await signOut({ redirect: false });
+    toast.success('Logged out');
   }, [resetStore, router]);
 
-  const leaveWorkspace = useCallback(async () => {
-    const userName = sessionData?.user?.name || '';
-    await router.push('/users/' + userName).then(() => {
+  const checkLeavingWorkspaceAndClearStore = useCallback(() => {
+    if (storeState.workspacePath) {
+      const workspaceName = storeState.workspacePath.split('/').pop();
       resetStore();
-    });
-  }, [resetStore, router, sessionData?.user?.name]);
+      const message = workspaceName
+        ? `Left workspace "${workspaceName}"`
+        : 'Left workspace';
+      toast.success(message);
+    }
+  }, [resetStore, storeState.workspacePath]);
 
   useHotkeys('shift+alt+l', () =>
-    sessionData
+    user
       ? void logOut()
       : void signIn(undefined, {
           callbackUrl: '/',
         }),
   );
 
-  const { mutate: deleteWorkspace } = api.ssh.rmWorkspace.useMutation({
-    onSuccess: async () => {
-      toast.success('Workspace deleted');
-      await leaveWorkspace();
-    },
-    onError: () => {
-      toast.error('Error deleting workspace');
-    },
-  });
-
-  if (!sessionData) return null;
-
-  if (open) {
-    return (
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogTrigger asChild>
-          <AvatarButton />
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              workspace and all its contents.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteWorkspace({ path: workspacePath || '' })}
-            >
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    );
-  }
+  if (!user) return null;
 
   return (
     <DropdownMenu>
@@ -146,24 +100,28 @@ export function AvatarDrop() {
         <DropdownMenuItem>
           <UserIcon className="mr-2 h-4 w-4" />
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium leading-none">
-              {sessionData.user?.name}
-            </p>
+            <p className="text-sm font-medium leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground dark:text-gray-500">
-              {sessionData.user?.email}
+              {user.email}
             </p>
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <Link href="/">
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => void checkLeavingWorkspaceAndClearStore()}
+            >
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
               <span>Home</span>
             </DropdownMenuItem>
           </Link>
-          <Link href={'/users/' + (sessionData.user.name || '')}>
-            <DropdownMenuItem className="cursor-pointer">
+          <Link href={user.route}>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => void checkLeavingWorkspaceAndClearStore()}
+            >
               <SquareStackIcon className="mr-2 h-4 w-4" />
               <span>My Workspaces</span>
             </DropdownMenuItem>

@@ -124,7 +124,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     if (!session.user.name) {
       throw new Error('User name not found');
     }
-    return { redirect: { destination: '/user/' + session.user.name } };
+    return { redirect: { destination: '/u/' + session.user.name } };
   }
 
   return {

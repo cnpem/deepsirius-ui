@@ -1,20 +1,21 @@
 import { ArrowRightIcon } from 'lucide-react';
 import { type NextPage } from 'next';
-import { signIn, useSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AvatarDrop } from '~/components/avatar-dropdown';
 import { Layout } from '~/components/layout';
+import { useUser } from '~/hooks/use-user';
 
 const AuthShowcase: React.FC = () => {
-  const { data: sessionData } = useSession();
+  const user = useUser();
 
-  if (!sessionData)
+  if (!user)
     return (
       <button
         className=" w-3/4 rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={() => void signIn(undefined, { callbackUrl: '/' })}
+        onClick={() => void signIn(undefined)}
       >
         {'Sign in'}
       </button>
@@ -22,7 +23,7 @@ const AuthShowcase: React.FC = () => {
 
   return (
     <Link
-      href={'/users/' + (sessionData.user.name || '')}
+      href={user.route}
       className="w-3/4 text-center rounded-full bg-slate-300 bg-opacity-10 px-10 py-3 font-semibold text-slate-300 no-underline transition hover:bg-white/20"
     >
       <span>My Workspaces</span>

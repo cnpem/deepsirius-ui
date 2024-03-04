@@ -1,13 +1,13 @@
 import { type NextPage } from 'next';
-import { useSession } from 'next-auth/react';
 import ErrorPage from 'next/error';
 import { LayoutNav } from '~/components/layout-nav';
 import { CreateNewWorkspace } from '~/components/workboard/create-new-workspace';
+import { useUser } from '~/hooks/use-user';
 
 const New: NextPage = () => {
-  const currentUserName = useSession().data?.user?.name;
+  const user = useUser();
 
-  if (!currentUserName) {
+  if (!user) {
     return <ErrorPage statusCode={404} />;
   }
 

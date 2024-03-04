@@ -1,6 +1,5 @@
 import { HeartIcon, PlusSquareIcon, TrashIcon } from 'lucide-react';
 import { type NextPage } from 'next';
-import { useSession } from 'next-auth/react';
 import ErrorPage from 'next/error';
 import { useRouter } from 'next/router';
 import { useCallback, useState } from 'react';
@@ -18,14 +17,20 @@ import {
 import { Input } from '~/components/ui/input';
 import { Skeleton } from '~/components/ui/skeleton';
 import { type NodeData, useStoreActions } from '~/hooks/use-store';
+import { useUser } from '~/hooks/use-user';
 import { api } from '~/utils/api';
 
 const User: NextPage = () => {
-  const currentUserName = useSession().data?.user?.name;
+  const user = useUser();
   const router = useRouter();
-  const { user } = router.query;
+  const { user: queryUser } = router.query;
 
-  if (user !== currentUserName) {
+  if (!user) {
+    // if the user is not logged in, the middleware will redirect to the login page
+    return null;
+  }
+
+  if (queryUser !== user.name) {
     return <ErrorPage statusCode={404} />;
   }
 

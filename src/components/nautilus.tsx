@@ -265,7 +265,8 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
                 }}
                 onDoubleClick={() => {
                   if (item.type === 'directory') {
-                    const newPath = `${path}/${item.name}`;
+                    const basePath = formatPath(path);
+                    const newPath = `${basePath}/${item.name}`;
                     setHistory((prev) => [...prev, path]);
                     setPath(newPath);
                   } else {

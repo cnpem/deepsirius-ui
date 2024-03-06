@@ -13,7 +13,7 @@ const New: NextPage = () => {
 
   return (
     <LayoutNav>
-      <CreateNewWorkspace />
+      <CreateNewWorkspace userRoute={user.route} />
     </LayoutNav>
   );
 };

@@ -58,7 +58,7 @@ export const remoteProcessRouter = createTRPCRouter({
       const connection = ctx.connection;
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
-      const scriptName = 'deepSirius-dataset.sbatch';
+      const scriptName = 'deepSirius-workspace.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });
@@ -279,7 +279,7 @@ export const remoteProcessRouter = createTRPCRouter({
       const connection = ctx.connection;
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
-      const scriptName = 'deepSirius-dataset.sbatch';
+      const scriptName = 'deepSirius-inference.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });

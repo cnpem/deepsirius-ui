@@ -3,7 +3,6 @@ import { type NextPage } from 'next';
 import ErrorPage from 'next/error';
 import { useRouter } from 'next/router';
 import { useCallback, useState } from 'react';
-import { type Edge, type Node } from 'reactflow';
 import { toast } from 'sonner';
 import { LayoutNav } from '~/components/layout-nav';
 import { Button } from '~/components/ui/button';
@@ -16,22 +15,20 @@ import {
 } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
 import { Skeleton } from '~/components/ui/skeleton';
-import { type NodeData, useStoreActions } from '~/hooks/use-store';
 import { useUser } from '~/hooks/use-user';
 import { api } from '~/utils/api';
 
 const User: NextPage = () => {
   const user = useUser();
   const router = useRouter();
-  const { user: queryUser } = router.query;
 
   if (!user) {
     // if the user is not logged in, the middleware will redirect to the login page
     return null;
   }
 
-  if (queryUser !== user.name) {
-    return <ErrorPage statusCode={404} />;
+  if (router.query.user !== user.name) {
+    return <ErrorPage statusCode={404} title="" />;
   }
 
   return (
@@ -44,11 +41,12 @@ const User: NextPage = () => {
 export default User;
 
 function UserWorkspaces() {
+  const user = useUser();
   const { data: userWorkspaces, isLoading } =
     api.workspaceDbState.getUserWorkspaces.useQuery();
   const utils = api.useUtils();
-  const { setWorkspacePath, initNodes, initEdges, updateStateSnapshot } =
-    useStoreActions();
+  // const { setWorkspacePath, initNodes, initEdges, updateStateSnapshot } =
+  //   useStoreActions();
 
   const router = useRouter();
 
@@ -56,25 +54,13 @@ function UserWorkspaces() {
     path: string;
     state: string;
   };
+
   const handleSelectWorkspace = useCallback(
     async (props: WorkspaceSelectProps) => {
-      if (props.state) {
-        const stateSnapshot = JSON.parse(props.state) as {
-          nodes: Node<NodeData>[];
-          edges: Edge[];
-        };
-        // init nodes and edges from db
-        initNodes(stateSnapshot.nodes);
-        initEdges(stateSnapshot.edges);
-        // write the state snapshot
-        updateStateSnapshot();
-      }
-      // sets the workspace path to the store which will trigger the workspace to be loaded
-      setWorkspacePath(props.path);
-      await router.push('/workboard');
-      toast.success('Workspace loaded');
+      if (!user) return;
+      await router.push(user.route + '/' + workspaceShortName(props.path));
     },
-    [setWorkspacePath, router, initNodes, initEdges, updateStateSnapshot],
+    [router, user],
   );
 
   const { mutate: deleteWorkspace } = api.ssh.rmWorkspace.useMutation({
@@ -86,6 +72,17 @@ function UserWorkspaces() {
       toast.error('Error deleting workspace');
     },
   });
+
+  const { mutate: updateFavoriteWorkspace } =
+    api.workspaceDbState.updateFavoriteWorkspace.useMutation({
+      onSuccess: async () => {
+        await utils.workspaceDbState.getUserWorkspaces.invalidate();
+        toast.success('Favorite Updated');
+      },
+      onError: () => {
+        toast.error('Error updating favorite workspace');
+      },
+    });
 
   const workspaceShortName = (path: string) => {
     return path.split('/').pop() as string;
@@ -101,9 +98,11 @@ function UserWorkspaces() {
     setSearch(e.target.value);
   }, []);
 
-  const filteredWorkspaces = userWorkspaces?.filter(({ path }) =>
-    path.includes(search),
-  );
+  const searchAndSortWorkspaces = userWorkspaces
+    ?.filter(({ path }) => path.includes(search))
+    .sort((a, b) => {
+      return a.favorite === b.favorite ? 0 : a.favorite ? -1 : 1;
+    });
 
   if (isLoading) {
     return <Skeleton />;
@@ -129,7 +128,7 @@ function UserWorkspaces() {
           </Button>
         </div>
 
-        {!filteredWorkspaces && (
+        {!searchAndSortWorkspaces && (
           <div className="flex flex-col gap-4">
             <Skeleton />
             <Skeleton />
@@ -137,7 +136,7 @@ function UserWorkspaces() {
           </div>
         )}
 
-        {filteredWorkspaces?.map((workspace) => (
+        {searchAndSortWorkspaces?.map((workspace) => (
           <Card
             key={workspace.path}
             className="my-2 bg-slate-200 dark:bg-slate-900 border-none"
@@ -171,8 +170,14 @@ function UserWorkspaces() {
               <div className="ml-auto">
                 <WorkspaceCardActions
                   path={workspace.path}
+                  favorite={workspace.favorite}
                   handleDelete={deleteWorkspace}
-                  handleFavorite={({ path }) => console.log(path)}
+                  handleFavorite={({ path }: { path: string }) =>
+                    updateFavoriteWorkspace({
+                      path,
+                      favorite: !workspace.favorite,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -187,11 +192,13 @@ function UserWorkspaces() {
 
 interface WorkspaceCardActionsProps {
   path: string;
+  favorite: boolean;
   handleDelete: ({ path }: { path: string }) => void;
   handleFavorite: ({ path }: { path: string }) => void;
 }
 const WorkspaceCardActions = ({
   path,
+  favorite,
   handleDelete,
   handleFavorite,
 }: WorkspaceCardActionsProps) => {
@@ -203,7 +210,8 @@ const WorkspaceCardActions = ({
         title="Favorite workspace"
         onClick={() => handleFavorite({ path })}
       >
-        <HeartIcon className="h-4 w-4" />
+        {favorite && <HeartIcon className="h-4 w-4" color="red" />}
+        {!favorite && <HeartIcon className="h-4 w-4" />}
       </Button>
       <Button
         variant="ghost"

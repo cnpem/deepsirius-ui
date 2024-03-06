@@ -5,6 +5,8 @@ import {
   DumbbellIcon,
   PlusCircle,
 } from 'lucide-react';
+import ErrorPage from 'next/error';
+import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import ReactFlow, {
@@ -21,7 +23,6 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import CustomConnectionLine from '~/components/workboard/connection-line';
 import { PlusOneNode } from '~/components/workboard/plusone-node';
-import { WorkspaceSelector } from '~/components/workboard/workspace-select';
 import {
   type NodeData,
   nodeTypes,
@@ -32,6 +33,7 @@ import { api } from '~/utils/api';
 
 import { AvatarDrop } from '../avatar-dropdown';
 import { ControlHelpButton } from '../help';
+import { LayoutNav } from '../layout-nav';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -344,16 +346,96 @@ function AlertDelete({ open, onOpenChange, onConfirm }: AlertDeleteProps) {
   );
 }
 
-/**
- * The Flow component is the component that manages the selection of a workspace ReactFlow instance (managed by Geppetto)
- * @returns the WorkspaceSelectDialog component if no workspacePath is set in the store or the Geppetto (Workspace Flow component) if it is
- */
-export default function Flow() {
+export default function FlowRouter() {
+  const {
+    initNodes,
+    initEdges,
+    setWorkspacePath,
+    resetStore,
+    updateStateSnapshot,
+  } = useStoreActions();
   const { workspacePath } = useStore();
+  const storeWorkspace = workspacePath?.split('/').pop() || '';
+  const router = useRouter();
+  const routeWorkspace = router.query.workspace as string; // parent component should handle the case when workspace is undefined
+  const workspaceChanged = routeWorkspace !== storeWorkspace;
 
-  if (!workspacePath) {
-    return <WorkspaceSelector />;
+  const { data, error, isLoading } =
+    api.workspaceDbState.getWorkspaceByName.useQuery(
+      {
+        name: routeWorkspace,
+      },
+      {
+        enabled: workspaceChanged,
+        refetchOnMount: false,
+      },
+    );
+
+  useEffect(() => {
+    console.log(
+      'workspaceChanged',
+      workspaceChanged,
+      data,
+      storeWorkspace,
+      routeWorkspace,
+    );
+    if (workspaceChanged && !!data?.path) {
+      if (storeWorkspace) {
+        toast.info(`Leaving workspace ${storeWorkspace}`);
+      }
+      toast.info(`Switching to workspace ${routeWorkspace}`);
+      resetStore();
+      setWorkspacePath(data.path);
+      if (!!data.state) {
+        const { nodes, edges } = JSON.parse(data.state) as {
+          nodes: Node<NodeData>[];
+          edges: Edge[];
+        };
+        if (nodes) initNodes(nodes);
+        if (edges) initEdges(edges);
+      }
+      updateStateSnapshot();
+    }
+  }, [
+    data,
+    workspaceChanged,
+    resetStore,
+    setWorkspacePath,
+    initNodes,
+    initEdges,
+    storeWorkspace,
+    routeWorkspace,
+    updateStateSnapshot,
+  ]);
+
+  const canCreateWorkspace = !workspaceChanged && workspacePath;
+  const searchingWorkspace = workspaceChanged && !error;
+
+  if (canCreateWorkspace) return <Geppetto workspacePath={workspacePath} />;
+
+  if (searchingWorkspace) {
+    return (
+      <LayoutNav title="Loading workspace...">
+        <div className="my-40 gap-4 flex flex-row justify-center items-center">
+          <p className="text-center text-slate-300">Loading workspace...</p>
+          <div className="animate-spin rounded-full h-5 w-5 mr-2 border-4 border-sky-600"></div>
+        </div>
+      </LayoutNav>
+    );
   }
 
-  return <Geppetto workspacePath={workspacePath} />;
+  if (error) {
+    console.error('error', error);
+    return <ErrorPage statusCode={500} title={error.message} />;
+  }
+
+  console.error('Forbidden state!');
+  console.error('workspaceChanged', workspaceChanged);
+  console.error('workspacePath', workspacePath);
+  console.error('workspaceInRoute', routeWorkspace);
+  console.error('data', data);
+  console.error('isLoading', isLoading);
+  console.error('error', error);
+
+  return <ErrorPage statusCode={404} />;
 }

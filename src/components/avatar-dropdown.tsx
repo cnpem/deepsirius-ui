@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import { useStore, useStoreActions } from '~/hooks/use-store';
+import { useStoreActions } from '~/hooks/use-store';
 import { useUser } from '~/hooks/use-user';
 
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -55,7 +55,6 @@ export function AvatarDrop() {
   const router = useRouter();
 
   const { resetStore } = useStoreActions();
-  const storeState = useStore();
 
   const { theme, setTheme } = useTheme();
 
@@ -69,17 +68,6 @@ export function AvatarDrop() {
     await signOut({ redirect: false });
     toast.success('Logged out');
   }, [resetStore, router]);
-
-  const checkLeavingWorkspaceAndClearStore = useCallback(() => {
-    if (storeState.workspacePath) {
-      const workspaceName = storeState.workspacePath.split('/').pop();
-      resetStore();
-      const message = workspaceName
-        ? `Left workspace "${workspaceName}"`
-        : 'Left workspace';
-      toast.success(message);
-    }
-  }, [resetStore, storeState.workspacePath]);
 
   useHotkeys('shift+alt+l', () =>
     user
@@ -109,19 +97,13 @@ export function AvatarDrop() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <Link href="/">
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => void checkLeavingWorkspaceAndClearStore()}
-            >
+            <DropdownMenuItem className="cursor-pointer">
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
               <span>Home</span>
             </DropdownMenuItem>
           </Link>
           <Link href={user.route}>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => void checkLeavingWorkspaceAndClearStore()}
-            >
+            <DropdownMenuItem className="cursor-pointer">
               <SquareStackIcon className="mr-2 h-4 w-4" />
               <span>My Workspaces</span>
             </DropdownMenuItem>

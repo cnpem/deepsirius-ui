@@ -25,6 +25,7 @@ import CustomConnectionLine from '~/components/workboard/connection-line';
 import { PlusOneNode } from '~/components/workboard/plusone-node';
 import {
   type NodeData,
+  type WorkspaceInfo,
   nodeTypes,
   useStore,
   useStoreActions,
@@ -50,7 +51,7 @@ import {
  * It uses the ReactFlow component to render the nodes and edges
  * It also uses the zustand store to manage the state of the nodes and edges
  */
-function Geppetto({ workspacePath }: { workspacePath: string }) {
+function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
   const [alertOpen, setAlertOpen] = useState(false);
   const {
     onConnect,
@@ -80,10 +81,10 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
 
   useEffect(() => {
     updateDbState({
-      path: workspacePath,
+      path: workspaceInfo.path,
       state: stateSnapshot,
     });
-  }, [updateDbState, stateSnapshot, workspacePath]);
+  }, [updateDbState, stateSnapshot, workspaceInfo.path]);
 
   const handleNodesDelete = useCallback(() => {
     const nodeIsProtected = (node: Node<NodeData>) => {
@@ -207,11 +208,11 @@ function Geppetto({ workspacePath }: { workspacePath: string }) {
           <PlusOneNode />
         </Panel>
         <Panel position="bottom-center">
-          <span className="flex w-fit rounded-sm border bg-muted p-2 text-xs font-semibold text-slate-500 dark:text-slate-400 ">
-            <span className="text-purple-500 dark:text-purple-400">
+          <span className="flex w-fit rounded-sm border bg-muted p-2 text-sm font-semibold text-slate-500 dark:text-slate-400 ">
+            <span className="text-purple-500 dark:text-purple-400 mr-2">
               Workspace:
-            </span>{' '}
-            {workspacePath}
+            </span>
+            {`"${workspaceInfo.name}"`}
           </span>
         </Panel>
         {nodes.length === 0 && (
@@ -350,12 +351,12 @@ export default function FlowRouter() {
   const {
     initNodes,
     initEdges,
-    setWorkspacePath,
+    setWorkspaceInfo,
     resetStore,
     updateStateSnapshot,
   } = useStoreActions();
-  const { workspacePath } = useStore();
-  const storeWorkspace = workspacePath?.split('/').pop() || '';
+  const { workspaceInfo } = useStore();
+  const storeWorkspace = workspaceInfo?.name;
   const router = useRouter();
   const routeWorkspace = router.query.workspace as string; // parent component should handle the case when workspace is undefined
   const workspaceChanged = routeWorkspace !== storeWorkspace;
@@ -385,7 +386,10 @@ export default function FlowRouter() {
       }
       toast.info(`Switching to workspace ${routeWorkspace}`);
       resetStore();
-      setWorkspacePath(data.path);
+      setWorkspaceInfo({
+        name: data.name,
+        path: data.path,
+      });
       if (!!data.state) {
         const { nodes, edges } = JSON.parse(data.state) as {
           nodes: Node<NodeData>[];
@@ -400,7 +404,7 @@ export default function FlowRouter() {
     data,
     workspaceChanged,
     resetStore,
-    setWorkspacePath,
+    setWorkspaceInfo,
     initNodes,
     initEdges,
     storeWorkspace,
@@ -408,10 +412,10 @@ export default function FlowRouter() {
     updateStateSnapshot,
   ]);
 
-  const canCreateWorkspace = !workspaceChanged && workspacePath;
+  const canCreateWorkspace = !workspaceChanged && workspaceInfo;
   const searchingWorkspace = workspaceChanged && !error;
 
-  if (canCreateWorkspace) return <Geppetto workspacePath={workspacePath} />;
+  if (canCreateWorkspace) return <Geppetto workspaceInfo={workspaceInfo} />;
 
   if (searchingWorkspace) {
     return (
@@ -431,7 +435,7 @@ export default function FlowRouter() {
 
   console.error('Forbidden state!');
   console.error('workspaceChanged', workspaceChanged);
-  console.error('workspacePath', workspacePath);
+  console.error('workspaceInfo', workspaceInfo);
   console.error('workspaceInRoute', routeWorkspace);
   console.error('data', data);
   console.error('isLoading', isLoading);

@@ -48,6 +48,11 @@ const validConnectionPairs = [
   ['network', 'inference'],
 ];
 
+export type WorkspaceInfo = {
+  path: string;
+  name: string;
+};
+
 export type NodeStatus = 'success' | 'error' | 'active' | 'busy';
 
 export type NodeData = {
@@ -64,7 +69,7 @@ export type NodeData = {
 type RFState = {
   nodes: Node<NodeData>[];
   edges: Edge[];
-  workspacePath?: string;
+  workspaceInfo?: WorkspaceInfo;
   stateSnapshot: string;
 };
 
@@ -79,7 +84,7 @@ type RFActions = {
   isValidConnection: (edge: Edge | Connection) => boolean;
   checkSourceIsConnected: (targetId: string) => boolean;
   getSourceData: (targetId: string) => NodeData | undefined;
-  setWorkspacePath: (workspacePath: string) => void;
+  setWorkspaceInfo: (workspaceInfo: WorkspaceInfo) => void;
   onUpdateNode: ({ id, data }: { id: string; data: NodeData }) => void;
   initNodes: (nodes: Node<NodeData>[]) => void;
   initEdges: (edges: Edge[]) => void;
@@ -95,7 +100,7 @@ export type RFStore = RFState & {
 const initialState: RFState = {
   nodes: [],
   edges: [],
-  workspacePath: undefined,
+  workspaceInfo: undefined,
   stateSnapshot: '',
 };
 
@@ -207,7 +212,7 @@ export const useStore = create<RFStore>()(
           }
         },
         onConnect: (params: Connection) => {
-          if (!get().workspacePath || !params.source || !params.target) {
+          if (!get().workspaceInfo || !params.source || !params.target) {
             return;
           }
           console.log('Store.OnConnect: Trying to connect', params);
@@ -320,17 +325,17 @@ export const useStore = create<RFStore>()(
             get().actions.updateStateSnapshot();
           }
         },
-        setWorkspacePath: (workspacePath: string) => {
+        setWorkspaceInfo: (workspaceInfo: WorkspaceInfo) => {
           set({
-            workspacePath: workspacePath,
+            workspaceInfo: workspaceInfo,
           });
         },
       },
     }),
     {
-      name: 'workspace-path',
+      name: 'workspace-state',
       partialize: (state) => ({
-        workspacePath: state.workspacePath,
+        workspaceInfo: state.workspaceInfo,
         stateSnapshot: state.stateSnapshot,
         nodes: state.nodes,
         edges: state.edges,

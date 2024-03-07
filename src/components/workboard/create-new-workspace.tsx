@@ -39,18 +39,21 @@ interface NewWorkspaceState {
 
 export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
   const router = useRouter();
-  const { setWorkspacePath, resetStore } = useStoreActions();
+  const { resetStore, setWorkspaceInfo } = useStoreActions();
   const [basePath, setBasePath] = useState(env.NEXT_PUBLIC_STORAGE_PATH);
-  const [workspaceState, setWorkspaceState] = useState<NewWorkspaceState>({
-    // jobIsPending: false,
-  });
+  const [newWorkspaceState, setNewWorkspaceState] = useState<NewWorkspaceState>(
+    {},
+  );
 
   const createWorkspaceDbMutation =
     api.workspaceDbState.createWorkspace.useMutation({
       onSuccess: async (data) => {
         // finally, set the workspace path in the store if the db registration was successful
         resetStore();
-        setWorkspacePath(data.path);
+        setWorkspaceInfo({
+          name: data.name,
+          path: data.path,
+        });
         toast.success('New workspace registered in the database');
         await router.push(`${userRoute}/${data.name}`);
       },
@@ -61,7 +64,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
         // what to do here?
         throw new Error(
           'Error registering workspace in the database. Last state: ' +
-            JSON.stringify(workspaceState),
+            JSON.stringify(newWorkspaceState),
         );
       },
     });
@@ -69,38 +72,38 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
   const submitNewWorkspaceMutation =
     api.remoteProcess.submitNewWorkspace.useMutation({
       onSuccess: (data) => {
-        setWorkspaceState({
-          ...workspaceState,
+        setNewWorkspaceState({
+          ...newWorkspaceState,
           jobId: data.jobId,
         });
       },
       onError: () => {
         toast.error('Error creating workspace');
-        setWorkspaceState({}); // reset the state?
+        setNewWorkspaceState({}); // reset the state?
       },
     });
 
   const { data: jobData } = api.remotejob.checkStatus.useQuery(
-    { jobId: workspaceState.jobId as string },
+    { jobId: newWorkspaceState.jobId as string },
     {
       refetchOnMount: false,
-      enabled: !!workspaceState.jobIsPending && !!workspaceState.jobId,
+      enabled: !!newWorkspaceState.jobIsPending && !!newWorkspaceState.jobId,
       refetchInterval: 5000,
       refetchIntervalInBackground: true,
     },
   );
 
   useEffect(() => {
-    if (!workspaceState.jobIsPending) return;
-    if (!workspaceState.path || !workspaceState.name) return;
+    if (!newWorkspaceState.jobIsPending) return;
+    if (!newWorkspaceState.path || !newWorkspaceState.name) return;
     if (jobData && jobData.jobStatus === 'COMPLETED') {
       // disable refetching until there is a new job
       createWorkspaceDbMutation.mutate({
-        path: workspaceState.path,
-        name: workspaceState.name,
+        path: newWorkspaceState.path,
+        name: newWorkspaceState.name,
       });
-      setWorkspaceState({
-        ...workspaceState,
+      setNewWorkspaceState({
+        ...newWorkspaceState,
         jobIsPending: false,
       });
       toast.success('Workspace created in the storage');
@@ -108,13 +111,18 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
     }
     if (jobData && jobData.jobStatus === 'FAILED') {
       toast.error('Error creating workspace');
-      setWorkspaceState({});
+      setNewWorkspaceState({});
     }
-  }, [jobData, workspaceState, setWorkspaceState, createWorkspaceDbMutation]);
+  }, [
+    jobData,
+    newWorkspaceState,
+    setNewWorkspaceState,
+    createWorkspaceDbMutation,
+  ]);
 
   const handleSubmit = (data: Form) => {
     const fullPath = `${data.workspaceBasePath}${data.workspaceName}`;
-    setWorkspaceState({
+    setNewWorkspaceState({
       path: fullPath,
       name: data.workspaceName,
       jobIsPending: true,
@@ -131,7 +139,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
       path: basePath,
     },
     {
-      enabled: !workspaceState.path, // only fetch the base path data when the form is not submitted and wokspaceState is not set
+      enabled: !newWorkspaceState.path, // only fetch the base path data when the form is not submitted and wokspaceState is not set
     },
   );
 
@@ -186,17 +194,19 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
           buttonDisabled: true,
         };
       }
-      if (workspaceState.jobIsPending) {
+      if (newWorkspaceState.jobIsPending) {
         return {
           buttonText: `Creating workspace ${
-            workspaceState.jobId ? `Job ID: ${workspaceState.jobId}` : '...'
+            newWorkspaceState.jobId
+              ? `Job ID: ${newWorkspaceState.jobId}`
+              : '...'
           }`,
           buttonDisabled: true,
         };
       }
       return {
         buttonText: 'Submit New Workspace',
-        buttonDisabled: !!workspaceState.path,
+        buttonDisabled: !!newWorkspaceState.path,
       };
     })();
 

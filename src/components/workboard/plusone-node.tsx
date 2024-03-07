@@ -21,14 +21,14 @@ import {
 
 // selects the type of node to be created using a dropdown menu
 export function PlusOneNode() {
-  const { nodes, workspacePath } = useStore((state) => ({
-    workspacePath: state.workspacePath,
+  const { nodes, workspaceInfo } = useStore((state) => ({
+    workspaceInfo: state.workspaceInfo,
     nodes: state.nodes,
   }));
   const { addNode } = useStoreActions();
 
   const onNodeAdd = (nodeType: AllowedNodeTypes) => {
-    if (!workspacePath) {
+    if (!workspaceInfo) {
       toast.error('uh oh! something went wrong', {
         description: 'Looks like the workspace was not loaded properly.',
         action: {
@@ -51,7 +51,7 @@ export function PlusOneNode() {
       type: nodeType,
       position: initialPostition,
       data: {
-        workspacePath,
+        workspacePath: workspaceInfo.path,
         status: 'active',
       },
     };

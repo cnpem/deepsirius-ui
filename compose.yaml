@@ -1,24 +1,21 @@
-version: '3.8'
+version: "3.8"
 services:
   app:
     container_name: deepsirius-ui
-    platform: 'linux/amd64'
+    platform: "linux/amd64"
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./apps/deepsirius-ui/Dockerfile
       args:
         # build time variables
         # only NEXT_PUBLIC variables needed?
-        NEXT_PUBLIC_TREE_PATH: '${NEXT_PUBLIC_TREE_PATH}'
+        NEXT_PUBLIC_STORAGE_PATH: "${NEXT_PUBLIC_STORAGE_PATH}"
     working_dir: /app
     volumes:
-      - ./dev.sqlite:/app/prisma/db.sqlite:rw
-      - ./abtlus-AD1-CA.cer:${CA_CERT}:ro
-      - type: bind
-        source: ${DOCKER_HOST_TREE_PATH}
-        target: ${NEXT_PUBLIC_TREE_PATH}
+      - /mnt/work/deepsirius/abtlus-AD1-CA.cer:${CA_CERT}:ro
+      - ./apps/deepsirius-ui/prisma/db.sqlite:/app/apps/deepsirius-ui/prisma/db.sqlite:rw
     ports:
-      - '3000:3000'
+      - "3000:3000"
     image: deepsirius-ui/latest
     environment:
       # run time variables

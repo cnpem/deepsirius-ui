@@ -24,45 +24,43 @@ When accessing the web app on the browser, the user is presented with a login pa
 
 The workflow selection view is a list of workflows that the user has created in the interface. The user can create a new workflow by clicking the new workflow button, which redirects the user to the workflow view. The user can also click on an existing workflow to edit it, which redirects the user to the workflow view with the selected workflow loaded.
 
-## Running the interface
-
-This interface is meant to be running as a web app independently from the ssc-deepsirius package. It is meant to be used as a client for the ssc-deepsirius package, which is a python package that runs on demand on the server side by creating a slurm job and running the analysis on the Sirius cluster in the appropriate queue.
-
-### Usage with docker
-
-For starting the interface with docker, you should have docker and docker-compose installed on your machine. You should also have a .env file with the appropriate variables for the docker-compose cli.
-
-Threre is a `.env.example` file that you can use as a template, with public variables already suggested for a docker deployment i.e. `NEXT_PUBLIC_TREE_PATH` set to "/mnt", given its the suggested path for the docker volume mount for the fs mount for the tree view.
-
-The docker-compose.yml file is then responsible to separate the env variables available to the client and to the server.
-
-```shell
-   docker compose up
-```
-
 ## Development
 
 This interface was built using the [T3 Stack](https://create.t3.gg/), which is a set of tools and libraries that we use to build web applications at [T3](https://t3.gg/).
 
 In this project, we chose to use [TypeScript](https://www.typescriptlang.org/) as our main language, [Next.js](https://nextjs.org) as our React framework, and [NextAuth.js](https://next-auth.js.org) for authentication. We also use [Prisma](https://prisma.io) to access our database, and [Tailwind CSS](https://tailwindcss.com) for styling.
 
-We also use [tRPC](https://trpc.io) to create a type-safe API layer between the client and the server.
+For creating the workflow view of the client components, we use [React Flow](https://reactflow.dev/), which is a React library for creating flowcharts. The app main components are created as nodes in the flowchart, and the connections between represents connections beetween the representations of the components in the data processing workflow that will be triggered as a job in a cluster environment.
 
-For developing state machines in components that needed special client-side logic, we use [XState](https://xstate.js.org/), specifically the [React Hooks](https://xstate.js.org/docs/packages/xstate-react/) package.
+The state of the components is also reflected in the flowchart, so that the user can see the status of the components (and its jobs) in the workflow view and are managed by a [Zustand](https://zustand-demo.pmnd.rs/) store on the cliend with hooks that updates the state of the components in the flowchart and when necessary, updates the database and interacts with the server through [tRPC](https://trpc.io) queries and mutations.
 
-For creating the workflow view of the client components, we use [React Flow](https://reactflow.dev/), which is a React library for creating flowcharts. The components are created as nodes in the flowchart, and the connections between them are the dependencies between the components. The state of the components is also reflected in the flowchart, so that the user can see the status of the components in the workflow view and are managed by a zustand store with hooks that updates the state of the components in the flowchart and when necessary, updates the database with the changes.
+_TRPC_ enables a type-safe API layer between the client and the server and managing state updates between them using hooks based in the powerful `useQuery` and `useMutation` from [TanStack Query](https://tanstack.com/query/latest). So the full state of the applications is a _Tug of war_ beetween the client store, the database state and the other server mutations.
 
-### Setting up a development enviroment and services
+### Run Locally
 
-We developed a compose.dev.yaml file that sets up a development environment with all the services needed to run the interface. The compose file is also responsible for setting up the database and the filesystem mount for the tree view.
+You build the app yourself and run it locally by running the docker container with:
+
+```shell
+   docker compose --env-file ./apps/deepsirius-ui/.env up --build
+```
+
+Then, open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Start development environment
+
+To start the development environment, you should fill the apps .env files with the appropriate variables for each app torun by itsekf. There is a .env.example in the apps file that you can use as a template.
 
 To run slurm jobs, the app service need to be able to connect via ssh to a slurm management node with the same credentials of the ldap client.
 
-To start the development environment, you should have docker and docker compose installed on your machine. You should fill the .env file with the appropriate variables for the docker compose cli. There is a .env.example file that you can use as a template.
+With these requirements satisfied, you can go to one of the apps base path
+and start the development i.e:
 
 ```shell
-   docker compose --file compose.dev.yaml --env-file .dev.env up --build
+   cd apps/deepsirius-ui
+   pnpm run dev
 ```
+
+Then, open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## License
 

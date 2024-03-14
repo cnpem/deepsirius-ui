@@ -3,7 +3,7 @@ name: deepsirius-ui
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
     branches:
       - main
 jobs:
@@ -20,13 +20,13 @@ jobs:
       STORAGE_PATH: /ibira
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Build image
-        run: docker build -t $REGISTRY/$IMAGE_NAME:$TAG --build-arg NEXT_PUBLIC_STORAGE_PATH=$STORAGE_PATH .
+      - name: Build app image
+        run: docker build -t $REGISTRY/$IMAGE_NAME:$TAG --file ./apps/deepsirius-ui/Dockerfile --build-arg NEXT_PUBLIC_STORAGE_PATH=$STORAGE_PATH .
 
       - name: Login to ghcr
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.repository_owner }}

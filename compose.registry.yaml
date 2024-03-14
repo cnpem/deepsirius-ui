@@ -1,13 +1,13 @@
-version: '3.8'
+version: "3.8"
 services:
   app:
     image: ghcr.io/cnpem/cnpem/deepsirius-ui:main
     container_name: deepsirius-ui
     volumes:
-      - ./dev.sqlite:/app/prisma/db.sqlite:rw
-      - ./abtlus-AD1-CA.cer:${CA_CERT}:ro
+      - ./apps/deepsirius-ui/prisma/db.sqlite:/apps/deepsirius-ui/prisma/db.sqlite:rw
+      - ${CA_CERT}:/app/abtlus-AD1-CA.cer:${CA_CERT}:ro
     ports:
-      - '3000:3000'
+      - "3000:3000"
     environment:
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}

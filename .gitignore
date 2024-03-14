@@ -1,20 +1,20 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
-.pnp.js
+/apps/deepsirius-ui/node_modules
+/apps/deepsirius-ui/.pnp
+/apps/deepsirius-ui/.pnp.js
 
 # testing
 /coverage
 
 # database
-/prisma/db.sqlite
-/prisma/db.sqlite-journal
+/apps/deepsirius-ui/prisma/db.sqlite
+/apps/deepsirius-ui/prisma/db.sqlite-journal
 *.sqlite
 
 # next.js
-/.next/
+/apps/deepsirius-ui/.next/
 /out/
 next-env.d.ts
 
@@ -39,6 +39,7 @@ yarn-error.log*
 .env.docker
 .env.dev*
 .dev.env
+/apps/*/.env
 
 # vercel
 .vercel
@@ -51,5 +52,7 @@ src/server/certs
 # new ca cert location when building locally so we can make git ignore it but not the docker
 *.cer
 
-
+dist
 .vscode
+node_modules
+.turbo

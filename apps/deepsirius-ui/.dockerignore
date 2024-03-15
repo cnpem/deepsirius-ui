@@ -1,9 +1,7 @@
 .env
 .env*.local
-.env-docker
 
 Dockerfile
-compose.yml
 .dockerignore
 node_modules
 npm-debug.log
@@ -11,9 +9,5 @@ README.md
 .next
 .git
 
-src/server/certs
-
-.vscode
-
-dev.Dockerfile
-compose.dev.yml
+prisma/db.sqlite
+prisma/*.sqlite

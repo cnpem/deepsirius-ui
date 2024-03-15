@@ -78,13 +78,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/deepsirius-ui/public ./apps/
 
 # # for being able to run migrations
 COPY --from=builder --chown=nextjs:nodejs /app/apps/deepsirius-ui/prisma ./apps/deepsirius-ui/prisma
-# removing the sqlite db file so it can be bind mounted in the volume
-RUN rm ./apps/deepsirius-ui/prisma/db.sqlite
-
 
 # Create the ssh directory avoid double login 1st time
 RUN mkdir -p /home/nextjs/.ssh
-
 
 EXPOSE 3000
 CMD ["node", "apps/deepsirius-ui/server.js"]

@@ -4,8 +4,8 @@ services:
     image: ghcr.io/cnpem/cnpem/deepsirius-ui:main
     container_name: deepsirius-ui
     volumes:
-      - ./apps/deepsirius-ui/prisma/db.sqlite:/apps/deepsirius-ui/prisma/db.sqlite:rw
-      - ${CA_CERT}:/app/abtlus-AD1-CA.cer:${CA_CERT}:ro
+      - ./apps/deepsirius-ui/prisma/db.sqlite:/app/apps/deepsirius-ui/prisma/db.sqlite:rw
+      - ./server.cer:${CA_CERT}:ro
     ports:
       - "3000:3000"
     environment:

@@ -12,7 +12,7 @@ services:
         NEXT_PUBLIC_STORAGE_PATH: "${NEXT_PUBLIC_STORAGE_PATH}"
     working_dir: /app
     volumes:
-      - /mnt/work/deepsirius/abtlus-AD1-CA.cer:${CA_CERT}:ro
+      - ./server.cer:${CA_CERT}:ro
       - ./apps/deepsirius-ui/prisma/db.sqlite:/app/apps/deepsirius-ui/prisma/db.sqlite:rw
     ports:
       - "3000:3000"

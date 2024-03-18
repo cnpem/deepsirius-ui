@@ -38,7 +38,15 @@ _TRPC_ enables a type-safe API layer between the client and the server and manag
 
 ### Run Locally
 
-You build the app yourself and run it locally by running the docker container with:
+You can copy the `compose.registry.yaml` file from the [github repository](https://github.com/cnpem/deepsirius-ui) and pull the built app from the [github registry page](https://github.com/cnpem/deepsirius-ui/pkgs/container/cnpem%2Fdeepsirius-ui) and run it locally with:
+
+```shell
+   docker compose --file compose.registry.yaml --env-file ./apps/deepsirius-ui/.env up
+```
+
+Then, open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+Or you can build the app yourself and run it locally by running the docker container with:
 
 ```shell
    docker compose --env-file ./apps/deepsirius-ui/.env up --build

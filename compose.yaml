@@ -28,3 +28,11 @@ services:
       - PRIVATE_KEY_PASSPHRASE=${PRIVATE_KEY_PASSPHRASE}
       - PROCESSING_CONTAINER_PATH=${PROCESSING_CONTAINER_PATH}
       - PROCESSING_CONTAINER_STORAGE_BIND=${PROCESSING_CONTAINER_STORAGE_BIND}
+  docs:
+    container_name: deepsirius-ui-docs
+    build:
+      context: .
+      dockerfile: ./apps/docs/Dockerfile
+    ports:
+      - '4321:3000'
+    image: deepsirius-ui-docs/latest

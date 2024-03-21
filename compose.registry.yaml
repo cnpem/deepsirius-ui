@@ -20,3 +20,8 @@ services:
       - PROCESSING_CONTAINER_STORAGE_BIND=${PROCESSING_CONTAINER_STORAGE_BIND}
       - STORAGE_API_URL=${STORAGE_API_URL}
       - STORAGE_API_KEY=${STORAGE_API_KEY}
+  docs:
+    image: ghcr.io/cnpem/cnpem/deepsirius-ui-docs:main
+    container_name: deepsirius-ui-docs
+    ports:
+      - "4321:3000"

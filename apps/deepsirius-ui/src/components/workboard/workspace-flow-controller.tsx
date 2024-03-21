@@ -1,5 +1,5 @@
 import {
-  ArrowBigLeft,
+  ArrowBigLeftIcon,
   CoffeeIcon,
   DatabaseIcon,
   DumbbellIcon,
@@ -307,8 +307,11 @@ function MiniMapNode({
 
 function AlertDemo() {
   return (
-    <Alert>
-      <ArrowBigLeft className="h-6 w-6 animate-bounce-x" />
+    <Alert className='flex flex-row gap-4 [&:has(svg)]:p-4 p-4'>
+      <div className='flex items-center'>
+        <ArrowBigLeftIcon className="position-relative h-6 w-6 animate-bounce-x h-fit" />
+      </div>
+      <div >
       <AlertTitle>Heads up!</AlertTitle>
       <AlertDescription>
         You can add{' '}
@@ -318,7 +321,9 @@ function AlertDemo() {
         to your workspace by clicking on the{' '}
         <PlusCircle className="inline h-5 w-5" /> button on the top left corner.
       </AlertDescription>
+      </div>
     </Alert>
+    
   );
 }
 

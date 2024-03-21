@@ -110,22 +110,21 @@ function UserWorkspaces() {
 
   if (userWorkspaces) {
     return (
-      <div className="flex flex-col mx-auto  md:w-1/2 w-full px-4">
-        <div className="flex flex-row gap-4 pt-0 pb-4">
+      <div className="mx-auto flex w-full flex-col gap-2 px-4 md:w-1/2">
+        <div className="flex flex-row gap-4 pb-4 pt-0">
           <Input
-            className="w-3/4 bg-white/10 border-white/10 border-b-2 text-white/90 focus:border-white/20 focus:ring-white/20 focus:ring-opacity-50 focus:ring-2 focus:outline-none transition-all duration-100 ease-in-out placeholder:text-slate-300"
+            className="border-none bg-slate-300 bg-opacity-10 text-slate-200 placeholder:text-slate-300"
             type="text"
             placeholder="Search workspaces"
             onChange={handleSearch}
           />
-          <Button
-            className="w-1/4 bg-green-700 gap-2 text-slate-800 dark:text-slate-300 hover:shadow-md hover:bg-green-700/90 transition-all duration-100 ease-in-out"
-            variant="default"
+          <button
+            className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
             onClick={() => void handleNewWorkspace()}
           >
-            <PlusSquareIcon className="h-5 w-5" />
+            <PlusSquareIcon className="mr-2 h-4 w-4" />
             {'New'}
-          </Button>
+          </button>
         </div>
 
         {!searchAndSortWorkspaces && (
@@ -139,14 +138,14 @@ function UserWorkspaces() {
         {searchAndSortWorkspaces?.map((workspace) => (
           <Card
             key={workspace.path}
-            className="my-2 bg-slate-200 dark:bg-slate-900 border-none"
+            className="border border-blue-400 bg-white text-blue-800 dark:border-blue-600 dark:bg-slate-900 dark:text-blue-500"
           >
-            <div className="grid grid-cols-2 justify-between gap-4 py-4 pl-8 pr-4 ">
+            <div className="grid grid-cols-2 justify-between gap-4 py-4 pl-8 pr-4">
               <div className="mr-auto">
                 <CardHeader className="align-start p-0 text-start">
                   <CardTitle>
                     <Button
-                      className="p-0 text-lg"
+                      className="p-0 text-lg font-semibold text-blue-800 dark:text-blue-500"
                       variant="link"
                       onClick={() =>
                         void handleSelectWorkspace({
@@ -160,7 +159,7 @@ function UserWorkspaces() {
                   </CardTitle>
                   <CardDescription>{workspace.path}</CardDescription>
                 </CardHeader>
-                <CardFooter className="text-sm text-muted-foreground p-0 my-2">
+                <CardFooter className="my-2 p-0 text-sm text-muted-foreground">
                   <p>
                     {'Last updated at: ' +
                       new Date(workspace.updatedAt).toLocaleString()}

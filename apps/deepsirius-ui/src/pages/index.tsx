@@ -1,34 +1,43 @@
-import { ArrowRightIcon } from 'lucide-react';
 import { type NextPage } from 'next';
 import { signIn } from 'next-auth/react';
 import Head from 'next/head';
 import Image from 'next/image';
-import Link from 'next/link';
+import Link, { type LinkProps } from 'next/link';
 import { AvatarDrop } from '~/components/avatar-dropdown';
 import { Layout } from '~/components/layout';
 import { useUser } from '~/hooks/use-user';
 
-const AuthShowcase: React.FC = () => {
+type StyledLinkProps = LinkProps & {
+  children: React.ReactNode;
+};
+
+const StyledLink = ({ children, ...props }: StyledLinkProps) => (
+  <Link
+    {...props}
+    className="w-full rounded-md bg-slate-400/10 px-10 py-3 text-center font-semibold text-slate-700 no-underline transition hover:bg-slate-400/80 dark:bg-slate-700/10 dark:text-slate-300 dark:hover:bg-slate-700/80"
+  >
+    {children}
+  </Link>
+);
+
+const SessionOptions: React.FC = () => {
   const user = useUser();
 
   if (!user)
     return (
-      <button
-        className=" w-3/4 rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={() => void signIn(undefined)}
-      >
-        {'Sign in'}
-      </button>
+      <>
+        <StyledLink href={'/'} onClick={() => void signIn(undefined)}>
+          Sign in
+        </StyledLink>
+        <StyledLink href={'/docs'}>Documentation</StyledLink>
+      </>
     );
 
   return (
-    <Link
-      href={user.route}
-      className="w-3/4 text-center rounded-full bg-slate-300 bg-opacity-10 px-10 py-3 font-semibold text-slate-300 no-underline transition hover:bg-white/20"
-    >
-      <span>My Workspaces</span>
-      <ArrowRightIcon className="ml-2 inline-block h-5 w-5 text-white" />
-    </Link>
+    <>
+      <StyledLink href={user.route}>Workspaces</StyledLink>
+      <StyledLink href={'/docs'}>Documentation</StyledLink>
+    </>
   );
 };
 
@@ -41,25 +50,21 @@ const Home: NextPage = () => {
           name="DeepSirius"
           content="Interface for using the deepsirius package on the web."
         />
-        <link rel="icon" href="/icon.svg" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-[#9994D7] via-[#6012E4] to-[#0B0C1B] dark:bg-gradient-to-br dark:from-[#0B0C1B] dark:via-[#6012E4] dark:to-[#9994D7]">
-        <div className="absolute top-0 right-0 m-5 z-10">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-light-ocean dark:bg-dark-ocean">
+        <div className="absolute right-0 top-0 z-10 m-5">
           <AvatarDrop />
         </div>
-        <div className="container flex lg:flex-row flex-col items-center justify-center lg:gap-12 px-4 py-16 ">
-          <Image
-            src="/full-transp.svg"
-            alt="DeepSirius Logo"
-            width={500}
-            height={500}
-          />
-          <div className="flex flex-col items-center gap-12">
-            <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem] text-center">
-              <span className="text-slate-900 dark:text-slate-300">Deep</span>
-              <span className="text-slate-300 dark:text-slate-900">Sirius</span>
+        <div className="container flex flex-col items-center justify-center gap-4 px-4 py-16 lg:flex-row lg:gap-12 ">
+          <div className="relative h-[30vh] w-[30vh] lg:h-[50vh] lg:w-[50vh]">
+            <Image src="/full.svg" alt="DeepSirius Logo" fill />
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <h1 className="mb-8 bg-dark-ocean-remapped bg-clip-text text-center text-5xl font-extrabold tracking-tight text-transparent dark:bg-light-ocean-remapped sm:text-[5rem]">
+              DeepSirius
             </h1>
-            <AuthShowcase />
+            <SessionOptions />
           </div>
         </div>
       </div>

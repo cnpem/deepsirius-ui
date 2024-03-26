@@ -44,7 +44,7 @@ const Workspace: NextPage = () => {
           content="Workspace
         "
         />
-        <link rel="icon" href="/icon.svg" />
+        <link rel="icon" href="/logo.svg" />
       </Head>
       <main>
         <NoSSRFlow />

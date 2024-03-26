@@ -12,18 +12,11 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
           <>
             <div className="flex flex-row items-center">
               <Image
-                className="dark:hidden mr-2"
-                width={34}
-                height={34}
-                src="/icon.svg"
+                src="/logo.png"
                 alt="logo"
-              />
-              <Image
-                className="dark:block hidden mr-2"
-                width={34}
-                height={34}
-                src="/icon-dark.svg"
-                alt="logo-dark"
+                width={35}
+                height={35}
+                className="mr-2"
               />
               <span className="font-semibold text-lg text-violet-600 dark:text-violet-400 text-center pt-1">
                 DeepSirius
@@ -31,7 +24,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
             </div>
           </>
         ),
-        githubUrl: "https://github.com/cnpem/pianno",
+        githubUrl: "https://github.com/cnpem/deepsirius-ui",
         transparentMode: "top",
       }}
     >

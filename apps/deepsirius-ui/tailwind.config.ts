@@ -46,6 +46,16 @@ module.exports = {
           foreground: 'hsl(var(--card-foreground))',
         },
       },
+      backgroundImage: {
+        'light-ocean':
+          'linear-gradient(130deg,hsl(0deg 0% 100%)51%,hsl(249deg 48% 94%)78%,hsl(248deg 47% 87%)86%,hsl(247deg 47% 81%)90%,hsl(246deg 46% 75%)92%,hsl(245deg 50% 70%)94%,hsl(248deg 62% 67%)95%,hsl(250deg 70% 64%)95%,hsl(254deg 75% 59%)96%,hsl(259deg 78% 52%)97%,hsl(259deg 81% 45%)97%,hsl(254deg 77% 40%)98%,hsl(249deg 74% 34%)99%,hsl(243deg 73% 28%)99%,hsl(237deg 79% 21%)100%)',
+        'dark-ocean':
+          'linear-gradient(310deg,hsl(0deg 0% 100%)0%,hsl(249deg 48% 94%)1%,hsl(248deg 47% 87%)2%,hsl(247deg 47% 81%)3%,hsl(246deg 46% 75%)3%,hsl(245deg 50% 70%)4%,hsl(248deg 62% 67%)5%,hsl(250deg 70% 64%)6%,hsl(254deg 75% 59%)7%,hsl(259deg 78% 52%)9%,hsl(252deg 72% 46%)11%,hsl(236deg 70% 36%)15%,hsl(225deg 91% 23%)21%,hsl(225deg 75% 15%)32%,hsl(236deg 42% 7%)67%)',
+        'light-ocean-remapped':
+          'linear-gradient(310deg,hsl(0deg 0% 100%)0%,hsl(249deg 48% 94%)10%,hsl(248deg 47% 87%)20%,hsl(247deg 47% 81%)30%,hsl(246deg 46% 75%)40%,hsl(245deg 50% 70%)45%,hsl(248deg 62% 67%)50%,hsl(250deg 70% 64%)55%,hsl(254deg 75% 59%)60%,hsl(259deg 78% 52%)65%,hsl(259deg 81% 45%)70%,hsl(254deg 77% 40%)75%,hsl(249deg 74% 34%)80%,hsl(243deg 73% 28%)85%,hsl(237deg 79% 21%)100%)',
+        'dark-ocean-remapped':
+          'linear-gradient(130deg,hsl(0deg 0% 100%)0%,hsl(249deg 48% 94%)10%,hsl(248deg 47% 87%)20%,hsl(247deg 47% 81%)30%,hsl(246deg 46% 75%)40%,hsl(245deg 50% 70%)45%,hsl(248deg 62% 67%)50%,hsl(250deg 70% 64%)55%,hsl(254deg 75% 59%)60%,hsl(259deg 78% 52%)65%,hsl(252deg 72% 46%)70%,hsl(236deg 70% 36%)75%,hsl(225deg 91% 23%)80%,hsl(225deg 75% 15%)85%,hsl(236deg 42% 7%)100%)',
+      },
       borderRadius: {
         lg: `var(--radius)`,
         md: `calc(var(--radius) - 2px)`,

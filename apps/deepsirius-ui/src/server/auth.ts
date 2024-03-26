@@ -258,7 +258,7 @@ export const authOptions: NextAuthOptions = {
   theme: {
     colorScheme: 'auto', // "auto" | "dark" | "light"
     brandColor: '', // Hex color code
-    logo: '/icon.svg', // Absolute URL to image
+    logo: '/logo.svg', // Absolute URL to image
     buttonText: '', // Hex color code
   },
 };

@@ -62,12 +62,11 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
     onNodesChange,
   } = useStoreActions();
   const { nodes, edges, stateSnapshot } = useStore();
-  const { mutate: updateDbState } =
-    api.workspaceDbState.updateWorkspace.useMutation({
-      onError: (error) => {
-        console.log('dbstate update error', error);
-      },
-    });
+  const { mutate: updateDbState } = api.db.updateWorkspace.useMutation({
+    onError: (error) => {
+      console.log('dbstate update error', error);
+    },
+  });
   const { mutate: rmFile } = api.ssh.rmFile.useMutation({
     onError: () => {
       toast.error('Error deleting file');
@@ -314,7 +313,7 @@ function AlertDemo() {
   return (
     <Alert className="flex flex-row gap-4 p-4 [&:has(svg)]:p-4">
       <div className="flex items-center">
-        <ArrowBigLeftIcon className="position-relative h-6 h-fit w-6 animate-bounce-x" />
+        <ArrowBigLeftIcon className="position-relative h-6 w-6 animate-bounce-x" />
       </div>
       <div>
         <AlertTitle>Heads up!</AlertTitle>
@@ -371,16 +370,15 @@ export default function FlowRouter() {
   const routeWorkspace = router.query.workspace as string; // parent component should handle the case when workspace is undefined
   const workspaceChanged = routeWorkspace !== storeWorkspace;
 
-  const { data, error, isLoading } =
-    api.workspaceDbState.getWorkspaceByName.useQuery(
-      {
-        name: routeWorkspace,
-      },
-      {
-        enabled: workspaceChanged,
-        refetchOnMount: false,
-      },
-    );
+  const { data, error, isLoading } = api.db.getWorkspaceByName.useQuery(
+    {
+      name: routeWorkspace,
+    },
+    {
+      enabled: workspaceChanged,
+      refetchOnMount: false,
+    },
+  );
 
   useEffect(() => {
     console.log(

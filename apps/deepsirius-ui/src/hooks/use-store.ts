@@ -110,11 +110,12 @@ export const useStore = create<RFStore>()(
       ...initialState,
       actions: {
         updateStateSnapshot: () => {
-          const dbState = {
-            nodes: get().nodes,
-            edges: get().edges,
-          };
-          set({ stateSnapshot: JSON.stringify(dbState) });
+          set({
+            stateSnapshot: JSON.stringify({
+              nodes: get().nodes,
+              edges: get().edges,
+            }),
+          });
         },
         resetStore: () => {
           set(initialState);

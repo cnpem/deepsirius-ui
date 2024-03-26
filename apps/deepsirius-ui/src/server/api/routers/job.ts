@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { createTRPCRouter, protectedSSHProcedure } from '~/server/api/trpc';
 
-export const remoteJobRouter = createTRPCRouter({
+export const jobRouter = createTRPCRouter({
   checkStatus: protectedSSHProcedure
     .input(
       z.object({

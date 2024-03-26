@@ -33,7 +33,7 @@ const inferenceJobSchema = z.object({
   formData: inferenceSchema,
 });
 
-export const remoteProcessRouter = createTRPCRouter({
+export const deepsiriusJobRouter = createTRPCRouter({
   submitNewWorkspace: protectedSSHProcedure
     .input(z.object({ workspacePath: z.string(), partition: z.string() }))
     .mutation(async ({ ctx, input }) => {

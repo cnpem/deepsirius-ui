@@ -41,7 +41,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
 
   const updateNodeInternals = useUpdateNodeInternals();
 
-  const {} = api.remotejob.checkStatus.useQuery(
+  const {} = api.job.checkStatus.useQuery(
     { jobId: nodeProps.data.jobId as string },
     {
       enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
@@ -105,9 +105,9 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
       },
     },
   );
-  const { mutateAsync: cancelJob } = api.remotejob.cancel.useMutation();
+  const { mutateAsync: cancelJob } = api.job.cancel.useMutation();
   const { mutateAsync: submitJob } =
-    api.remoteProcess.submitDataset.useMutation();
+    api.deepsiriusJob.submitDataset.useMutation();
   const { onUpdateNode } = useStoreActions();
 
   const handleSubmitJob = (formData: FormType) => {

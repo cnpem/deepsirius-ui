@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
 
-export const workspaceDbStateRouter = createTRPCRouter({
+export const dbRouter = createTRPCRouter({
   createWorkspace: protectedProcedure
     .input(
       z.object({

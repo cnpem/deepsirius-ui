@@ -45,32 +45,31 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
     {},
   );
 
-  const createWorkspaceDbMutation =
-    api.workspaceDbState.createWorkspace.useMutation({
-      onSuccess: async (data) => {
-        // finally, set the workspace path in the store if the db registration was successful
-        resetStore();
-        setWorkspaceInfo({
-          name: data.name,
-          path: data.path,
-        });
-        toast.success('New workspace registered in the database');
-        await router.push(`${userRoute}/${data.name}`);
-      },
-      onError: () => {
-        toast.error('Error registering workspace in the database');
-        // the worksppace was created in the filesystem but not registered in the database
-        // the user cant use the workspace until it is registered in the database
-        // what to do here?
-        throw new Error(
-          'Error registering workspace in the database. Last state: ' +
-            JSON.stringify(newWorkspaceState),
-        );
-      },
-    });
+  const createWorkspaceDbMutation = api.db.createWorkspace.useMutation({
+    onSuccess: async (data) => {
+      // finally, set the workspace path in the store if the db registration was successful
+      resetStore();
+      setWorkspaceInfo({
+        name: data.name,
+        path: data.path,
+      });
+      toast.success('New workspace registered in the database');
+      await router.push(`${userRoute}/${data.name}`);
+    },
+    onError: () => {
+      toast.error('Error registering workspace in the database');
+      // the worksppace was created in the filesystem but not registered in the database
+      // the user cant use the workspace until it is registered in the database
+      // what to do here?
+      throw new Error(
+        'Error registering workspace in the database. Last state: ' +
+          JSON.stringify(newWorkspaceState),
+      );
+    },
+  });
 
   const submitNewWorkspaceMutation =
-    api.remoteProcess.submitNewWorkspace.useMutation({
+    api.deepsiriusJob.submitNewWorkspace.useMutation({
       onSuccess: (data) => {
         setNewWorkspaceState({
           ...newWorkspaceState,
@@ -83,7 +82,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
       },
     });
 
-  const { data: jobData } = api.remotejob.checkStatus.useQuery(
+  const { data: jobData } = api.job.checkStatus.useQuery(
     { jobId: newWorkspaceState.jobId as string },
     {
       refetchOnMount: false,
@@ -218,7 +217,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
   };
 
   return (
-    <div className="rounded-sm border p-8 shadow-xl items-center justify-center md:w-1/2 w-full mx-auto bg-background">
+    <div className="mx-auto w-full items-center justify-center rounded-sm border bg-background p-8 shadow-xl md:w-1/2">
       <div className="flex flex-col gap-4">
         <span className="font-semibold">Select workspace</span>
         <span className="text-sm text-muted-foreground">

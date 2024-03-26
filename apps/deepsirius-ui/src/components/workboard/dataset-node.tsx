@@ -148,7 +148,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     return (
       <Card
         data-selected={nodeProps.selected}
-        className="w-fit bg-green-100 text-green-800 data-[selected=true]:border-green-500 border-green-800 dark:bg-muted dark:text-green-400"
+        className="w-fit border-green-800 bg-green-100 text-green-800 data-[selected=true]:border-green-500 dark:bg-muted dark:text-green-400"
       >
         <CardContent className="p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
@@ -184,7 +184,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     return (
       <Card
         data-selected={nodeProps.selected}
-        className="w-fit bg-yellow-100 text-yellow-800 data-[selected=true]:border-yellow-600 border-yellow-800 dark:bg-muted dark:text-yellow-400"
+        className="w-fit border-yellow-800 bg-yellow-100 text-yellow-800 data-[selected=true]:border-yellow-600 dark:bg-muted dark:text-yellow-400"
       >
         <CardContent className="p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
@@ -193,7 +193,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               <p className="text-sm font-semibold leading-none text-yellow-800 dark:text-yellow-400">
                 {nodeProps.data?.remotePath?.split('/').pop()}
               </p>
-              <p className="text-sm text-yellow-600 lowercase">
+              <p className="text-sm lowercase text-yellow-600">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
                   nodeProps.data.jobStatus || 'checking status..'
                 }`}
@@ -214,13 +214,13 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                   </div>
                   <div className="flex flex-row items-center justify-between gap-1">
                     <p className="font-medium">status</p>
-                    <p className="text-violet-600 lowercase">
+                    <p className="lowercase text-violet-600">
                       {nodeProps.data.jobStatus}
                     </p>
                   </div>
                   <div className="flex flex-row items-center justify-between gap-1">
                     <p className="font-medium">updated at</p>
-                    <p className="text-violet-600 text-end">
+                    <p className="text-end text-violet-600">
                       {nodeProps.data.updatedAt}
                     </p>
                   </div>
@@ -273,7 +273,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     return (
       <Card
         data-selected={nodeProps.selected}
-        className="w-fit bg-blue-100 text-blue-800 data-[selected=true]:border-blue-500 border-blue-800 dark:bg-muted dark:text-blue-400"
+        className="w-fit border-blue-800 bg-blue-100 text-blue-800 data-[selected=true]:border-blue-500 dark:bg-muted dark:text-blue-400"
       >
         <CardContent className="p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
@@ -282,7 +282,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               <p className="text-sm font-semibold leading-none text-blue-800 dark:text-blue-400">
                 {nodeProps.data?.remotePath?.split('/').pop()}
               </p>
-              <p className="text-sm text-blue-600 lowercase">
+              <p className="text-sm lowercase text-blue-600">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
                   nodeProps.data.jobStatus || 'jobStatus'
                 }`}
@@ -304,37 +304,37 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">status</p>
-                  <p className="text-violet-600 lowercase">
+                  <p className="lowercase text-violet-600">
                     {nodeProps.data.jobStatus}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">updated at</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-end text-violet-600">
                     {nodeProps.data.updatedAt}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">classes</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-end text-violet-600">
                     {formData?.classes}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">sample size</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-end text-violet-600">
                     {formData?.sampleSize}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">strategy</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-end text-violet-600">
                     {formData?.strategy}
                   </p>
                 </div>
                 <div className="flex flex-row items-center justify-between gap-1">
                   <p className="font-medium">patch size</p>
-                  <p className="text-violet-600 text-end">
+                  <p className="text-end text-violet-600">
                     {formData?.patchSize}
                   </p>
                 </div>
@@ -344,12 +344,17 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                 <ScrollArea className="h-[125px]">
                   {formData?.data.map((d, i) => (
                     <div key={i} className="flex flex-col items-start">
-                      <p className="font-medium text-sm text-ellipsis bg-muted px-2 py-1 w-full">
+                      <p className="w-full text-ellipsis bg-muted px-2 py-1 text-sm font-medium">
                         {d.image.split('/').slice(-1)}
                       </p>
-                      <p className="font-medium  text-sm text-ellipsis bg-violet-200 dark:bg-violet-900 px-2 py-1 w-full">
+                      <p className="w-full  text-ellipsis bg-violet-200 px-2 py-1 text-sm font-medium dark:bg-violet-900">
                         {d.label.split('/').slice(-1)}
                       </p>
+                      {!!d.weightMap && (
+                        <p className="w-full text-ellipsis bg-violet-300 px-2 py-1 text-sm font-medium dark:bg-violet-900">
+                          {d.weightMap?.split('/').slice(-1)}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </ScrollArea>
@@ -370,16 +375,16 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     return (
       <Card
         data-selected={nodeProps.selected}
-        className="w-fit bg-red-100 text-red-800 data-[selected=true]:border-red-500 border-red-800 dark:bg-muted dark:text-red-400"
+        className="w-fit border-red-800 bg-red-100 text-red-800 data-[selected=true]:border-red-500 dark:bg-muted dark:text-red-400"
       >
-        <CardContent className="p-4 relative pr-8">
+        <CardContent className="relative p-4 pr-8">
           <div className=" flex flex-row items-center gap-4">
             <DatabaseIcon className="inline-block" />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold leading-none text-red-800 dark:text-red-400">
                 {nodeProps.data?.remotePath?.split('/').pop()}
               </p>
-              <p className="text-sm text-red-600 lowercase">
+              <p className="text-sm lowercase text-red-600">
                 {`${nodeProps.data.jobId || 'jobId'} -- ${
                   nodeProps.data.jobStatus || 'jobStatus'
                 }`}

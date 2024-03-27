@@ -1,16 +1,7 @@
 import dayjs from 'dayjs';
-import { AlertTriangleIcon, DatabaseIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import {
-  Handle,
-  type NodeProps,
-  Position,
-  useUpdateNodeInternals,
-} from 'reactflow';
+import { type NodeProps, useUpdateNodeInternals } from 'reactflow';
 import { toast } from 'sonner';
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
-import { Button } from '~/components/ui/button';
-import { Card, CardContent } from '~/components/ui/card';
 import { ScrollArea } from '~/components/ui/scroll-area';
 import {
   Sheet,
@@ -24,6 +15,12 @@ import {
 } from '~/components/workboard/node-component-forms/dataset-form';
 import { type NodeData, useStoreActions } from '~/hooks/use-store';
 import { api } from '~/utils/api';
+import NodeCard from './node-components/node-card';
+import {
+  BusySheet,
+  ErrorSheet,
+  SuccessSheet,
+} from './node-components/node-sheet';
 
 export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   const formEditState =
@@ -40,75 +37,79 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   );
 
   const updateNodeInternals = useUpdateNodeInternals();
+  const { onUpdateNode } = useStoreActions();
 
-  const {} = api.job.checkStatus.useQuery(
+  const { data: jobData } = api.job.checkStatus.useQuery(
     { jobId: nodeProps.data.jobId as string },
     {
       enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
       refetchInterval: 5000,
       refetchIntervalInBackground: true,
       refetchOnWindowFocus: true,
-      onSuccess: (data) => {
-        console.log('checkJob.onSuccess', data);
-        // TODO: the enabled flag should be enough to prevent this from happening
-        // check why it's not
-        if (!nodeProps.data.jobId) {
-          console.error('checkJob.onSuccess', 'no job id', data);
-        }
-        const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-        if (data.jobStatus === 'COMPLETED') {
-          toast.success('Job completed');
-          onUpdateNode({
-            id: nodeProps.id,
-            data: {
-              ...nodeProps.data,
-              status: 'success',
-              jobId: nodeProps.data.jobId,
-              jobStatus: data.jobStatus,
-              message: `Job ${
-                nodeProps.data.jobId ?? 'aa'
-              } finished successfully in ${date}`,
-              updatedAt: date,
-            },
-          });
-          updateNodeInternals(nodeProps.id);
-        } else if (data.jobStatus === 'FAILED') {
-          toast.error('Job failed');
-          onUpdateNode({
-            id: nodeProps.id,
-            data: {
-              ...nodeProps.data,
-              status: 'error',
-              jobId: nodeProps.data.jobId,
-              jobStatus: data.jobStatus,
-              message: `Job ${nodeProps.data.jobId ?? 'aa'} failed in ${date}`,
-              updatedAt: date,
-            },
-          });
-          updateNodeInternals(nodeProps.id);
-        } else {
-          onUpdateNode({
-            id: nodeProps.id,
-            data: {
-              ...nodeProps.data,
-              status: 'busy',
-              jobId: nodeProps.data.jobId,
-              jobStatus: data.jobStatus,
-              message: `Job ${nodeProps.data.jobId ?? 'aa'} is ${
-                data.jobStatus?.toLocaleLowerCase() ?? 'aa'
-              }, last checked at ${date}`,
-              updatedAt: date,
-            },
-          });
-          updateNodeInternals(nodeProps.id);
-        }
-      },
     },
   );
+
+  useEffect(() => {
+    if (nodeProps.data.status !== 'busy') return;
+    if (!jobData) return;
+    const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
+    if (jobData.jobStatus === 'COMPLETED') {
+      toast.success('Job completed');
+      onUpdateNode({
+        id: nodeProps.id,
+        data: {
+          ...nodeProps.data,
+          status: 'success',
+          jobId: nodeProps.data.jobId,
+          jobStatus: jobData.jobStatus,
+          message: `Job ${
+            nodeProps.data.jobId ?? 'aa'
+          } finished successfully in ${date}`,
+          updatedAt: date,
+        },
+      });
+      updateNodeInternals(nodeProps.id);
+    } else if (jobData.jobStatus === 'FAILED') {
+      toast.error('Job failed');
+      onUpdateNode({
+        id: nodeProps.id,
+        data: {
+          ...nodeProps.data,
+          status: 'error',
+          jobId: nodeProps.data.jobId,
+          jobStatus: jobData.jobStatus,
+          message: `Job ${nodeProps.data.jobId ?? 'aa'} failed in ${date}`,
+          updatedAt: date,
+        },
+      });
+      updateNodeInternals(nodeProps.id);
+    } else {
+      onUpdateNode({
+        id: nodeProps.id,
+        data: {
+          ...nodeProps.data,
+          status: 'busy',
+          jobId: nodeProps.data.jobId,
+          jobStatus: jobData.jobStatus,
+          message: `Job ${nodeProps.data.jobId ?? 'aa'} is ${
+            jobData.jobStatus?.toLocaleLowerCase() ?? 'no status'
+          }, last checked at ${date}`,
+          updatedAt: date,
+        },
+      });
+      updateNodeInternals(nodeProps.id);
+    }
+  }, [
+    jobData,
+    nodeProps.data,
+    nodeProps.id,
+    updateNodeInternals,
+    onUpdateNode,
+  ]);
+
   const { mutateAsync: cancelJob } = api.job.cancel.useMutation();
   const { mutateAsync: submitJob } =
     api.deepsiriusJob.submitDataset.useMutation();
-  const { onUpdateNode } = useStoreActions();
 
   const handleSubmitJob = (formData: FormType) => {
     submitJob({
@@ -141,282 +142,186 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
       })
       .catch(() => {
         toast.error('Error submitting job');
+        setFormData(formData);
+        onUpdateNode({
+          id: nodeProps.id,
+          data: {
+            ...nodeProps.data,
+            status: 'error',
+            remotePath: ``,
+            jobId: '',
+            message: `Error submitting job in ${dayjs().format(
+              'YYYY-MM-DD HH:mm:ss',
+            )}`,
+            form: formData,
+          },
+        });
+        updateNodeInternals(nodeProps.id);
       });
+  };
+
+  const handleCancelJob = () => {
+    cancelJob({ jobId: nodeProps.data.jobId as string })
+      .then(() => {
+        const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
+        toast.success('Job canceled');
+        onUpdateNode({
+          id: nodeProps.id,
+          data: {
+            ...nodeProps.data,
+            status: 'error',
+            jobId: nodeProps.data.jobId,
+            jobStatus: 'CANCELLED',
+            message: `Job ${nodeProps.data.jobId ?? 'aa'} canceled in ${date}`,
+            updatedAt: date,
+          },
+        });
+        updateNodeInternals(nodeProps.id);
+      })
+      .catch(() => {
+        toast.error('Error canceling job');
+      });
+    toast.info('Canceling job..');
   };
 
   if (nodeProps.data.status === 'active') {
     return (
-      <Card
-        data-selected={nodeProps.selected}
-        className="w-fit border-green-800 bg-green-100 text-green-800 data-[selected=true]:border-green-500 dark:bg-muted dark:text-green-400"
-      >
-        <CardContent className="p-4 pr-8">
-          <div className=" flex flex-row items-center gap-4">
-            <DatabaseIcon className="inline-block" />
-            <div className="flex-1 space-y-1">
-              <p className="text-sm font-medium leading-none text-green-800 dark:text-green-400">
-                {'new dataset'}
-              </p>
-              <p className="text-sm text-green-600 dark:text-green-500">
-                {'Click to create a job'}
-              </p>
-            </div>
-          </div>
-          <Sheet open={nodeProps.selected} modal={false}>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Create</SheetTitle>
-              </SheetHeader>
-              <DatasetForm onSubmitHandler={handleSubmitJob} />
-            </SheetContent>
-          </Sheet>
-        </CardContent>
-        <Handle
-          className="!bg-green-400 active:!bg-green-500 dark:!bg-muted dark:active:!bg-green-400"
-          type="source"
-          position={Position.Right}
+      <>
+        <NodeCard
+          nodeType="dataset"
+          nodeStatus="active"
+          selected={nodeProps.selected}
+          title="new dataset"
+          subtitle="Click to create a job"
         />
-      </Card>
+        <Sheet open={nodeProps.selected} modal={false}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Create</SheetTitle>
+            </SheetHeader>
+            <DatasetForm onSubmitHandler={handleSubmitJob} />
+          </SheetContent>
+        </Sheet>
+      </>
     );
   }
 
   if (nodeProps.data.status === 'busy') {
     return (
-      <Card
-        data-selected={nodeProps.selected}
-        className="w-fit border-yellow-800 bg-yellow-100 text-yellow-800 data-[selected=true]:border-yellow-600 dark:bg-muted dark:text-yellow-400"
-      >
-        <CardContent className="p-4 pr-8">
-          <div className=" flex flex-row items-center gap-4">
-            <DatabaseIcon className="inline-block" />
-            <div className="flex-1 space-y-1">
-              <p className="text-sm font-semibold leading-none text-yellow-800 dark:text-yellow-400">
-                {nodeProps.data?.remotePath?.split('/').pop()}
-              </p>
-              <p className="text-sm lowercase text-yellow-600">
-                {`${nodeProps.data.jobId || 'jobId'} -- ${
-                  nodeProps.data.jobStatus || 'checking status..'
-                }`}
-              </p>
-            </div>
-            <Sheet open={nodeProps.selected} modal={false}>
-              <SheetContent className="flex flex-col gap-4">
-                <Alert>
-                  <AlertDescription>{nodeProps.data.message}</AlertDescription>
-                </Alert>
-                <SheetHeader>
-                  <SheetTitle>Details</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
-                  <div className="flex flex-row items-center justify-between gap-1">
-                    <p className="font-medium">id</p>
-                    <p className="text-violet-600">{nodeProps.data.jobId}</p>
-                  </div>
-                  <div className="flex flex-row items-center justify-between gap-1">
-                    <p className="font-medium">status</p>
-                    <p className="lowercase text-violet-600">
-                      {nodeProps.data.jobStatus}
-                    </p>
-                  </div>
-                  <div className="flex flex-row items-center justify-between gap-1">
-                    <p className="font-medium">updated at</p>
-                    <p className="text-end text-violet-600">
-                      {nodeProps.data.updatedAt}
-                    </p>
-                  </div>
-                </div>
-                <hr />
-                <Button
-                  onClick={() => {
-                    //   actor.send('cancel');
-                    cancelJob({ jobId: nodeProps.data.jobId as string })
-                      .then(() => {
-                        const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-                        toast.success('Job canceled');
-                        onUpdateNode({
-                          id: nodeProps.id,
-                          data: {
-                            ...nodeProps.data,
-                            status: 'error',
-                            jobId: nodeProps.data.jobId,
-                            jobStatus: 'CANCELLED',
-                            message: `Job ${
-                              nodeProps.data.jobId ?? 'aa'
-                            } canceled in ${date}`,
-                            updatedAt: date,
-                          },
-                        });
-                        updateNodeInternals(nodeProps.id);
-                      })
-                      .catch(() => {
-                        toast.error('Error canceling job');
-                      });
-                    toast.info('Canceling job..');
-                  }}
-                >
-                  cancel
-                </Button>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </CardContent>
-        <Handle
-          className="!bg-yellow-400 active:!bg-yellow-500 dark:!bg-muted dark:active:!bg-yellow-400"
-          type="source"
-          position={Position.Right}
+      <>
+        <NodeCard
+          nodeType="dataset"
+          nodeStatus="busy"
+          selected={nodeProps.selected}
+          title={nodeProps.data?.remotePath?.split('/').pop() ?? 'new dataset'}
+          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
+            nodeProps.data.jobStatus || 'checking status..'
+          }`}
         />
-      </Card>
+        <BusySheet
+          selected={nodeProps.selected}
+          title={'Details'}
+          jobId={nodeProps.data.jobId}
+          jobStatus={nodeProps.data.jobStatus}
+          updatedAt={nodeProps.data.updatedAt}
+          message={nodeProps.data.message}
+          handleCancel={handleCancelJob}
+        />
+      </>
     );
   }
 
   if (nodeProps.data.status === 'success') {
     return (
-      <Card
-        data-selected={nodeProps.selected}
-        className="w-fit border-blue-800 bg-blue-100 text-blue-800 data-[selected=true]:border-blue-500 dark:bg-muted dark:text-blue-400"
-      >
-        <CardContent className="p-4 pr-8">
-          <div className=" flex flex-row items-center gap-4">
-            <DatabaseIcon className="inline-block" />
-            <div className="flex-1 space-y-1">
-              <p className="text-sm font-semibold leading-none text-blue-800 dark:text-blue-400">
-                {nodeProps.data?.remotePath?.split('/').pop()}
-              </p>
-              <p className="text-sm lowercase text-blue-600">
-                {`${nodeProps.data.jobId || 'jobId'} -- ${
-                  nodeProps.data.jobStatus || 'jobStatus'
-                }`}
-              </p>
-            </div>
-          </div>
-          <Sheet open={nodeProps.selected} modal={false}>
-            <SheetContent className="flex flex-col gap-4">
-              <Alert>
-                <AlertDescription>{nodeProps.data.message}</AlertDescription>
-              </Alert>
-              <SheetHeader>
-                <SheetTitle>Details</SheetTitle>
-              </SheetHeader>
-              <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
-                <div className="flex flex-row items-center justify-between gap-1">
-                  <p className="font-medium">id</p>
-                  <p className="text-violet-600">{nodeProps.data.jobId}</p>
-                </div>
-                <div className="flex flex-row items-center justify-between gap-1">
-                  <p className="font-medium">status</p>
-                  <p className="lowercase text-violet-600">
-                    {nodeProps.data.jobStatus}
-                  </p>
-                </div>
-                <div className="flex flex-row items-center justify-between gap-1">
-                  <p className="font-medium">updated at</p>
-                  <p className="text-end text-violet-600">
-                    {nodeProps.data.updatedAt}
-                  </p>
-                </div>
-                <div className="flex flex-row items-center justify-between gap-1">
-                  <p className="font-medium">classes</p>
-                  <p className="text-end text-violet-600">
-                    {formData?.classes}
-                  </p>
-                </div>
-                <div className="flex flex-row items-center justify-between gap-1">
-                  <p className="font-medium">sample size</p>
-                  <p className="text-end text-violet-600">
-                    {formData?.sampleSize}
-                  </p>
-                </div>
-                <div className="flex flex-row items-center justify-between gap-1">
-                  <p className="font-medium">strategy</p>
-                  <p className="text-end text-violet-600">
-                    {formData?.strategy}
-                  </p>
-                </div>
-                <div className="flex flex-row items-center justify-between gap-1">
-                  <p className="font-medium">patch size</p>
-                  <p className="text-end text-violet-600">
-                    {formData?.patchSize}
-                  </p>
-                </div>
-              </div>
-              <hr />
-              <div className="flex flex-col gap-1">
-                <ScrollArea className="h-[125px]">
-                  {formData?.data.map((d, i) => (
-                    <div key={i} className="flex flex-col items-start">
-                      <p className="w-full text-ellipsis bg-muted px-2 py-1 text-sm font-medium">
-                        {d.image.split('/').slice(-1)}
-                      </p>
-                      <p className="w-full  text-ellipsis bg-violet-200 px-2 py-1 text-sm font-medium dark:bg-violet-900">
-                        {d.label.split('/').slice(-1)}
-                      </p>
-                      {!!d.weightMap && (
-                        <p className="w-full text-ellipsis bg-violet-300 px-2 py-1 text-sm font-medium dark:bg-violet-900">
-                          {d.weightMap?.split('/').slice(-1)}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </ScrollArea>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </CardContent>
-        <Handle
-          className="!bg-blue-400 active:!bg-blue-500 dark:!bg-muted dark:active:!bg-blue-400"
-          type="source"
-          position={Position.Right}
+      <>
+        <NodeCard
+          nodeType="dataset"
+          nodeStatus="success"
+          selected={nodeProps.selected}
+          title={nodeProps.data?.remotePath?.split('/').pop() ?? 'new dataset'}
+          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
+            nodeProps.data.jobStatus || 'jobStatus'
+          }`}
         />
-      </Card>
+        <SuccessSheet
+          selected={nodeProps.selected}
+          message={nodeProps.data.message}
+        >
+          <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
+            {formData &&
+              Object.entries(formData)
+                .filter(
+                  ([_, value]) =>
+                    typeof value === 'string' || typeof value === 'number',
+                )
+                .map(([key, value], index) => {
+                  const isEven = index % 2 === 0;
+                  return (
+                    <div
+                      key={key}
+                      className="flex flex-row items-center justify-between gap-1"
+                    >
+                      <p className="font-medium">
+                        {key.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()}
+                      </p>
+                      <p
+                        data-even={isEven}
+                        className="text-end data-[even=true]:text-violet-600 "
+                      >
+                        {value as string}
+                      </p>
+                    </div>
+                  );
+                })}
+          </div>
+          <hr />
+          <div className="flex flex-col gap-1">
+            <ScrollArea className="h-[125px]">
+              {formData?.data.map((d, i) => (
+                <div key={i} className="flex flex-col items-start">
+                  <p className="w-full text-ellipsis bg-muted px-2 py-1 text-sm font-medium">
+                    {d.image.split('/').slice(-1)}
+                  </p>
+                  <p className="w-full  text-ellipsis bg-violet-200 px-2 py-1 text-sm font-medium dark:bg-violet-900">
+                    {d.label.split('/').slice(-1)}
+                  </p>
+                  {!!d.weightMap && (
+                    <p className="w-full text-ellipsis bg-violet-300 px-2 py-1 text-sm font-medium dark:bg-violet-900">
+                      {d.weightMap?.split('/').slice(-1)}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </ScrollArea>
+          </div>
+        </SuccessSheet>
+      </>
     );
   }
 
   if (nodeProps.data.status === 'error') {
     return (
-      <Card
-        data-selected={nodeProps.selected}
-        className="w-fit border-red-800 bg-red-100 text-red-800 data-[selected=true]:border-red-500 dark:bg-muted dark:text-red-400"
-      >
-        <CardContent className="relative p-4 pr-8">
-          <div className=" flex flex-row items-center gap-4">
-            <DatabaseIcon className="inline-block" />
-            <div className="flex-1 space-y-1">
-              <p className="text-sm font-semibold leading-none text-red-800 dark:text-red-400">
-                {nodeProps.data?.remotePath?.split('/').pop()}
-              </p>
-              <p className="text-sm lowercase text-red-600">
-                {`${nodeProps.data.jobId || 'jobId'} -- ${
-                  nodeProps.data.jobStatus || 'jobStatus'
-                }`}
-              </p>
-            </div>
-          </div>
-          <Sheet open={nodeProps.selected} modal={false}>
-            <SheetContent className="flex flex-col gap-4">
-              <Alert variant="destructive">
-                <AlertTriangleIcon className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                  {nodeProps.data.message || 'Something went wrong'}
-                </AlertDescription>
-              </Alert>
-              <SheetHeader>
-                <SheetTitle>Retry</SheetTitle>
-              </SheetHeader>
-              <DatasetForm
-                name={formData?.datasetName ?? ''}
-                data={formData?.data ?? []}
-                onSubmitHandler={handleSubmitJob}
-              />
-            </SheetContent>
-          </Sheet>
-        </CardContent>
-        <Handle
-          className="!bg-red-400 active:!bg-red-500 dark:!bg-muted dark:active:!bg-red-400"
-          type="source"
-          position={Position.Right}
+      <>
+        <NodeCard
+          nodeType="dataset"
+          nodeStatus="error"
+          selected={nodeProps.selected}
+          title={nodeProps.data?.remotePath?.split('/').pop() ?? 'new dataset'}
+          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
+            nodeProps.data.jobStatus || 'jobStatus'
+          }`}
         />
-      </Card>
+        <ErrorSheet
+          selected={nodeProps.selected}
+          message={nodeProps.data.message}
+        >
+          <DatasetForm
+            name={formData?.datasetName ?? ''}
+            data={formData?.data ?? []}
+            onSubmitHandler={handleSubmitJob}
+          />
+        </ErrorSheet>
+      </>
     );
   }
 

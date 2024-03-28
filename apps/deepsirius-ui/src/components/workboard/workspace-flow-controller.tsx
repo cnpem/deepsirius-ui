@@ -124,6 +124,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
         rmDir({ path: node.data.remotePath });
       }
     });
+    toast.info('Nodes deleted');
     onNodesDelete(deletableNodes);
   }, [edges, nodes, onNodesDelete, rmDir, rmFile]);
 

@@ -16,11 +16,7 @@ import {
   applyNodeChanges,
 } from 'reactflow';
 import { toast } from 'sonner';
-import {
-  // type StateCreator,
-  // type StoreMutatorIdentifier,
-  create,
-} from 'zustand';
+import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DatasetNode } from '~/components/workboard/dataset-node';
 import { InferenceNode } from '~/components/workboard/inference-node';
@@ -28,10 +24,13 @@ import { NetworkNode } from '~/components/workboard/network-node';
 import type { FormType as DatasetForm } from '~/components/workboard/node-component-forms/dataset-form';
 import type { FormType as InferenceForm } from '~/components/workboard/node-component-forms/inference-form';
 import type { FormType as NetworkForm } from '~/components/workboard/node-component-forms/network-form';
+import type { FormType as AugmentationForm } from '~/components/workboard/node-component-forms/augmentation-form';
 import { PlusOneNode } from '~/components/workboard/plusone-node';
+import { AugmentationNode } from '~/components/workboard/augmentation-node';
 
 export const nodeTypes: NodeTypes = {
   dataset: DatasetNode,
+  augmentation: AugmentationNode,
   network: NetworkNode,
   inference: InferenceNode,
   new: PlusOneNode,
@@ -44,6 +43,7 @@ export const AllowedNodeTypesList = Object.keys(nodeTypes).filter(
 export type AllowedNodeTypes = (typeof AllowedNodeTypesList)[number];
 
 const validConnectionPairs = [
+  ['dataset', 'augmentation'],
   ['dataset', 'network'],
   ['network', 'inference'],
 ];
@@ -63,7 +63,7 @@ export type NodeData = {
   jobStatus?: string;
   message?: string;
   updatedAt?: string;
-  form?: InferenceForm | NetworkForm | DatasetForm;
+  form?: InferenceForm | NetworkForm | DatasetForm | AugmentationForm;
 };
 
 type RFState = {
@@ -110,11 +110,12 @@ export const useStore = create<RFStore>()(
       ...initialState,
       actions: {
         updateStateSnapshot: () => {
-          const dbState = {
-            nodes: get().nodes,
-            edges: get().edges,
-          };
-          set({ stateSnapshot: JSON.stringify(dbState) });
+          set({
+            stateSnapshot: JSON.stringify({
+              nodes: get().nodes,
+              edges: get().edges,
+            }),
+          });
         },
         resetStore: () => {
           set(initialState);

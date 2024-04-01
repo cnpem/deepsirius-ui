@@ -62,12 +62,11 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
     onNodesChange,
   } = useStoreActions();
   const { nodes, edges, stateSnapshot } = useStore();
-  const { mutate: updateDbState } =
-    api.workspaceDbState.updateWorkspace.useMutation({
-      onError: (error) => {
-        console.log('dbstate update error', error);
-      },
-    });
+  const { mutate: updateDbState } = api.db.updateWorkspace.useMutation({
+    onError: (error) => {
+      console.log('dbstate update error', error);
+    },
+  });
   const { mutate: rmFile } = api.ssh.rmFile.useMutation({
     onError: () => {
       toast.error('Error deleting file');
@@ -186,7 +185,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
 
   //TODO: would be nice to change the height for full screen mode to h-[930px]
   return (
-    <div className="h-screen p-1">
+    <div className="h-screen">
       <AlertDelete
         open={alertOpen}
         onOpenChange={setAlertOpen}
@@ -209,7 +208,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
         </Panel>
         <Panel position="bottom-center">
           <span className="flex w-fit rounded-sm border bg-muted p-2 text-sm font-semibold text-slate-500 dark:text-slate-400 ">
-            <span className="text-purple-500 dark:text-purple-400 mr-2">
+            <span className="mr-2 text-purple-500 dark:text-purple-400">
               Workspace:
             </span>
             {`"${workspaceInfo.name}"`}
@@ -234,11 +233,16 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
         <MiniMap
           nodeColor={nodeColor}
           nodeComponent={MiniMapNode}
-          className="-translate-y-8 translate-x-2 scale-90 rounded-lg border p-2 dark:bg-muted"
+          maskColor="rgba(0,0,0,0.2)"
+          className="scale-90 rounded-sm dark:bg-muted/70"
           pannable
           zoomable
         />
-        <Background variant={variant} gap={12} />
+        <Background
+          className="bg-light-ocean dark:bg-dark-ocean"
+          variant={variant}
+          gap={24}
+        />
       </ReactFlow>
     </div>
   );
@@ -307,23 +311,23 @@ function MiniMapNode({
 
 function AlertDemo() {
   return (
-    <Alert className='flex flex-row gap-4 [&:has(svg)]:p-4 p-4'>
-      <div className='flex items-center'>
-        <ArrowBigLeftIcon className="position-relative h-6 w-6 animate-bounce-x h-fit" />
+    <Alert className="flex flex-row gap-4 p-4 [&:has(svg)]:p-4">
+      <div className="flex items-center">
+        <ArrowBigLeftIcon className="position-relative h-6 w-6 animate-bounce-x" />
       </div>
-      <div >
-      <AlertTitle>Heads up!</AlertTitle>
-      <AlertDescription>
-        You can add{' '}
-        <span className="font-semibold text-purple-500 dark:text-purple-400">
-          nodes
-        </span>{' '}
-        to your workspace by clicking on the{' '}
-        <PlusCircle className="inline h-5 w-5" /> button on the top left corner.
-      </AlertDescription>
+      <div>
+        <AlertTitle>Heads up!</AlertTitle>
+        <AlertDescription>
+          You can add{' '}
+          <span className="font-semibold text-purple-500 dark:text-purple-400">
+            nodes
+          </span>{' '}
+          to your workspace by clicking on the{' '}
+          <PlusCircle className="inline h-5 w-5" /> button on the top left
+          corner.
+        </AlertDescription>
       </div>
     </Alert>
-    
   );
 }
 
@@ -366,16 +370,15 @@ export default function FlowRouter() {
   const routeWorkspace = router.query.workspace as string; // parent component should handle the case when workspace is undefined
   const workspaceChanged = routeWorkspace !== storeWorkspace;
 
-  const { data, error, isLoading } =
-    api.workspaceDbState.getWorkspaceByName.useQuery(
-      {
-        name: routeWorkspace,
-      },
-      {
-        enabled: workspaceChanged,
-        refetchOnMount: false,
-      },
-    );
+  const { data, error, isLoading } = api.db.getWorkspaceByName.useQuery(
+    {
+      name: routeWorkspace,
+    },
+    {
+      enabled: workspaceChanged,
+      refetchOnMount: false,
+    },
+  );
 
   useEffect(() => {
     console.log(
@@ -425,9 +428,9 @@ export default function FlowRouter() {
   if (searchingWorkspace) {
     return (
       <LayoutNav title="Loading workspace...">
-        <div className="my-40 gap-4 flex flex-row justify-center items-center">
+        <div className="my-40 flex flex-row items-center justify-center gap-4">
           <p className="text-center text-slate-300">Loading workspace...</p>
-          <div className="animate-spin rounded-full h-5 w-5 mr-2 border-4 border-sky-600"></div>
+          <div className="mr-2 h-5 w-5 animate-spin rounded-full border-4 border-sky-600"></div>
         </div>
       </LayoutNav>
     );

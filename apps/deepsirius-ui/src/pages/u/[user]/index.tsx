@@ -43,10 +43,8 @@ export default User;
 function UserWorkspaces() {
   const user = useUser();
   const { data: userWorkspaces, isLoading } =
-    api.workspaceDbState.getUserWorkspaces.useQuery();
+    api.db.getUserWorkspaces.useQuery();
   const utils = api.useUtils();
-  // const { setWorkspacePath, initNodes, initEdges, updateStateSnapshot } =
-  //   useStoreActions();
 
   const router = useRouter();
 
@@ -65,7 +63,7 @@ function UserWorkspaces() {
 
   const { mutate: deleteWorkspace } = api.ssh.rmWorkspace.useMutation({
     onSuccess: async () => {
-      await utils.workspaceDbState.getUserWorkspaces.invalidate();
+      await utils.db.getUserWorkspaces.invalidate();
       toast.success('Workspace deleted');
     },
     onError: () => {
@@ -74,9 +72,9 @@ function UserWorkspaces() {
   });
 
   const { mutate: updateFavoriteWorkspace } =
-    api.workspaceDbState.updateFavoriteWorkspace.useMutation({
+    api.db.updateFavoriteWorkspace.useMutation({
       onSuccess: async () => {
-        await utils.workspaceDbState.getUserWorkspaces.invalidate();
+        await utils.db.getUserWorkspaces.invalidate();
         toast.success('Favorite Updated');
       },
       onError: () => {

@@ -63,7 +63,7 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
 
   const updateNodeInternals = useUpdateNodeInternals();
 
-  const { isFetching } = api.remotejob.checkStatus.useQuery(
+  const { isFetching } = api.job.checkStatus.useQuery(
     { jobId: nodeProps.data.jobId as string },
     {
       enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
@@ -125,9 +125,9 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
       },
     },
   );
-  const { mutateAsync: cancelJob } = api.remotejob.cancel.useMutation();
+  const { mutateAsync: cancelJob } = api.job.cancel.useMutation();
   const { mutateAsync: submitJob } =
-    api.remoteProcess.submitInference.useMutation();
+    api.deepsiriusJob.submitInference.useMutation();
   const { onUpdateNode, getSourceData } = useStoreActions();
 
   const handleSubmitJob = (formData: FormType) => {

@@ -1,7 +1,6 @@
 import { ArrowLeftIcon } from 'lucide-react';
 import type { GetServerSidePropsContext } from 'next';
 import { signIn } from 'next-auth/react';
-import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { type SubmitHandler, useForm } from 'react-hook-form';
@@ -95,7 +94,7 @@ function Form() {
 export default function SignIn() {
   return (
     <LayoutNav>
-      <div className="flex h-fit w-fit mx-auto ">
+      <div className="mx-auto flex h-fit w-fit ">
         <Link
           href="/"
           className={cn(
@@ -103,10 +102,10 @@ export default function SignIn() {
             'absolute left-2 top-2',
           )}
         >
-          <ArrowLeftIcon className="w-4 h-4 mr-2" />
+          <ArrowLeftIcon className="mr-2 h-4 w-4" />
           Home
         </Link>
-        <div className="space-y-12 rounded-xl px-8 pb-8 pt-12 bg-white dark:bg-slate-900 sm:shadow-xl">
+        <div className="space-y-12 rounded-xl bg-white px-8 pb-8 pt-12 dark:bg-slate-900 sm:shadow-xl">
           <Form />
         </div>
       </div>

@@ -1,8 +1,8 @@
 import { createTRPCRouter } from '~/server/api/trpc';
-import { remoteJobRouter } from './routers/remote-job';
-import { remoteProcessRouter } from './routers/remote-node-process-router';
+import { jobRouter } from './routers/job';
+import { deepsiriusJobRouter } from './routers/deepsirius-job';
 import { sshRouter } from './routers/ssh';
-import { workspaceDbStateRouter } from './routers/workspace-db-state-router';
+import { dbRouter } from './routers/db';
 
 /**
  * This is the primary router for your server.
@@ -11,9 +11,9 @@ import { workspaceDbStateRouter } from './routers/workspace-db-state-router';
  */
 export const appRouter = createTRPCRouter({
   ssh: sshRouter,
-  remotejob: remoteJobRouter,
-  workspaceDbState: workspaceDbStateRouter,
-  remoteProcess: remoteProcessRouter,
+  db: dbRouter,
+  job: jobRouter,
+  deepsiriusJob: deepsiriusJobRouter,
 });
 
 // export type definition of API

@@ -31,7 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 const AvatarButton = React.forwardRef<HTMLButtonElement>((props, ref) => (
   <Button
     variant="ghost"
-    className="rounded-md border-2 border-slate-200 dark:border-slate-500 dark:bg-slate-500 dark:bg-opacity-50 dark:hover:bg-slate-500"
+    className="rounded-sm border-2 border-slate-300/20 bg-slate-400/10 hover:bg-slate-400/80 dark:border-slate-500/20 dark:bg-slate-700/10 dark:hover:bg-slate-700/80"
     size="icon"
     title="user info"
     ref={ref}
@@ -39,9 +39,9 @@ const AvatarButton = React.forwardRef<HTMLButtonElement>((props, ref) => (
   >
     <Avatar>
       <AvatarImage
-        src="/transp-icon-2023-10-28.svg"
+        src="/logo.svg"
         alt="Deep Sirius"
-        className="rounded-inherit "
+        className="rounded-inherit p-2"
       />
       <AvatarFallback>oi</AvatarFallback>
     </Avatar>
@@ -115,7 +115,7 @@ export function AvatarDrop() {
           onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
         >
           <MoonIcon className="h-4 w-4 rotate-0 scale-100 transition-all hover:text-slate-900 dark:-rotate-90 dark:scale-0 dark:text-slate-400 dark:hover:text-slate-100" />
-          <SunIcon className="h-4 w-4 absolute rotate-90 scale-0 transition-all hover:text-slate-900 dark:rotate-0 dark:scale-100 dark:text-slate-400 dark:hover:text-slate-100" />
+          <SunIcon className="absolute h-4 w-4 rotate-90 scale-0 transition-all hover:text-slate-900 dark:rotate-0 dark:scale-100 dark:text-slate-400 dark:hover:text-slate-100" />
           <span className="ml-2">{theme === 'light' ? 'Dark' : 'Light'}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

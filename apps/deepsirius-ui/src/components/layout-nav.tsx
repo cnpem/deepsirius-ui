@@ -13,25 +13,25 @@ export function LayoutNav({ children, title }: LayoutProps) {
       <Head>
         <title>{title || 'Deepsirius UI'}</title>
         <meta name="deepsirius-ui" content="Deepsirius UI Nav" />
-        <link rel="icon" href="/icon.svg" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="flex min-h-screen w-full flex-col bg-gradient-to-br from-[#9994D7] via-[#6012E4] to-[#0B0C1B] dark:bg-gradient-to-br dark:from-[#0B0C1B] dark:via-[#6012E4] dark:to-[#9994D7]">
+      <div className="flex min-h-screen w-full flex-col bg-light-ocean dark:bg-dark-ocean">
         <div className="absolute right-0 top-0 z-10 m-5">
           <AvatarDrop />
         </div>
-        <div className="relative mx-auto h-[20vh] w-full">
+        <div className="relative m-8 mx-auto h-[15vh] w-full">
           <Image
-            className="width-auto mx-auto opacity-75"
-            src="/transp-top-2024-02-28.svg"
+            className="width-auto mx-auto"
+            src="/top.svg"
             alt="DeepSirius Logo"
             fill
           />
         </div>
         <div>{children}</div>
-        <div className="relative mx-auto h-[25vh] w-full">
+        <div className="relative m-8 mx-auto h-[20vh] w-full">
           <Image
-            className="width-auto mx-auto opacity-75"
-            src="/transp-bottom-2024-02-28.svg"
+            className="width-auto mx-auto"
+            src="/bottom.svg"
             alt="DeepSirius Logo"
             fill
           />

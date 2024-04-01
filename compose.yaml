@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   app:
     container_name: deepsirius-ui
@@ -34,5 +33,5 @@ services:
       context: .
       dockerfile: ./apps/docs/Dockerfile
     ports:
-      - '4321:3000'
+      - "4321:3000"
     image: deepsirius-ui-docs/latest

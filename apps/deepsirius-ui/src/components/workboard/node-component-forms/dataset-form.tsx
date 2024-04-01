@@ -5,6 +5,8 @@ import { HoverCardTrigger } from '@radix-ui/react-hover-card';
 import {
   BookmarkIcon,
   BookmarkPlusIcon,
+  FileIcon,
+  FilePlusIcon,
   ImageIcon,
   ImagePlusIcon,
   PlusIcon,
@@ -27,18 +29,13 @@ import { HoverCard, HoverCardContent } from '~/components/ui/hover-card';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '~/components/ui/popover';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select';
-import { Switch } from '~/components/ui/switch';
+
 import { slurmPartitionOptions } from '~/lib/constants';
 
 const slurmOptions = z.object({
@@ -59,39 +56,29 @@ const dataSchema = z.object({
     .regex(/^.*\.(tif|tiff|TIFF|hdf5|h5|raw|b)$/, {
       message: 'Must be a valid image extension!',
     }),
-});
-
-const augmentationSchema = z.object({
-  vflip: z.boolean(),
-  hflip: z.boolean(),
-  rotateClock: z.boolean(),
-  rotateCClock: z.boolean(),
-  contrast: z.boolean(),
-  dropout: z.boolean(),
-  linearContrast: z.boolean(),
-  gaussianBlur: z.boolean(),
-  poissonNoise: z.boolean(),
-  averageBlur: z.boolean(),
-  elasticDeformation: z.boolean(),
+  weightMap: z
+    .string()
+    .regex(/^.*\.(h5)$/, {
+      message: 'Must be h5!',
+    })
+    .optional(),
 });
 
 export const datasetSchema = z.object({
   slurmOptions,
   datasetName: z
     .string()
-    .nonempty({ message: 'Must have a dataset name!' })
+    .min(1, { message: 'Must have a name!' })
     .refine((s) => !s.includes(' '), 'No Spaces!'),
   data: dataSchema
     .array()
     .nonempty({ message: 'Must have at least one image!' }),
-  augmentation: augmentationSchema,
   patchSize: z.enum(powerSizes),
   sampleSize: z.coerce.number().min(1),
   strategy: z.enum(strategies),
   classes: z.coerce.number().min(2),
 });
 
-// this should be named DatasetFormType
 export type FormType = z.input<typeof datasetSchema>;
 export type FormCallback = (data: FormType) => void;
 
@@ -110,19 +97,6 @@ function useDatasetForm(
     defaultValues: {
       datasetName: name,
       data: data,
-      augmentation: {
-        vflip: false,
-        hflip: false,
-        rotateClock: false,
-        rotateCClock: false,
-        contrast: false,
-        dropout: false,
-        linearContrast: false,
-        gaussianBlur: false,
-        poissonNoise: false,
-        averageBlur: false,
-        elasticDeformation: false,
-      },
       patchSize: '64',
       sampleSize: 2,
       strategy: 'uniform',
@@ -153,6 +127,10 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
     form.setValue(`data.${index}.label`, path);
   };
 
+  const onSelectWeight = (path: string, index: number) => {
+    form.setValue(`data.${index}.weightMap`, path);
+  };
+
   return (
     <Form {...form}>
       <form
@@ -172,11 +150,11 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
             </FormItem>
           )}
         />
-        <div className="border p-2 rounded-md border-dashed">
+        <div className="rounded-md border border-dashed p-2">
           {fields.map((field, index) => (
             <div
               key={field.id}
-              className="flex flex-row gap-1 py-1 items-center justify-center"
+              className="flex flex-row items-center justify-center gap-1 py-1"
             >
               <FormField
                 control={form.control}
@@ -189,16 +167,17 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                         trigger={
                           <HoverCardTrigger asChild>
                             <Button
-                              className="data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
+                              className="w-fill gap-1 data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
                               data-img={!!field.value}
                               variant={'outline'}
-                              size={'icon'}
+                              // size={'icon'}
                             >
                               {!!field.value ? (
                                 <ImageIcon className="h-4 w-4" />
                               ) : (
                                 <ImagePlusIcon className="h-4 w-4" />
                               )}
+                              Image
                             </Button>
                           </HoverCardTrigger>
                         }
@@ -207,7 +186,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                       <HoverCardContent className="w-fit">
                         <div className="flex flex-col gap-2">
                           <h4 className="text-sm font-semibold">@image</h4>
-                          <p className="font-medium text-xs text-violet-600 dark:text-violet-400">
+                          <p className="text-xs font-medium text-violet-600 dark:text-violet-400">
                             {field.value.split('/').slice(-1)[0]}
                           </p>
                           <span className="text-xs text-muted-foreground">
@@ -231,16 +210,17 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                         trigger={
                           <HoverCardTrigger asChild>
                             <Button
-                              className="data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
+                              className="w-fill gap-1 data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
                               data-img={!!field.value}
                               variant={'outline'}
-                              size={'icon'}
+                              // size={'icon'}
                             >
                               {!!field.value ? (
                                 <BookmarkIcon className="h-4 w-4" />
                               ) : (
                                 <BookmarkPlusIcon className="h-4 w-4" />
                               )}
+                              Label
                             </Button>
                           </HoverCardTrigger>
                         }
@@ -249,7 +229,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                       <HoverCardContent className="w-fit">
                         <div className="flex flex-col gap-2">
                           <h4 className="text-sm font-semibold">@label</h4>
-                          <p className="font-medium text-xs text-violet-600 dark:text-violet-400">
+                          <p className="text-xs font-medium text-violet-600 dark:text-violet-400">
                             {field.value.split('/').slice(-1)[0]}
                           </p>
                           <span className="text-xs text-muted-foreground">
@@ -262,8 +242,52 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                   </FormItem>
                 )}
               />
+              {/* weight map */}
+              <FormField
+                control={form.control}
+                key={`data.${index}.weightMap`}
+                name={`data.${index}.weightMap`}
+                render={({ field }) => (
+                  <FormItem>
+                    <HoverCard>
+                      <NautilusDialog
+                        trigger={
+                          <HoverCardTrigger asChild>
+                            <Button
+                              className="w-fill gap-1 data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
+                              data-img={!!field.value}
+                              variant={'outline'}
+                              // size={'icon'}
+                            >
+                              {!!field.value ? (
+                                <FileIcon className="h-4 w-4" />
+                              ) : (
+                                <FilePlusIcon className="h-4 w-4" />
+                              )}
+                              Weight
+                            </Button>
+                          </HoverCardTrigger>
+                        }
+                        onSelect={(path) => onSelectWeight(path, index)}
+                      />
+                      <HoverCardContent className="w-fit">
+                        <div className="flex flex-col gap-2">
+                          <h4 className="text-sm font-semibold">@weights</h4>
+                          <p className="text-xs font-medium text-violet-600 dark:text-violet-400">
+                            {field.value?.split('/').slice(-1)[0] || ''}
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {field.value}
+                          </span>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )}
+              />
               <Button
-                className="rounded-full h-6 w-6"
+                className="h-5 w-5 rounded-full"
                 variant={'destructive'}
                 onClick={() => remove(index)}
                 size={'icon'}
@@ -272,11 +296,11 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
               </Button>
             </div>
           ))}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             <Button
               id="add-data"
               variant={'outline'}
-              size={'icon'}
+              className="w-full gap-1"
               type="button"
               onClick={() =>
                 append({
@@ -286,13 +310,17 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
               }
             >
               <PlusIcon className="h-4 w-4" />
+              {fields.length === 0 ? 'Add Data' : 'More!'}
             </Button>
-            <Label htmlFor="add-data" className="text-xs text-muted-foreground">
-              Add data
+            <Label
+              htmlFor="add-data"
+              className="sr-only text-xs text-muted-foreground"
+            >
+              More data
             </Label>
           </div>
         </div>
-        <div className={'border p-2 rounded-md border-dashed text-xs'}>
+        <div className={'rounded-md border border-dashed p-2 text-xs'}>
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -377,12 +405,12 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
             />
           </div>
         </div>
-        <footer className="flex flex-row justify-between items-center">
+        <footer className="flex flex-row items-center justify-between gap-2">
           <FormField
             control={form.control}
             name="slurmOptions.partition"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-1/2">
                 <FormLabel className="sr-only">Slurm Partition</FormLabel>
                 <Select onValueChange={field.onChange}>
                   <FormControl>
@@ -406,262 +434,11 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
               </FormItem>
             )}
           />
-          <Button className="mt-2" type="submit">
+          <Button className="mt-2 w-1/2" type="submit">
             Create
           </Button>
         </footer>
       </form>
     </Form>
-  );
-}
-
-function AugmentationPopover({
-  form,
-}: {
-  form: ReturnType<typeof useDatasetForm>;
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant={'ghost'}>Augmentation</Button>
-      </PopoverTrigger>
-      <PopoverContent>
-        <div className="grid grid-cols-3 gap-4">
-          <FormField
-            name="augmentation.vflip"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Vertical Flip
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="augmentation.hflip"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Horizontal Flip
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="augmentation.rotateCClock"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Rotate 90
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="augmentation.rotateClock"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Rotate -90
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="augmentation.contrast"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Contrast
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="augmentation.linearContrast"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Linear Contrast
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="augmentation.dropout"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Dropout
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            name="augmentation.gaussianBlur"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Gaussian Blur
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            name="augmentation.poissonNoise"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Poisson Noise
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="augmentation.averageBlur"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Average Blur
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            name="augmentation.elasticDeformation"
-            control={form.control}
-            render={({ field }) => (
-              <FormItem className="">
-                <FormControl>
-                  <div className=" flex items-center space-x-4 py-4">
-                    <div className="flex-1 space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        Elastic Deformation
-                      </p>
-                    </div>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-      </PopoverContent>
-    </Popover>
   );
 }

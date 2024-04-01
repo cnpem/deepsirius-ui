@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "clean": "rm -rf .turbo node_modules",
+    "clean": "rm -rf .next .turbo node_modules",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
@@ -72,7 +72,7 @@
     "@typescript-eslint/eslint-plugin": "^5.56.0",
     "@typescript-eslint/parser": "^5.56.0",
     "autoprefixer": "^10.4.14",
-    "eslint": "^8.36.0",
+    "eslint": "^8.57.0",
     "eslint-config-next": "^14.1.0",
     "lint-staged": "^13.2.2",
     "postcss": "^8.4.21",
@@ -80,7 +80,7 @@
     "prettier-plugin-tailwindcss": "^0.2.6",
     "prisma": "^5.0.0",
     "tailwindcss": "^3.3.1",
-    "typescript": "^5.0.2"
+    "typescript": "^5.4.2"
   },
   "packageManager": "pnpm@8.9.0",
   "ct3aMetadata": {

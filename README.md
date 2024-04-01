@@ -52,6 +52,8 @@ Or you can build the app yourself and run it locally by running the docker conta
    docker compose --env-file ./apps/deepsirius-ui/.env up --build
 ```
 
+> Note: One can generate the initial `init.sql` file for the database with the command `pnpm dlx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/init.sql` from the deepsirius-ui app folder.
+
 Then, open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ### Start development environment

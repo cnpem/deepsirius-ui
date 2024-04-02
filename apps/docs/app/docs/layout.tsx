@@ -12,7 +12,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
           <>
             <div className="flex flex-row items-center">
               <Image
-                src="/logo.png"
+                src="/dive/logo.png"
                 alt="logo"
                 width={35}
                 height={35}

@@ -1,7 +1,6 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import fs from 'fs';
 import ldap from 'ldapjs';
-import { nanoid } from 'nanoid';
 import { type GetServerSidePropsContext } from 'next';
 import {
   type DefaultSession,
@@ -107,30 +106,24 @@ export const authOptions: NextAuthOptions = {
 
         // register user in database
         const userInDb = await prisma.user.findUnique({
-          where: { email: email },
+          where: { email },
         });
 
         if (!userInDb) {
-          const user = {
-            id: nanoid(),
-            name: name,
-            email: email,
-            password: password,
-          };
-          await prisma.user.create({
+          const newUser = await prisma.user.create({
             data: {
-              id: user.id,
-              name: user.name,
-              email: user.email,
+              name,
+              email,
             },
           });
-          return user;
+          return {
+            ...newUser,
+            password,
+          };
         }
 
         return {
-          id: userInDb.id,
-          name: userInDb.name,
-          email: userInDb.email,
+          ...userInDb,
           password,
         };
       },

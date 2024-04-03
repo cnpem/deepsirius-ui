@@ -1,9 +1,8 @@
 import { type NextPage } from 'next';
 import { signIn } from 'next-auth/react';
 import Head from 'next/head';
-import Image from 'next/image';
 import Link, { type LinkProps } from 'next/link';
-import { AvatarDrop } from '~/components/avatar-dropdown';
+import { FullBgImage } from '~/components/bg-images';
 import { Layout } from '~/components/layout';
 import { useUser } from '~/hooks/use-user';
 
@@ -52,13 +51,10 @@ const Home: NextPage = () => {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="flex min-h-screen flex-col items-center justify-center bg-light-ocean dark:bg-dark-ocean">
-        <div className="absolute right-0 top-0 z-10 m-5">
-          <AvatarDrop />
-        </div>
-        <div className="container flex flex-col items-center justify-center gap-4 px-4 py-16 lg:flex-row lg:gap-12 ">
-          <div className="relative h-[30vh] w-[30vh] lg:h-[50vh] lg:w-[50vh]">
-            <Image src="/full.svg" alt="DeepSirius Logo" fill />
+      <div className="flex min-h-dvh w-full flex-col bg-light-ocean dark:bg-dark-ocean">
+        <div className="container my-auto flex flex-col items-center justify-center gap-4 lg:flex-row lg:gap-12 ">
+          <div className="relative flex h-[32vh] w-[32vh] justify-center overflow-hidden">
+            <FullBgImage />
           </div>
           <div className="flex flex-col items-center gap-2">
             <h1 className="mb-8 bg-dark-ocean-remapped bg-clip-text text-center text-5xl font-extrabold tracking-tight text-transparent dark:bg-light-ocean-remapped sm:text-[5rem]">

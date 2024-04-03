@@ -1,15 +1,12 @@
-import { ArrowLeftIcon } from 'lucide-react';
 import type { GetServerSidePropsContext } from 'next';
 import { signIn } from 'next-auth/react';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { LayoutNav } from '~/components/layout-nav';
-import { Button, buttonVariants } from '~/components/ui/button';
+import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { cn } from '~/lib/utils';
 import { getServerAuthSession } from '~/server/auth';
 
 type FormData = {
@@ -94,18 +91,8 @@ function Form() {
 export default function SignIn() {
   return (
     <LayoutNav>
-      <div className="mx-auto flex h-fit w-fit ">
-        <Link
-          href="/"
-          className={cn(
-            buttonVariants({ variant: 'link' }),
-            'absolute left-2 top-2',
-          )}
-        >
-          <ArrowLeftIcon className="mr-2 h-4 w-4" />
-          Home
-        </Link>
-        <div className="space-y-12 rounded-xl bg-white px-8 pb-8 pt-12 dark:bg-slate-900 sm:shadow-xl">
+      <div className="flex flex-row justify-center">
+        <div className="m-4 w-fit justify-center rounded-xl border bg-white px-8 pb-8 pt-12 dark:bg-slate-900 sm:shadow-xl">
           <Form />
         </div>
       </div>

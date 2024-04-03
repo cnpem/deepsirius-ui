@@ -1,6 +1,6 @@
 import Head from 'next/head';
-import Image from 'next/image';
 import { AvatarDrop } from '~/components/avatar-dropdown';
+import { TopBgImage, BottomBgImage } from '~/components/bg-images';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,26 +15,16 @@ export function LayoutNav({ children, title }: LayoutProps) {
         <meta name="deepsirius-ui" content="Deepsirius UI Nav" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="flex min-h-screen w-full flex-col bg-light-ocean dark:bg-dark-ocean">
-        <div className="absolute right-0 top-0 z-10 m-5">
+      <div className="flex min-h-dvh w-full flex-col bg-light-ocean dark:bg-dark-ocean">
+        <div className="m-4 flex justify-end">
           <AvatarDrop />
         </div>
-        <div className="relative m-8 mx-auto h-[15vh] w-full">
-          <Image
-            className="width-auto mx-auto"
-            src="/top.svg"
-            alt="DeepSirius Logo"
-            fill
-          />
+        <div className="relative my-auto flex h-32 flex-row justify-center overflow-hidden">
+          <TopBgImage />
         </div>
-        <div>{children}</div>
-        <div className="relative m-8 mx-auto h-[20vh] w-full">
-          <Image
-            className="width-auto mx-auto"
-            src="/bottom.svg"
-            alt="DeepSirius Logo"
-            fill
-          />
+        {children}
+        <div className="relative my-auto flex h-40 flex-row justify-center overflow-hidden">
+          <BottomBgImage />
         </div>
       </div>
     </main>

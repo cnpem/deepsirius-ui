@@ -13,8 +13,16 @@ import { env } from '~/env.mjs';
 import { createTRPCRouter, protectedSSHProcedure } from '~/server/api/trpc';
 import { createTempScript } from '~/server/remote-job';
 
-export const slurmOutFilename = 'log-%j-%x.out';
-export const slurmErrFilename = 'log-%j-%x.err';
+const slurmOutFilename = 'log-%j-%x.out';
+const slurmErrFilename = 'log-%j-%x.err';
+
+export function logPaths(workspacePath: string) {
+  return {
+    base: `${workspacePath}/logs`,
+    out: `${workspacePath}/logs/${slurmOutFilename}`,
+    err: `${workspacePath}/logs/${slurmErrFilename}`,
+  };
+}
 
 const datasetJobSchema = z.object({
   workspacePath: z.string(),
@@ -49,7 +57,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const ntasks = 1;
       const partition = input.partition;
       // defining the container script
-      const containerScript = `singularity run --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
+      const containerScript = `singularity exec --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       // defining the full command
       const command = `${containerScript} ssc-deepsirius create_workspace ${input.workspacePath}`;
       const sbatchContent = [
@@ -66,6 +74,10 @@ export const deepsiriusJobRouter = createTRPCRouter({
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
       const scriptName = 'deepSirius-workspace.sbatch';
+
+      // fs.mkdirSync(input.workspacePath, { recursive: true });
+      const baseLogPath = logPaths(input.workspacePath).base;
+      await connection.mkdir(baseLogPath);
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });
@@ -108,19 +120,18 @@ export const deepsiriusJobRouter = createTRPCRouter({
         .map(({ label }) => `--input-labels ${label}`)
         .join(' ');
       const inputWeightsKwArgs = input.formData.data
-        .map(({ weightMap }) =>
-          weightMap ? `--input-weights ${weightMap}` : '',
-        )
+        .map(({ weightMap }) => (weightMap ? `--weight-map ${weightMap}` : ''))
         .join(' ')
         .replace(/\s+/g, ' ');
       const cliScript = `ssc-deepsirius create_dataset ${argsString} ${samplingKwargsString} ${inputImgagesKwArgs} ${inputLabelsKwArgs} ${inputWeightsKwArgs}`;
-      const containerScript = `singularity run --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
+      const containerScript = `singularity exec --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       const command = `${containerScript} ${cliScript}`;
+      const { out, err } = logPaths(input.workspacePath);
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
-        `#SBATCH --output=${input.workspacePath}/jobs/${slurmOutFilename}`,
-        `#SBATCH --error=${input.workspacePath}/jobs/${slurmErrFilename}`,
+        `#SBATCH --output=${out}`,
+        `#SBATCH --error=${err}`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
         `${command}`,
@@ -162,7 +173,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const ntasks = 1;
       const partition = input.formData.slurmOptions.partition;
       // defining the container script
-      const containerScript = `singularity run --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
+      const containerScript = `singularity exec --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       // parsing formData
       const augmentationParams = {
         flip_vertical: input.formData.vflip,
@@ -185,11 +196,12 @@ export const deepsiriusJobRouter = createTRPCRouter({
         .join(' ');
       // defining the full command
       const command = `${containerScript} ssc-deepsirius augment_dataset ${input.workspacePath} ${input.datasetName} ${augmentationParamsString}`;
+      const { out, err } = logPaths(input.workspacePath);
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
-        `#SBATCH --output=${slurmOutFilename}`,
-        `#SBATCH --error=${slurmErrFilename}`,
+        `#SBATCH --output=${out}`,
+        `#SBATCH --error=${err}`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
         `${command}`,
@@ -245,13 +257,14 @@ export const deepsiriusJobRouter = createTRPCRouter({
       // full strings for the cli scripts
       const trainingScript = `ssc-deepsirius train_model ${kwArgsString} ${argsString}`;
       // defining the container script
-      const containerScript = `singularity run --nv --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
+      const containerScript = `singularity exec --nv --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       const command = `${containerScript} ${trainingScript}`;
+      const { out, err } = logPaths(input.workspacePath);
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
-        `#SBATCH --output=${slurmOutFilename}`,
-        `#SBATCH --error=${slurmErrFilename}`,
+        `#SBATCH --output=${out}`,
+        `#SBATCH --error=${err}`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
         `#SBATCH --gres=gpu:${gpus}`,
@@ -312,11 +325,12 @@ export const deepsiriusJobRouter = createTRPCRouter({
         (input.formData.normalize ? ' --norm-data' : ' --no-norm-data');
       // creating the full command line script
       const command = `${containerScript} ssc-deepsirius run_inference ${argsString} ${KwArgsString} ${inputImagesKwArgs}`;
+      const { out, err } = logPaths(input.workspacePath);
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
-        `#SBATCH --output=${slurmOutFilename}`,
-        `#SBATCH --error=${slurmErrFilename}`,
+        `#SBATCH --output=${out}`,
+        `#SBATCH --error=${err}`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
         `#SBATCH --gres=gpu:${gpus}`,

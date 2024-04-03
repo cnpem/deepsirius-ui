@@ -382,13 +382,6 @@ export default function FlowRouter() {
   );
 
   useEffect(() => {
-    console.log(
-      'workspaceChanged',
-      workspaceChanged,
-      data,
-      storeWorkspace,
-      routeWorkspace,
-    );
     if (workspaceChanged && !!data?.path) {
       if (storeWorkspace) {
         toast.info(`Leaving workspace ${storeWorkspace}`);

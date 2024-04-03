@@ -58,8 +58,9 @@ const dataSchema = z.object({
     }),
   weightMap: z
     .string()
-    .regex(/^.*\.(h5)$/, {
-      message: 'Must be h5!',
+    .min(2, { message: 'Must be a valid image name!' })
+    .regex(/^.*\.(tif|tiff|TIFF|hdf5|h5|raw|b)$/, {
+      message: 'Must be a valid image extension!',
     })
     .optional(),
 });

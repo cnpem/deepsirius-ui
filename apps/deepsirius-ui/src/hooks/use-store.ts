@@ -44,6 +44,7 @@ export type AllowedNodeTypes = (typeof AllowedNodeTypesList)[number];
 
 const validConnectionPairs = [
   ['dataset', 'augmentation'],
+  ['augmentation', 'network'],
   ['dataset', 'network'],
   ['network', 'inference'],
 ];

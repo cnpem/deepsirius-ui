@@ -365,7 +365,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
               </FormItem>
             )}
           />
-          <Button className="mt-2 w-1/2" type="submit">
+          <Button className="mt-2 w-1/2" type="submit" disabled>
             Submit Job
           </Button>
         </footer>

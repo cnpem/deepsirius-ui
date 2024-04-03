@@ -12,6 +12,7 @@
 /apps/deepsirius-ui/prisma/db.sqlite
 /apps/deepsirius-ui/prisma/db.sqlite-journal
 *.sqlite
+*.sql
 
 # next.js
 /apps/deepsirius-ui/.next/

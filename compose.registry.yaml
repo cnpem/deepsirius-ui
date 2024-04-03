@@ -3,10 +3,12 @@ services:
     image: ghcr.io/cnpem/cnpem/deepsirius-ui:main
     container_name: deepsirius-ui
     volumes:
-      - ./apps/deepsirius-ui/prisma/db.sqlite:/app/apps/deepsirius-ui/prisma/db.sqlite:rw
       - ./server.cer:${CA_CERT}:ro
     ports:
       - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
@@ -19,8 +21,35 @@ services:
       - PROCESSING_CONTAINER_STORAGE_BIND=${PROCESSING_CONTAINER_STORAGE_BIND}
       - STORAGE_API_URL=${STORAGE_API_URL}
       - STORAGE_API_KEY=${STORAGE_API_KEY}
+    networks:
+      - deepsirius-ui-network
+  db:
+    image: postgres:15.6
+    container_name: deepsirius-ui-db
+    healthcheck:
+      test: pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    networks:
+      - deepsirius-ui-network
   docs:
     image: ghcr.io/cnpem/cnpem/deepsirius-ui-docs:main
     container_name: deepsirius-ui-docs
     ports:
       - "4321:3000"
+
+volumes:
+  pgdata:
+
+
+networks:
+  deepsirius-ui-network:
+    name: deepsirius-ui-network

@@ -1,5 +1,6 @@
 services:
   app:
+    image: deepsirius-ui/latest
     container_name: deepsirius-ui
     platform: "linux/amd64"
     build:
@@ -10,12 +11,13 @@ services:
         # only NEXT_PUBLIC variables needed?
         NEXT_PUBLIC_STORAGE_PATH: "${NEXT_PUBLIC_STORAGE_PATH}"
     working_dir: /app
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - ./server.cer:${CA_CERT}:ro
-      - ./apps/deepsirius-ui/prisma/db.sqlite:/app/apps/deepsirius-ui/prisma/db.sqlite:rw
     ports:
       - "3000:3000"
-    image: deepsirius-ui/latest
     environment:
       # run time variables
       - NEXTAUTH_URL=${NEXTAUTH_URL}
@@ -27,6 +29,25 @@ services:
       - PRIVATE_KEY_PASSPHRASE=${PRIVATE_KEY_PASSPHRASE}
       - PROCESSING_CONTAINER_PATH=${PROCESSING_CONTAINER_PATH}
       - PROCESSING_CONTAINER_STORAGE_BIND=${PROCESSING_CONTAINER_STORAGE_BIND}
+    networks:
+      - deepsirius-ui-network
+  db:
+    image: postgres:15.6
+    container_name: deepsirius-ui-db
+    healthcheck:
+      test: pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    networks:
+      - deepsirius-ui-network
   docs:
     container_name: deepsirius-ui-docs
     build:
@@ -35,3 +56,11 @@ services:
     ports:
       - "4321:3000"
     image: deepsirius-ui-docs/latest
+
+volumes:
+  pgdata:
+
+
+networks:
+  deepsirius-ui-network:
+    name: deepsirius-ui-network

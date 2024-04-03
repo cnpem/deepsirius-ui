@@ -4,6 +4,7 @@ import ErrorPage from 'next/error';
 import { useRouter } from 'next/router';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
+import AlertDelete from '~/components/alert-delete';
 import { LayoutNav } from '~/components/layout-nav';
 import { Button } from '~/components/ui/button';
 import {
@@ -199,25 +200,33 @@ const WorkspaceCardActions = ({
   handleDelete,
   handleFavorite,
 }: WorkspaceCardActionsProps) => {
+  const [alertOpen, setAlertOpen] = useState(false);
   return (
-    <div className="flex">
-      <Button
-        variant="ghost"
-        size="icon"
-        title="Favorite workspace"
-        onClick={() => handleFavorite({ path })}
-      >
-        {favorite && <HeartIcon className="h-4 w-4" color="red" />}
-        {!favorite && <HeartIcon className="h-4 w-4" />}
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        title="Delete workspace"
-        onClick={() => handleDelete({ path })}
-      >
-        <TrashIcon className="h-4 w-4" />
-      </Button>
-    </div>
+    <>
+      <AlertDelete
+        open={alertOpen}
+        onOpenChange={setAlertOpen}
+        onConfirm={() => handleDelete({ path })}
+      />
+      <div className="flex">
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Favorite workspace"
+          onClick={() => handleFavorite({ path })}
+        >
+          {favorite && <HeartIcon className="h-4 w-4" color="red" />}
+          {!favorite && <HeartIcon className="h-4 w-4" />}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Delete workspace"
+          onClick={() => setAlertOpen(true)}
+        >
+          <TrashIcon className="h-4 w-4" />
+        </Button>
+      </div>
+    </>
   );
 };

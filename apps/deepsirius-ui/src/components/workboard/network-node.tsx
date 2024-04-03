@@ -120,7 +120,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     console.log('handleSubmitJob');
     const connectedNodeData = getSourceData(nodeProps.id);
     if (!connectedNodeData || !connectedNodeData.remotePath) {
-      toast.info('Please connect a dataset');
+      toast.warning('Please connect a dataset');
       return;
     }
     submitJob({

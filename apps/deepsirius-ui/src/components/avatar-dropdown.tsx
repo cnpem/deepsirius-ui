@@ -14,7 +14,7 @@ import { useCallback } from 'react';
 import * as React from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { toast } from 'sonner';
-import { Button } from '~/components/ui/button';
+import { Button, buttonVariants } from '~/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +27,7 @@ import { useStoreActions } from '~/hooks/use-store';
 import { useUser } from '~/hooks/use-user';
 
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { cn } from '~/lib/utils';
 
 const AvatarButton = React.forwardRef<HTMLButtonElement>((props, ref) => (
   <Button
@@ -77,7 +78,13 @@ export function AvatarDrop() {
         }),
   );
 
-  if (!user) return null;
+  if (!user)
+    return (
+      <Link href="/" className={cn(buttonVariants({ variant: 'link' }))}>
+        <ArrowLeftIcon className="mr-2 h-4 w-4" />
+        Home
+      </Link>
+    );
 
   return (
     <DropdownMenu>

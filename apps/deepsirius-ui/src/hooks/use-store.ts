@@ -6,7 +6,6 @@ import {
   type Node,
   type NodeChange,
   type NodeDragHandler,
-  type NodeTypes,
   type OnConnect,
   type OnEdgesChange,
   type OnEdgesDelete,
@@ -18,34 +17,26 @@ import {
 import { toast } from 'sonner';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DatasetNode } from '~/components/workboard/dataset-node';
-import { InferenceNode } from '~/components/workboard/inference-node';
-import { NetworkNode } from '~/components/workboard/network-node';
 import type { FormType as DatasetForm } from '~/components/workboard/node-component-forms/dataset-form';
 import type { FormType as InferenceForm } from '~/components/workboard/node-component-forms/inference-form';
 import type { FormType as NetworkForm } from '~/components/workboard/node-component-forms/network-form';
 import type { FormType as AugmentationForm } from '~/components/workboard/node-component-forms/augmentation-form';
-import { PlusOneNode } from '~/components/workboard/plusone-node';
-import { AugmentationNode } from '~/components/workboard/augmentation-node';
 
-export const nodeTypes: NodeTypes = {
-  dataset: DatasetNode,
-  augmentation: AugmentationNode,
-  network: NetworkNode,
-  inference: InferenceNode,
-  new: PlusOneNode,
-};
-
-export const AllowedNodeTypesList = Object.keys(nodeTypes).filter(
-  (nodeType) => nodeType !== 'new',
-);
-
-export type AllowedNodeTypes = (typeof AllowedNodeTypesList)[number];
+export type NodeTypeName =
+  | 'dataset'
+  | 'augmentation'
+  | 'network'
+  | 'finetune'
+  | 'inference';
 
 const validConnectionPairs = [
   ['dataset', 'augmentation'],
   ['augmentation', 'network'],
   ['dataset', 'network'],
+  ['network', 'finetune'],
+  ['dataset', 'finetune'],
+  ['augmentation', 'finetune'],
+  ['finetune', 'inference'],
   ['network', 'inference'],
 ];
 

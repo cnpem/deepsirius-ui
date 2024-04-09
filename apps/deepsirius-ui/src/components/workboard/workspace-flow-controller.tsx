@@ -16,32 +16,41 @@ import ReactFlow, {
   type Edge,
   MiniMap,
   type Node,
+  type NodeTypes,
   Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import CustomConnectionLine from '~/components/workboard/connection-line';
-import { PlusOneNode } from '~/components/workboard/plusone-node';
 import {
   type NodeData,
   type WorkspaceInfo,
-  nodeTypes,
   useStore,
   useStoreActions,
+  type NodeTypeName,
 } from '~/hooks/use-store';
+import { DatasetNode } from '~/components/workboard/dataset-node';
+import { InferenceNode } from '~/components/workboard/inference-node';
+import { NetworkNode } from '~/components/workboard/network-node';
+import { AugmentationNode } from '~/components/workboard/augmentation-node';
+
 import { api } from '~/utils/api';
 
 import { AvatarDrop } from '../avatar-dropdown';
 import { ControlHelpButton } from '../help';
 import { LayoutNav } from '../layout-nav';
 import AlertDelete from '~/components/alert-delete';
+import { PlusOneMenu } from '~/components/workboard/plusone-menu';
+import NodeIcon from './node-components/node-icon';
 
-/**
- * The Geppetto component is the main component for the workspace flow
- * It uses the ReactFlow component to render the nodes and edges
- * It also uses the zustand store to manage the state of the nodes and edges
- */
+const nodeTypes: NodeTypes = {
+  dataset: DatasetNode,
+  augmentation: AugmentationNode,
+  network: NetworkNode,
+  inference: InferenceNode,
+};
+
 function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
   const [alertOpen, setAlertOpen] = useState(false);
   const {
@@ -196,7 +205,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
         fitView
       >
         <Panel position="top-left" className="flex flex-col gap-2">
-          <PlusOneNode />
+          <PlusOneMenu />
         </Panel>
         <Panel position="bottom-center">
           <span className="flex w-fit rounded-sm border bg-muted p-2 text-sm font-semibold text-slate-500 dark:text-slate-400 ">

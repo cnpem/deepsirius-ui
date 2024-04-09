@@ -1,4 +1,4 @@
-import { type AllowedNodeTypes, type NodeStatus } from '~/hooks/use-store';
+import { type NodeTypeName, type NodeStatus } from '~/hooks/use-store';
 import { Card, CardContent } from '~/components/ui/card';
 import NodeIcon from './node-icon';
 import { Handle, Position } from 'reactflow';
@@ -6,7 +6,7 @@ import { cn } from '~/lib/utils';
 
 interface NodeCardProps {
   nodeStatus: NodeStatus;
-  nodeType: AllowedNodeTypes;
+  nodeType: NodeTypeName;
   selected: boolean;
   title: string;
   subtitle: string;

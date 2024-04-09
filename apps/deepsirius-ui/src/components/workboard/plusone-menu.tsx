@@ -12,22 +12,29 @@ import {
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
 import {
-  type AllowedNodeTypes,
-  AllowedNodeTypesList,
+  type NodeTypeName,
   type NodeData,
   useStore,
   useStoreActions,
 } from '~/hooks/use-store';
 
+const nodeTypeNames: NodeTypeName[] = [
+  'dataset',
+  'augmentation',
+  'network',
+  // 'finetune',
+  'inference',
+];
+
 // selects the type of node to be created using a dropdown menu
-export function PlusOneNode() {
+export function PlusOneMenu() {
   const { nodes, workspaceInfo } = useStore((state) => ({
     workspaceInfo: state.workspaceInfo,
     nodes: state.nodes,
   }));
   const { addNode } = useStoreActions();
 
-  const onNodeAdd = (nodeType: AllowedNodeTypes) => {
+  const onNodeAdd = (nodeType: NodeTypeName) => {
     if (!workspaceInfo) {
       toast.error('uh oh! something went wrong', {
         description: 'Looks like the workspace was not loaded properly.',
@@ -62,7 +69,7 @@ export function PlusOneNode() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="transition data-[state=open]:rotate-45 scale-100 data-[state=open]:scale-75"
+        className="scale-100 transition data-[state=open]:rotate-45 data-[state=open]:scale-75"
         asChild
       >
         <Button
@@ -77,7 +84,7 @@ export function PlusOneNode() {
       <DropdownMenuContent>
         <DropdownMenuLabel>Create New Node</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {AllowedNodeTypesList.map((typeName) => (
+        {nodeTypeNames.map((typeName) => (
           <DropdownMenuItem onSelect={() => onNodeAdd(typeName)} key={typeName}>
             {typeName}
           </DropdownMenuItem>

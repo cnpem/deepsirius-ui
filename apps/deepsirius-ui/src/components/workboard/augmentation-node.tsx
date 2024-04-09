@@ -131,16 +131,14 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
     api.deepsiriusJob.submitAugmentation.useMutation();
 
   const handleSubmit = (formData: FormType) => {
-    console.log('handleSubmitJob');
-    const name = getSourceDatasetName();
-    if (!name) {
+    const baseDatasetName = getSourceDatasetName();
+    if (!baseDatasetName) {
       toast.warning('Please connect a dataset');
       return;
     }
-    console.log('will submit', formData, name);
     submitJob({
-      formData: formData,
-      datasetName: name,
+      formData,
+      baseDatasetName,
       workspacePath: nodeProps.data.workspacePath,
     })
       .then(({ jobId }) => {
@@ -149,7 +147,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
           data: {
             ...nodeProps.data,
             status: 'busy',
-            remotePath: `${nodeProps.data.workspacePath}/datasets/${formData.augmentedDatasetName}.h5`, // this is not ideal => we shouldnd guess the path
+            remotePath: `${nodeProps.data.workspacePath}/datasets/${formData.augmentedDatasetName}.h5`,
             jobId: jobId,
             message: `Job ${jobId} submitted in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
@@ -199,7 +197,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
           nodeType={nodeProps.type}
           selected={nodeProps.selected}
           title={'augmentation'}
-          subtitle={'Click to create an augmented dataset'}
+          subtitle={'Click to augment a dataset'}
           nodeStatus={nodeProps.data.status}
         />
         <ActiveSheet

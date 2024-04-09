@@ -31,7 +31,7 @@ const datasetJobSchema = z.object({
 
 const augmentationJobSchema = z.object({
   workspacePath: z.string(),
-  datasetName: z.string().min(1),
+  baseDatasetName: z.string().min(1),
   formData: augmentationSchema,
 });
 
@@ -172,30 +172,37 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const jobName = 'deepsirius-augmentation';
       const ntasks = 1;
       const partition = input.formData.slurmOptions.partition;
+      const gpus = input.formData.slurmOptions.nGPU;
       // defining the container script
       const containerScript = `singularity exec --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
-      // parsing formData
-      const augmentationParams = {
-        flip_vertical: input.formData.vflip,
-        flip_horizontal: input.formData.hflip,
-        rotate_90: input.formData.rotateCClock,
-        'rotate_-90': input.formData.rotateClock,
-        contrast: input.formData.contrast,
-        linear_contrast: input.formData.linearContrast,
-        dropout: input.formData.dropout,
-        gaussian_blur: input.formData.gaussianBlur,
-        avg_blur: input.formData.averageBlur,
-        additive_poisson: input.formData.poissonNoise,
-        elastic_deformation: input.formData.elasticDeformation,
+      // mapping formData to cli kwargs
+      const flagArgs = {
+        '--rot90': input.formData.augmentationArgs.rot90,
+        '--rot270': input.formData.augmentationArgs.rot270,
+        '--flip_horizontal': input.formData.augmentationArgs.flipHorizontal,
+        '--flip_vertical': input.formData.augmentationArgs.flipVertical,
       };
-      // filter object keys that are true and join them with a space in a single string
-      const augmentationParamsString = Object.entries(augmentationParams)
-        .map(([key, value]) => {
-          if (value) return `--aug-params ${key}`;
-        })
+      const flagArgsString = Object.entries(flagArgs)
+        .map(([key, value]) => (value ? key : ''))
+        .join(' ');
+
+      const kwArgs = {
+        '--elastic_alpha': input.formData.augmentationArgs.elastic.alpha,
+        '--elastic_sigma': input.formData.augmentationArgs.elastic.sigma,
+        '--gaussian_blur': input.formData.augmentationArgs.gaussianBlur.sigma,
+        '--contrast': input.formData.augmentationArgs.contrast.factor,
+        '--average_blur':
+          input.formData.augmentationArgs.averageBlur.kernelSize,
+        '--linear_contrast':
+          input.formData.augmentationArgs.linearContrast.factor,
+        '--dropout': input.formData.augmentationArgs.dropout.factor,
+        '--poisson_noise': input.formData.augmentationArgs.poissonNoise.scale,
+      };
+      const kwArgsString = Object.entries(kwArgs)
+        .map(([key, value]) => (value ? `${key} ${value.join(' ')}` : ''))
         .join(' ');
       // defining the full command
-      const command = `${containerScript} ssc-deepsirius augment_dataset ${input.workspacePath} ${input.datasetName} ${augmentationParamsString}`;
+      const command = `${containerScript} ssc-deepsirius augment_dataset ${input.workspacePath} ${input.baseDatasetName} ${input.formData.augmentedDatasetName} ${flagArgsString} ${kwArgsString}`;
       const { out, err } = logPaths(input.workspacePath);
       const sbatchContent = [
         '#!/bin/bash',
@@ -204,8 +211,16 @@ export const deepsiriusJobRouter = createTRPCRouter({
         `#SBATCH --error=${err}`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
+        `#SBATCH --gres=gpu:${gpus}`,
         `${command}`,
       ].join('\n');
+      console.log(sbatchContent);
+
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `This feature is not yet implemented. Until then, this is where the submitAugmentation route ends. 
+          The sbatchContent would be ${sbatchContent}`,
+      });
 
       const connection = ctx.connection;
 

@@ -1,10 +1,4 @@
-import {
-  ArrowBigLeftIcon,
-  CoffeeIcon,
-  DatabaseIcon,
-  DumbbellIcon,
-  PlusCircle,
-} from 'lucide-react';
+import { ArrowBigLeftIcon, PlusCircle } from 'lucide-react';
 import ErrorPage from 'next/error';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
@@ -266,48 +260,20 @@ function MiniMapNode({
 }) {
   const { nodes } = useStore();
   const node = nodes.find((n) => n.id === id);
-  if (node?.type === 'dataset') {
-    return (
-      <DatabaseIcon
-        width={1.2 * width}
-        height={1.2 * height}
-        x={x}
-        y={y}
-        stroke={color}
-        fillOpacity={0.5}
-        fill={color}
-      />
-    );
-  }
-  if (node?.type === 'network') {
-    return (
-      <DumbbellIcon
-        width={1.2 * width}
-        height={1.2 * height}
-        size={300}
-        x={x}
-        y={y}
-        stroke={color}
-        fillOpacity={0.4}
-        fill={color}
-      />
-    );
-  }
-  if (node?.type === 'inference') {
-    return (
-      <CoffeeIcon
-        width={1.2 * width}
-        height={1.2 * height}
-        size={300}
-        x={x}
-        y={y}
-        stroke={color}
-        fillOpacity={0.4}
-        fill={color}
-      />
-    );
-  }
-  return null;
+  if (!node) return null;
+  if (!node.type) return null;
+  return (
+    <NodeIcon
+      nodeType={node.type as NodeTypeName}
+      width={1.2 * width}
+      height={1.2 * height}
+      x={x}
+      y={y}
+      stroke={color}
+      fillOpacity={0.5}
+      fill={color}
+    />
+  );
 }
 
 function AlertDemo() {

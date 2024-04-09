@@ -1,9 +1,16 @@
-import { CoffeeIcon, DatabaseIcon, DumbbellIcon } from 'lucide-react';
-import { type AllowedNodeTypes } from '~/hooks/use-store';
+import {
+  ImagesIcon,
+  DatabaseIcon,
+  DatabaseZapIcon,
+  BrainCircuitIcon,
+  GoalIcon,
+  type LucideProps,
+} from 'lucide-react';
+import { type NodeTypeName } from '~/hooks/use-store';
 import { cn } from '~/lib/utils';
 
-interface NodeIconProps extends React.HTMLAttributes<SVGElement> {
-  nodeType: AllowedNodeTypes;
+interface NodeIconProps extends Omit<LucideProps, 'ref'> {
+  nodeType: NodeTypeName;
 }
 export default function NodeIcon({
   nodeType,
@@ -17,15 +24,20 @@ export default function NodeIcon({
       );
     case 'augmentation':
       return (
-        <DatabaseIcon className={cn('inline-block', className)} {...props} />
+        <DatabaseZapIcon className={cn('inline-block', className)} {...props} />
       );
     case 'network':
       return (
-        <DumbbellIcon className={cn('inline-block', className)} {...props} />
+        <BrainCircuitIcon
+          className={cn('inline-block', className)}
+          {...props}
+        />
       );
+    case 'finetune':
+      return <GoalIcon className={cn('inline-block', className)} {...props} />;
     case 'inference':
       return (
-        <CoffeeIcon className={cn('inline-block', className)} {...props} />
+        <ImagesIcon className={cn('inline-block', className)} {...props} />
       );
     default:
       return <></>;

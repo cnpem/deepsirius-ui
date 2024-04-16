@@ -1,50 +1,68 @@
-// this router contains the routes for all remote process related to the node components of the application workspace
-// the routes are protected by the authentication middleware and use environment variables to connect to the remote processing server
-// using slurm and ssh so they can be run with the user's credentials
-// some process require running apptainer/singularity containers on the server, while others can run simple bash scripts for creating and moving files and directories
-import { TRPCError } from '@trpc/server';
-import fs from 'fs';
-import { z } from 'zod';
-import { datasetSchema } from '~/components/workboard/node-component-forms/dataset-form';
-import { augmentationSchema } from '~/components/workboard/node-component-forms/augmentation-form';
-import { inferenceSchema } from '~/components/workboard/node-component-forms/inference-form';
-import { networkSchema } from '~/components/workboard/node-component-forms/network-form';
 import { env } from '~/env.mjs';
 import { createTRPCRouter, protectedSSHProcedure } from '~/server/api/trpc';
 import { createTempScript } from '~/server/remote-job';
+import { TRPCError } from '@trpc/server';
+import fs from 'fs';
+import { z } from 'zod';
+import {
+  datasetSchema,
+  imageSchema,
+} from '~/components/workboard/node-component-forms/dataset-form';
+import { augmentationSchema } from '~/components/workboard/node-component-forms/augmentation-form';
+import { inferenceSchema } from '~/components/workboard/node-component-forms/inference-form';
+import { networkSchema } from '~/components/workboard/node-component-forms/network-form';
+import { finetuneSchema } from '~/components/workboard/node-component-forms/finetune-form';
 
-const slurmOutFilename = 'log-%j-%x.out';
-const slurmErrFilename = 'log-%j-%x.err';
+type logPathsProps = {
+  workspacePath: string;
+  query?: {
+    jobId: string;
+    jobName: string;
+  };
+};
 
-export function logPaths(workspacePath: string) {
+export function logPaths(props: logPathsProps) {
+  const { workspacePath, query } = props;
+  const slurmFilename = query
+    ? `log-${query.jobId}-${query.jobName}`
+    : 'log-%j-%x';
   return {
     base: `${workspacePath}/logs`,
-    out: `${workspacePath}/logs/${slurmOutFilename}`,
-    err: `${workspacePath}/logs/${slurmErrFilename}`,
+    out: `${workspacePath}/logs/${slurmFilename}.out`,
+    err: `${workspacePath}/logs/${slurmFilename}.err`,
   };
 }
 
 const datasetJobSchema = z.object({
-  workspacePath: z.string(),
+  workspacePath: z.string().min(1),
   formData: datasetSchema,
 });
 
 const augmentationJobSchema = z.object({
-  workspacePath: z.string(),
-  baseDatasetName: z.string().min(1),
+  workspacePath: z.string().min(1),
+  sourceDatasetName: z.string().min(1),
   formData: augmentationSchema,
+  baseDatasetFullImages: z.array(imageSchema),
 });
 
 const networkJobSchema = z.object({
-  workspacePath: z.string(),
-  datasetPath: z.string().min(1),
-  trainingType: z.enum(['create', 'retry', 'finetune']), // 'create': creates a new network and start training, 'retry': start training an existing network, 'finetune': start training a network from a checkpoint
+  workspacePath: z.string().min(1),
+  sourceDatasetName: z.string().min(1),
+  trainingType: z.enum(['create', 'retry']),
   formData: networkSchema,
 });
 
+const finetuneJobSchema = z.object({
+  workspacePath: z.string().min(1),
+  sourceDatasetName: z.string().min(1),
+  sourceNetworkLabel: z.string().min(1),
+  sourceNetworkType: z.string().min(1),
+  formData: finetuneSchema,
+});
+
 const inferenceJobSchema = z.object({
-  workspacePath: z.string(),
-  networkName: z.string().min(1),
+  workspacePath: z.string().min(1),
+  sourceNetworkLabel: z.string().min(1),
   formData: inferenceSchema,
 });
 
@@ -60,24 +78,24 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const containerScript = `singularity exec --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       // defining the full command
       const command = `${containerScript} ssc-deepsirius create_workspace ${input.workspacePath}`;
+      const { base, out, err } = logPaths({
+        workspacePath: input.workspacePath,
+      });
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
-        `#SBATCH --output=${slurmOutFilename}`,
-        `#SBATCH --error=${slurmErrFilename}`,
+        `#SBATCH --output=${out}`,
+        `#SBATCH --error=${err}`,
         `#SBATCH --ntasks=${ntasks}`,
         `#SBATCH --partition=${partition}`,
         `${command}`,
       ].join('\n');
 
       const connection = ctx.connection;
+      await connection.mkdir(base);
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
       const scriptName = 'deepSirius-workspace.sbatch';
-
-      // fs.mkdirSync(input.workspacePath, { recursive: true });
-      const baseLogPath = logPaths(input.workspacePath).base;
-      await connection.mkdir(baseLogPath);
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });
@@ -126,7 +144,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const cliScript = `ssc-deepsirius create_dataset ${argsString} ${samplingKwargsString} ${inputImgagesKwArgs} ${inputLabelsKwArgs} ${inputWeightsKwArgs}`;
       const containerScript = `singularity exec --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       const command = `${containerScript} ${cliScript}`;
-      const { out, err } = logPaths(input.workspacePath);
+      const { out, err } = logPaths({ workspacePath: input.workspacePath });
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
@@ -141,12 +159,6 @@ export const deepsiriusJobRouter = createTRPCRouter({
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
       const scriptName = 'deepSirius-dataset.sbatch';
-
-      // console.log('sbatchContent', sbatchContent);
-      // throw new TRPCError({
-      //   code: 'INTERNAL_SERVER_ERROR',
-      //   message: 'hue',
-      // });
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });
@@ -179,31 +191,36 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const flagArgs = {
         '--rot90': input.formData.augmentationArgs.rot90,
         '--rot270': input.formData.augmentationArgs.rot270,
-        '--flip_horizontal': input.formData.augmentationArgs.flipHorizontal,
-        '--flip_vertical': input.formData.augmentationArgs.flipVertical,
+        '--flip-horizontal': input.formData.augmentationArgs.flipHorizontal,
+        '--flip-vertical': input.formData.augmentationArgs.flipVertical,
       };
       const flagArgsString = Object.entries(flagArgs)
         .map(([key, value]) => (value ? key : ''))
         .join(' ');
 
       const kwArgs = {
-        '--elastic_alpha': input.formData.augmentationArgs.elastic.alpha,
-        '--elastic_sigma': input.formData.augmentationArgs.elastic.sigma,
-        '--gaussian_blur': input.formData.augmentationArgs.gaussianBlur.sigma,
+        '--elastic-alpha': input.formData.augmentationArgs.elastic.alpha,
+        '--elastic-sigma': input.formData.augmentationArgs.elastic.sigma,
+        '--gaussian-blur': input.formData.augmentationArgs.gaussianBlur.sigma,
         '--contrast': input.formData.augmentationArgs.contrast.factor,
-        '--average_blur':
+        '--average-blur':
           input.formData.augmentationArgs.averageBlur.kernelSize,
-        '--linear_contrast':
+        '--linear-contrast':
           input.formData.augmentationArgs.linearContrast.factor,
         '--dropout': input.formData.augmentationArgs.dropout.factor,
-        '--poisson_noise': input.formData.augmentationArgs.poissonNoise.scale,
+        '--poisson-noise': input.formData.augmentationArgs.poissonNoise.scale,
       };
       const kwArgsString = Object.entries(kwArgs)
         .map(([key, value]) => (value ? `${key} ${value.join(' ')}` : ''))
         .join(' ');
+
+      const inputImgageArgs = input.baseDatasetFullImages
+        .map((image) => `${image}`)
+        .join(' ');
+
       // defining the full command
-      const command = `${containerScript} ssc-deepsirius augment_dataset ${input.workspacePath} ${input.baseDatasetName} ${input.formData.augmentedDatasetName} ${flagArgsString} ${kwArgsString}`;
-      const { out, err } = logPaths(input.workspacePath);
+      const command = `${containerScript} ssc-deepsirius augment_dataset ${input.workspacePath} ${input.sourceDatasetName} ${input.formData.augmentedDatasetName} ${inputImgageArgs} ${flagArgsString} ${kwArgsString}`;
+      const { out, err } = logPaths({ workspacePath: input.workspacePath });
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
@@ -214,13 +231,6 @@ export const deepsiriusJobRouter = createTRPCRouter({
         `#SBATCH --gres=gpu:${gpus}`,
         `${command}`,
       ].join('\n');
-      console.log(sbatchContent);
-
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: `This feature is not yet implemented. Until then, this is where the submitAugmentation route ends. 
-          The sbatchContent would be ${sbatchContent}`,
-      });
 
       const connection = ctx.connection;
 
@@ -253,7 +263,68 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const partition = input.formData.slurmOptions.partition;
       const gpus = input.formData.slurmOptions.nGPU;
       // parsing args ssc-deepsirius package cli args
-      const argsString = `${input.workspacePath} ${input.formData.networkTypeName} ${input.formData.networkUserLabel} ${input.datasetPath}`;
+      const argsString = `${input.workspacePath} ${input.formData.networkTypeName} ${input.formData.networkUserLabel} ${input.sourceDatasetName}`;
+      // mapping formData to cli kwargs
+      const kwArgs = {
+        'max-iter': input.formData.iterations,
+        // batch-size: formData.batchSize,
+        'learning-rate': input.formData.learningRate,
+        optimiser: input.formData.optimizer,
+        'drop-classifier': input.formData.dropClassifier,
+        // this is a silly way to get around the fact that the cli expects 3 values for patch size
+        'net-patch-size': (input.formData.patchSize + ' ').repeat(3),
+      };
+      const kwArgsString = Object.entries(kwArgs)
+        .map(([key, value]) => `--${key} ${value as string}`)
+        .join(' ');
+      // full strings for the cli scripts
+      const trainingScript = `ssc-deepsirius train_model ${kwArgsString} ${argsString}`;
+      // defining the container script
+      const containerScript = `singularity exec --nv --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
+      const command = `${containerScript} ${trainingScript}`;
+      const { out, err } = logPaths({ workspacePath: input.workspacePath });
+      const sbatchContent = [
+        '#!/bin/bash',
+        `#SBATCH --job-name=${jobName}`,
+        `#SBATCH --output=${out}`,
+        `#SBATCH --error=${err}`,
+        `#SBATCH --ntasks=${ntasks}`,
+        `#SBATCH --partition=${partition}`,
+        `#SBATCH --gres=gpu:${gpus}`,
+        `${command}`,
+      ].join('\n');
+      const connection = ctx.connection;
+
+      const { tempDir, scriptPath } = createTempScript(sbatchContent);
+      const scriptName = 'deepSirius-network.sbatch';
+
+      await connection.putFile(scriptPath, scriptName);
+      fs.rmdirSync(tempDir, { recursive: true });
+
+      const { stdout, stderr } = await connection.execCommand(
+        `sbatch --parsable ${scriptName}`,
+      );
+
+      if (stderr) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: stderr,
+        });
+      }
+
+      const jobId = stdout.trim();
+      return { jobId: jobId };
+    }),
+  submitFinetune: protectedSSHProcedure
+    .input(finetuneJobSchema)
+    .mutation(async ({ ctx, input }) => {
+      // job configuration
+      const jobName = 'deepsirius-finetune';
+      const ntasks = 1;
+      const partition = input.formData.slurmOptions.partition;
+      const gpus = input.formData.slurmOptions.nGPU;
+      // parsing args ssc-deepsirius package cli args
+      const argsString = `${input.workspacePath} ${input.sourceNetworkType} ${input.sourceNetworkLabel} ${input.sourceDatasetName}`;
       // mapping formData to cli kwargs
       const kwArgs = {
         'max-iter': input.formData.iterations,
@@ -267,14 +338,13 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const kwArgsString =
         Object.entries(kwArgs)
           .map(([key, value]) => `--${key} ${value as string}`)
-          .join(' ') +
-        (input.trainingType === 'finetune' ? ' --use-finetune' : '');
+          .join(' ') + ' --use-finetune';
       // full strings for the cli scripts
       const trainingScript = `ssc-deepsirius train_model ${kwArgsString} ${argsString}`;
       // defining the container script
       const containerScript = `singularity exec --nv --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       const command = `${containerScript} ${trainingScript}`;
-      const { out, err } = logPaths(input.workspacePath);
+      const { out, err } = logPaths({ workspacePath: input.workspacePath });
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,
@@ -320,7 +390,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       // defining output directory for the inference results
       // const outputDir = `${input.workspacePath}/inference/${input.networkName}`;
       // parsing args ssc-deepsirius package cli args
-      const argsString = `${input.workspacePath} ${input.networkName} ${input.formData.outputDir}`;
+      const argsString = `${input.workspacePath} ${input.sourceNetworkLabel} ${input.formData.outputDir}`;
       // parsing input images list as cli kwargs string
       const inputImagesKwArgs = input.formData.inputImages
         .map((image) => `--list-imgs-infer ${image.path}`)
@@ -340,7 +410,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
         (input.formData.normalize ? ' --norm-data' : ' --no-norm-data');
       // creating the full command line script
       const command = `${containerScript} ssc-deepsirius run_inference ${argsString} ${KwArgsString} ${inputImagesKwArgs}`;
-      const { out, err } = logPaths(input.workspacePath);
+      const { out, err } = logPaths({ workspacePath: input.workspacePath });
       const sbatchContent = [
         '#!/bin/bash',
         `#SBATCH --job-name=${jobName}`,

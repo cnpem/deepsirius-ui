@@ -22,11 +22,11 @@ import {
   type WorkspaceInfo,
   useStore,
   useStoreActions,
-  type NodeTypeName,
 } from '~/hooks/use-store';
 import { DatasetNode } from '~/components/workboard/dataset-node';
 import { InferenceNode } from '~/components/workboard/inference-node';
 import { NetworkNode } from '~/components/workboard/network-node';
+import { FinetuneNode } from '~/components/workboard/finetune-node';
 import { AugmentationNode } from '~/components/workboard/augmentation-node';
 
 import { api } from '~/utils/api';
@@ -42,8 +42,23 @@ const nodeTypes: NodeTypes = {
   dataset: DatasetNode,
   augmentation: AugmentationNode,
   network: NetworkNode,
+  finetune: FinetuneNode,
   inference: InferenceNode,
 };
+
+function getTargetNodes(
+  sourceNodeId: string,
+  edges: Edge[],
+  nodes: Node<NodeData>[],
+) {
+  const targetNodesIds: string[] = edges
+    .filter((edge) => edge.source === sourceNodeId)
+    .map((edge) => edge.target);
+  const targetNodes: Node<NodeData>[] = nodes.filter((node) =>
+    targetNodesIds.includes(node.id),
+  );
+  return targetNodes;
+}
 
 function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
   const [alertOpen, setAlertOpen] = useState(false);
@@ -79,48 +94,182 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
     });
   }, [updateDbState, stateSnapshot, workspaceInfo.path]);
 
+  const handleDeleteDatasetAndAugmentationNode = useCallback(
+    (selectedNode: Node<NodeData>) => {
+      // this node can be deleted if its targets are not protected or if its not busy
+      if (selectedNode.data.status === 'busy') {
+        toast.error('Cannot delete busy node');
+        return;
+      }
+      const targetNodes = getTargetNodes(selectedNode.id, edges, nodes);
+      const hasProtectedTargetNodes = targetNodes.some(
+        (node) => node.data.status === 'busy' || node.data.status === 'success',
+      );
+      if (hasProtectedTargetNodes) {
+        toast.error(
+          'Cannot delete network node with protected inference nodes',
+        );
+        return;
+      }
+      // delete the remote files
+      const remotePath = selectedNode.data.remotePath;
+      if (remotePath) {
+        rmFile({ path: remotePath });
+      }
+      // delete the node on the store
+      onNodesDelete([selectedNode]);
+      toast.info('Dataset node deleted');
+      return;
+    },
+    [edges, nodes, onNodesDelete, rmFile],
+  );
+
+  const handleDeleteNetworkNode = useCallback(
+    (selectedNode: Node<NodeData>) => {
+      if (selectedNode.data.status === 'busy') {
+        toast.error('Cannot delete busy node');
+        return;
+      }
+
+      const targetNodes = getTargetNodes(selectedNode.id, edges, nodes);
+      const hasProtectedInferenceNodes = targetNodes.some(
+        (node) => node.data.status === 'busy' || node.data.status === 'success',
+      );
+      if (hasProtectedInferenceNodes) {
+        toast.error(
+          'Cannot delete network node with protected inference nodes',
+        );
+        return;
+      }
+
+      // get target finetune nodes and the target finetune nodes of the target finetune nodes
+      function getTargetFinetuneNodes(node: Node<NodeData>) {
+        const targetFinetuneNodes = getTargetNodes(
+          node.id,
+          edges,
+          nodes,
+        ).filter((node) => node.type === 'finetune');
+        const targetNodesOfTargetNodes: Node<NodeData>[] = [];
+        targetFinetuneNodes.forEach((node) => {
+          targetNodesOfTargetNodes.push(...getTargetFinetuneNodes(node));
+        });
+        return [...targetFinetuneNodes, ...targetNodesOfTargetNodes];
+      }
+      const targetFinetuneNodes = getTargetFinetuneNodes(selectedNode);
+
+      const hasProtectedFinetuneNodes = targetFinetuneNodes.some(
+        (node) => node.data.status === 'busy' || node.data.status === 'success',
+      );
+      if (hasProtectedFinetuneNodes) {
+        toast.error('Cannot delete network node with protected finetune nodes');
+        return;
+      }
+
+      if (targetFinetuneNodes.length > 0) {
+        onNodesDelete(targetFinetuneNodes);
+        toast.info('Related Finetune nodes deleted');
+      }
+
+      // delete the remote files
+      const remotePath = selectedNode.data.remotePath;
+      if (remotePath) {
+        rmDir({ path: remotePath });
+      }
+      // delete the node on the store
+      onNodesDelete([selectedNode]);
+      toast.info('Network node deleted');
+      return;
+    },
+    [edges, nodes, onNodesDelete, rmDir],
+  );
+
+  const handleDeleteFinetuneNode = useCallback(
+    (selectedNode: Node<NodeData>) => {
+      // this node cant be deleted if its a target node or if its busy
+      if (selectedNode.data.status === 'busy') {
+        toast.error('Cannot delete busy node');
+        return;
+      }
+
+      const isTarget = edges.some((edge) => edge.target === selectedNode.id);
+      if (isTarget) {
+        toast.error(
+          'Cannot delete finetune node with connected nodes. You must delete the parent network node.',
+        );
+        return;
+      }
+      // delete the node on the store
+      onNodesDelete([selectedNode]);
+      toast.info('Finetune node deleted');
+      return;
+    },
+    [edges, onNodesDelete],
+  );
+
+  const handleDeleteInferenceNode = useCallback(
+    (selectedNode: Node<NodeData>) => {
+      // this node cant be deleted if its busy
+      if (selectedNode.data.status === 'busy') {
+        toast.error('Cannot delete busy node');
+        return;
+      }
+      // delete the node on the store
+      onNodesDelete([selectedNode]);
+      toast.info('Inference node deleted');
+      return;
+    },
+    [onNodesDelete],
+  );
+
   const handleNodesDelete = useCallback(() => {
-    const nodeIsProtected = (node: Node<NodeData>) => {
-      if (node.data.status === 'busy') return true;
-      if (node.data.status === 'success') {
-        // check if there are edges connecting this node to a target
-        return edges.some((edge) => edge.source === node.id);
-      }
-      return false;
-    };
-    const [protectedNodes, deletableNodes] = nodes.reduce(
-      (acc, node) => {
-        if (node.selected) {
-          if (nodeIsProtected(node)) {
-            acc[0].push(node);
-          } else {
-            acc[1].push(node);
-          }
-        }
-        return acc;
-      },
-      [[], []] as [Node<NodeData>[], Node<NodeData>[]],
+    const selectedNodes = nodes.filter((node) => node.selected);
+    // delete dataset and augmentation nodes
+    const selectedDatasetAndAugmentationNodes = selectedNodes.filter(
+      (node) => node.type === 'dataset' || node.type === 'augmentation',
     );
-    // show error message if some nodes should not be deleted
-    if (protectedNodes.length > 0) {
-      toast.error('Cannot delete protected nodes');
+    if (selectedDatasetAndAugmentationNodes.length > 0) {
+      selectedDatasetAndAugmentationNodes.forEach((selectedNode) =>
+        handleDeleteDatasetAndAugmentationNode(selectedNode),
+      );
+      return;
     }
-    if (deletableNodes.length === 0) return;
-    // delete remote files
-    deletableNodes.forEach((node) => {
-      if (!node.data.remotePath) return;
-      // deleting inference nodes should not delete remote files
-      if (node.type === 'inference') return;
-      if (node.type === 'dataset') {
-        rmFile({ path: node.data.remotePath });
-      }
-      if (node.type === 'network') {
-        rmDir({ path: node.data.remotePath });
-      }
-    });
-    toast.info('Nodes deleted');
-    onNodesDelete(deletableNodes);
-  }, [edges, nodes, onNodesDelete, rmDir, rmFile]);
+    // delete network nodes
+    const selectedNetworkNodes = selectedNodes.filter(
+      (node) => node.type === 'network',
+    );
+    if (selectedNetworkNodes.length > 0) {
+      selectedNetworkNodes.forEach((selectedNode) =>
+        handleDeleteNetworkNode(selectedNode),
+      );
+      return;
+    }
+    // delete finetune nodes
+    const selectedFinetuneNodes = selectedNodes.filter(
+      (node) => node.type === 'finetune',
+    );
+    if (selectedFinetuneNodes.length > 0) {
+      selectedFinetuneNodes.forEach((selectedNode) =>
+        handleDeleteFinetuneNode(selectedNode),
+      );
+      return;
+    }
+    // delete inference nodes
+    const selectedInferenceNodes = selectedNodes.filter(
+      (node) => node.type === 'inference',
+    );
+    if (selectedInferenceNodes.length > 0) {
+      selectedInferenceNodes.forEach((selectedNode) =>
+        handleDeleteInferenceNode(selectedNode),
+      );
+      return;
+    }
+  }, [
+    nodes,
+    handleDeleteNetworkNode,
+    handleDeleteFinetuneNode,
+    handleDeleteDatasetAndAugmentationNode,
+    handleDeleteInferenceNode,
+  ]);
 
   const handleEdgesDelete = useCallback(() => {
     const nodeIsProtected = (nodeId: string) => {
@@ -264,7 +413,7 @@ function MiniMapNode({
   if (!node.type) return null;
   return (
     <NodeIcon
-      nodeType={node.type as NodeTypeName}
+      nodeType={node.type}
       width={1.2 * width}
       height={1.2 * height}
       x={x}

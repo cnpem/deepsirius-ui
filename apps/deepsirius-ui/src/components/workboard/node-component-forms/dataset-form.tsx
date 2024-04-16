@@ -43,27 +43,19 @@ const slurmOptions = z.object({
 });
 const powerSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
 const strategies = ['uniform'] as const;
+export const imageSchema = z
+  .string()
+  .min(2, { message: 'Must be a valid image name!' })
+  .regex(/^.*\.(tif|tiff|TIFF|hdf5|h5|raw|b)$/, {
+    message: 'Must be a valid image extension!',
+  });
+
 const dataSchema = z.object({
-  image: z
-    .string()
-    .min(2, { message: 'Must be a valid image name!' })
-    .regex(/^.*\.(tif|tiff|TIFF|hdf5|h5|raw|b)$/, {
-      message: 'Must be a valid image extension!',
-    }),
-  label: z
-    .string()
-    .min(2, { message: 'Must be a valid image name!' })
-    .regex(/^.*\.(tif|tiff|TIFF|hdf5|h5|raw|b)$/, {
-      message: 'Must be a valid image extension!',
-    }),
-  weightMap: z
-    .string()
-    .min(2, { message: 'Must be a valid image name!' })
-    .regex(/^.*\.(tif|tiff|TIFF|hdf5|h5|raw|b)$/, {
-      message: 'Must be a valid image extension!',
-    })
-    .optional(),
+  image: imageSchema,
+  label: imageSchema,
+  weightMap: imageSchema.optional(),
 });
+export type DataSchema = z.infer<typeof dataSchema>;
 
 export const datasetSchema = z.object({
   slurmOptions,

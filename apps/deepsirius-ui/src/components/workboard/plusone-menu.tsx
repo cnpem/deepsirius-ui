@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react';
 import { nanoid } from 'nanoid';
-import { type Node, type XYPosition } from 'reactflow';
+import { useReactFlow, type Node, type XYPosition } from 'reactflow';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import {
@@ -11,30 +11,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '~/components/ui/dropdown-menu';
-import {
-  type NodeTypeName,
-  type NodeData,
-  useStore,
-  useStoreActions,
-} from '~/hooks/use-store';
+import { type NodeData, useStore, useStoreActions } from '~/hooks/use-store';
 
-const nodeTypeNames: NodeTypeName[] = [
+const nodeTypes = [
   'dataset',
   'augmentation',
   'network',
-  // 'finetune',
+  'finetune',
   'inference',
 ];
 
 // selects the type of node to be created using a dropdown menu
 export function PlusOneMenu() {
+  const { fitView } = useReactFlow();
   const { nodes, workspaceInfo } = useStore((state) => ({
     workspaceInfo: state.workspaceInfo,
     nodes: state.nodes,
   }));
   const { addNode } = useStoreActions();
 
-  const onNodeAdd = (nodeType: NodeTypeName) => {
+  const onNodeAdd = (nodeType: string) => {
     if (!workspaceInfo) {
       toast.error('uh oh! something went wrong', {
         description: 'Looks like the workspace was not loaded properly.',
@@ -48,9 +44,10 @@ export function PlusOneMenu() {
     const nodesMaxX = Math.max(...nodes.map((node) => node.position.x));
     const nodesMinX = Math.min(...nodes.map((node) => node.position.x));
     const nodesMinY = Math.min(...nodes.map((node) => node.position.y));
+    const nodesMaxY = Math.max(...nodes.map((node) => node.position.y));
     const initialPostition: XYPosition = {
       x: (nodesMinX + (nodesMaxX - nodesMinX) / 2) | 0,
-      y: (nodesMinY - 200) | 0,
+      y: (nodesMinY + (nodesMaxY - nodesMinY) / 2) | 0,
     };
     const nodeid = nanoid();
     const newNode: Node<NodeData> = {
@@ -64,6 +61,7 @@ export function PlusOneMenu() {
     };
     // now that the node is created in the database, we can add it to the store with an always defined registryId
     addNode(newNode);
+    fitView({ padding: 0.5 });
   };
 
   return (
@@ -84,7 +82,7 @@ export function PlusOneMenu() {
       <DropdownMenuContent>
         <DropdownMenuLabel>Create New Node</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {nodeTypeNames.map((typeName) => (
+        {nodeTypes.map((typeName) => (
           <DropdownMenuItem onSelect={() => onNodeAdd(typeName)} key={typeName}>
             {typeName}
           </DropdownMenuItem>

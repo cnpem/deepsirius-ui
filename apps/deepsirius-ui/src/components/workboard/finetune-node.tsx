@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { type NodeProps, useUpdateNodeInternals } from 'reactflow';
 import { toast } from 'sonner';
 import {
-  NetworkForm,
+  FinetuneForm,
   type FormType,
-} from '~/components/workboard/node-component-forms/network-form';
-import { type NodeData, useStoreActions } from '~/hooks/use-store';
+} from '~/components/workboard/node-component-forms/finetune-form';
+import { type NodeData, useStoreActions, useStore } from '~/hooks/use-store';
 import { api } from '~/utils/api';
 import NodeCard from './node-components/node-card';
 import {
@@ -15,33 +15,50 @@ import {
   ErrorSheet,
   SuccessSheet,
 } from './node-components/node-sheet';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '~/components/ui/accordion';
 
-export function NetworkNode(nodeProps: NodeProps<NodeData>) {
+export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
   const [open, setOpen] = useState(false);
 
-  const { onUpdateNode, getSourceData } = useStoreActions();
+  const { onUpdateNode } = useStoreActions();
 
-  const [formData, setFormData] = useState<FormType | undefined>(
-    nodeProps.data.networkData?.form,
-  );
-
-  function getSourceDatasetData(nodeId: string) {
-    const sourceNodeData = getSourceData(nodeId);
-    if (sourceNodeData?.datasetData) {
-      return {
-        sourceDatasetName: sourceNodeData.datasetData.name,
-      };
-    }
-    if (sourceNodeData?.augmentationData) {
-      return {
-        sourceDatasetName: sourceNodeData.augmentationData.sourceDatasetName,
-      };
-    }
+  function getSourceData(nodeId: string) {
+    const sourceNodesId = useStore
+      .getState()
+      .edges.filter((edge) => edge.target === nodeId);
+    const sourceNodes = sourceNodesId.map((id) =>
+      useStore.getState().nodes.find((node) => node.id === id.source),
+    );
+    const sourceDataset = sourceNodes.find((node) => node?.type === 'dataset');
+    const sourceAugmentedDataset = sourceNodes.find(
+      (node) => node?.type === 'augmentation',
+    );
+    const sourceNetwork = sourceNodes.find((node) => node?.type === 'network');
+    const sourceFinetune = sourceNodes.find(
+      (node) => node?.type === 'finetune',
+    );
 
     return {
-      sourceDatasetName: undefined,
+      sourceDatasetName:
+        sourceDataset?.data?.datasetData?.name ??
+        sourceAugmentedDataset?.data?.augmentationData?.sourceDatasetName,
+      sourceNetworkLabel:
+        sourceNetwork?.data?.networkData?.label ??
+        sourceFinetune?.data?.finetuneData?.sourceNetworkLabel,
+      sourceNetworkType:
+        sourceNetwork?.data?.networkData?.networkType ??
+        sourceFinetune?.data?.finetuneData?.sourceNetworkType,
     };
   }
+
+  const [formData, setFormData] = useState<FormType | undefined>(
+    nodeProps.data.finetuneData?.form,
+  );
 
   useEffect(() => {
     const formEditState =
@@ -68,10 +85,16 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     if (jobData.jobStatus === 'COMPLETED') {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       toast.success('Job completed');
+      const finetuneData = nodeProps.data.finetuneData;
+      if (!finetuneData) {
+        toast.warning('Finetune data not found');
+        return;
+      }
       onUpdateNode({
         id: nodeProps.id,
         data: {
           ...nodeProps.data,
+
           status: 'success',
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
@@ -79,13 +102,15 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             nodeProps.data.jobId ?? 'aa'
           } finished successfully in ${date}`,
           updatedAt: date,
+          finetuneData: {
+            ...finetuneData,
+          },
         },
       });
       updateNodeInternals(nodeProps.id);
     } else if (jobData.jobStatus === 'FAILED') {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       toast.error('Job failed');
-      const networkData = nodeProps.data.networkData;
       onUpdateNode({
         id: nodeProps.id,
         data: {
@@ -95,7 +120,6 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
           jobStatus: jobData.jobStatus,
           message: `Job ${nodeProps.data.jobId ?? 'aa'} failed in ${date}`,
           updatedAt: date,
-          networkData,
         },
       });
       updateNodeInternals(nodeProps.id);
@@ -108,8 +132,8 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
           status: 'busy',
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
-          message: `Job ${nodeProps.data.jobId ?? 'jobId not found'} is ${
-            jobData.jobStatus?.toLocaleLowerCase() ?? 'jobStatus not found'
+          message: `Job ${nodeProps.data.jobId ?? 'aa'} is ${
+            jobData.jobStatus?.toLocaleLowerCase() ?? 'aa'
           }, last checked at ${date}`,
           updatedAt: date,
         },
@@ -117,6 +141,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
       updateNodeInternals(nodeProps.id);
     }
   }, [
+    formData,
     jobData,
     nodeProps.data,
     nodeProps.id,
@@ -126,50 +151,49 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
 
   const { mutateAsync: cancelJob } = api.job.cancel.useMutation();
   const { mutateAsync: submitJob } =
-    api.deepsiriusJob.submitNetwork.useMutation();
+    api.deepsiriusJob.submitFinetune.useMutation();
 
-  type NetworkFormSubmitType = 'create' | 'retry';
-
-  const handleSubmit = (
-    formData: FormType,
-    submitType: NetworkFormSubmitType,
-  ) => {
-    const { sourceDatasetName } = getSourceDatasetData(nodeProps.id);
+  const handleSubmit = (formData: FormType) => {
+    console.log('handleSubmitJob');
+    const { sourceDatasetName, sourceNetworkLabel, sourceNetworkType } =
+      getSourceData(nodeProps.id);
     if (!sourceDatasetName) {
       toast.warning('Please connect a dataset');
       return;
     }
+    if (!sourceNetworkLabel || !sourceNetworkType) {
+      toast.warning('Please connect a network');
+      return;
+    }
     submitJob({
       sourceDatasetName,
-      trainingType: submitType,
+      sourceNetworkLabel,
+      sourceNetworkType,
       workspacePath: nodeProps.data.workspacePath,
       formData,
     })
       .then(({ jobId }) => {
-        console.log('handleSubmitJob then?', 'jobId', jobId);
         if (!jobId) {
           console.error('handleSubmitJob then?', 'no jobId');
           toast.error('Error submitting job');
           return;
         }
         setFormData(formData);
-        console.log();
         onUpdateNode({
           id: nodeProps.id,
           data: {
             ...nodeProps.data,
             status: 'busy',
-            remotePath: `${nodeProps.data.workspacePath}/networks/${formData.networkUserLabel}`,
+            remotePath: ``,
             jobId: jobId,
             message: `Job ${jobId} submitted in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
             )}`,
-            networkData: {
+            finetuneData: {
               sourceDatasetName,
-              networkType: formData.networkTypeName,
+              sourceNetworkLabel,
+              sourceNetworkType,
               form: formData,
-              label: formData.networkUserLabel,
-              remotePath: `${nodeProps.data.workspacePath}/networks/${formData.networkUserLabel}`,
             },
           },
         });
@@ -189,13 +213,6 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             message: `Error submitting job in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
             )}`,
-            networkData: {
-              sourceDatasetName,
-              networkType: formData.networkTypeName,
-              form: formData,
-              label: formData.networkUserLabel,
-              remotePath: `${nodeProps.data.workspacePath}/networks/${formData.networkUserLabel}`,
-            },
           },
         });
         updateNodeInternals(nodeProps.id);
@@ -214,7 +231,9 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
             status: 'error',
             jobId: nodeProps.data.jobId,
             jobStatus: 'CANCELLED',
-            message: `Job ${nodeProps.data.jobId ?? 'aa'} canceled in ${date}`,
+            message: `Job ${
+              nodeProps.data.jobId ?? '[jobId not found]'
+            } canceled in ${date}`,
             updatedAt: date,
           },
         });
@@ -230,14 +249,13 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          title={'network'}
-          subtitle={'click to train a network'}
+          title={'finetune'}
+          subtitle={'click to finetune a network'}
           {...nodeProps}
         />
-        <ActiveSheet selected={nodeProps.selected} title={'Network Training'}>
-          <NetworkForm
-            jobType="create"
-            onSubmitHandler={(formData) => handleSubmit(formData, 'create')}
+        <ActiveSheet selected={nodeProps.selected} title={'Finetune Network'}>
+          <FinetuneForm
+            onSubmitHandler={(formData) => handleSubmit(formData)}
           />
         </ActiveSheet>
       </>
@@ -248,7 +266,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          title={formData?.networkUserLabel || 'network'}
+          title={'finetune'}
           subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
             nodeProps.data.jobStatus || 'jobStatus'
           }`}
@@ -271,7 +289,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          title={formData?.networkUserLabel || 'network'}
+          title={'finetune'}
           subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
             nodeProps.data.jobStatus || 'jobStatus'
           }`}
@@ -280,37 +298,63 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
         <SuccessSheet
           selected={nodeProps.selected}
           message={nodeProps.data.message}
+          title="Finetune"
         >
-          <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
-            {formData &&
-              Object.entries(formData)
-                .filter(
-                  ([_, value]) =>
-                    typeof value === 'string' ||
-                    typeof value === 'number' ||
-                    typeof value === 'boolean',
-                )
-                .map(([key, value], index) => {
-                  const isEven = index % 2 === 0;
+          <FinetuneForm
+            onSubmitHandler={(formData) => handleSubmit(formData)}
+          />
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="item-1">
+              <AccordionTrigger>
+                <h2 className="text-md font-semibold text-foreground">
+                  Job Details
+                </h2>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="flex flex-col gap-1 rounded-md border border-input p-2 font-mono">
+                  <div
+                    key={'previous-iterations'}
+                    className="flex flex-row items-center justify-between gap-1"
+                  >
+                    <p className="font-medium">total iterations trained</p>
+                    <p className="text-end">
+                      {nodeProps.data.finetuneData?.form.iterations ?? 0}
+                    </p>
+                  </div>
 
-                  return (
-                    <div
-                      key={key}
-                      className="flex flex-row items-center justify-between gap-1"
-                    >
-                      <p className="font-medium">
-                        {key.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()}
-                      </p>
-                      <p
-                        data-even={isEven}
-                        className="text-end data-[even=true]:text-violet-600 "
-                      >
-                        {value.toString()}
-                      </p>
-                    </div>
-                  );
-                })}
-          </div>
+                  {formData &&
+                    Object.entries(formData)
+                      .filter(
+                        ([_, value]) =>
+                          typeof value === 'string' ||
+                          typeof value === 'number' ||
+                          typeof value === 'boolean',
+                      )
+                      .map(([key, value], index) => {
+                        const isEven = index % 2 === 0;
+                        return (
+                          <div
+                            key={key}
+                            className="flex flex-row items-center justify-between gap-1"
+                          >
+                            <p className="font-medium">
+                              {key
+                                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                                .toLowerCase()}
+                            </p>
+                            <p
+                              data-even={isEven}
+                              className="text-end data-[even=true]:text-violet-600 "
+                            >
+                              {value.toString()}
+                            </p>
+                          </div>
+                        );
+                      })}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </SuccessSheet>
       </>
     );
@@ -320,7 +364,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          title={formData?.networkUserLabel || 'network'}
+          title={'finetune'}
           subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
             nodeProps.data.jobStatus || 'Error'
           }`}
@@ -330,12 +374,9 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
           selected={nodeProps.selected}
           message={nodeProps.data.message}
         >
-          <NetworkForm
-            networkTypeName={formData?.networkTypeName || 'vnet'}
-            networkUserLabel={formData?.networkUserLabel || 'new network'}
-            jobType="retry"
-            onSubmitHandler={(data) => {
-              handleSubmit(data, 'retry');
+          <FinetuneForm
+            onSubmitHandler={(formData) => {
+              handleSubmit(formData);
             }}
           />
         </ErrorSheet>

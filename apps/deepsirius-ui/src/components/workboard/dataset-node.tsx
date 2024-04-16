@@ -33,7 +33,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   }, [formEditState]);
 
   const [formData, setFormData] = useState<FormType | undefined>(
-    nodeProps.data.form as FormType,
+    nodeProps.data.datasetData?.form,
   );
 
   const updateNodeInternals = useUpdateNodeInternals();
@@ -134,7 +134,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
             message: `Job ${jobId} submitted in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
             )}`,
-            form: formData,
+            datasetData: {
+              name: formData.datasetName,
+              remotePath: `${nodeProps.data.workspacePath}/datasets/${formData.datasetName}.h5`,
+              form: formData,
+            },
           },
         });
         updateNodeInternals(nodeProps.id);
@@ -148,12 +152,16 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
           data: {
             ...nodeProps.data,
             status: 'error',
-            remotePath: ``,
+            remotePath: '',
             jobId: '',
             message: `Error submitting job in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
             )}`,
-            form: formData,
+            datasetData: {
+              name: formData.datasetName,
+              remotePath: '',
+              form: formData,
+            },
           },
         });
         updateNodeInternals(nodeProps.id);
@@ -188,11 +196,9 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          nodeType="dataset"
-          nodeStatus="active"
-          selected={nodeProps.selected}
           title="new dataset"
-          subtitle="Click to create a job"
+          subtitle="click to create a dataset"
+          {...nodeProps}
         />
         <Sheet open={nodeProps.selected} modal={false}>
           <SheetContent>
@@ -210,13 +216,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          nodeType="dataset"
-          nodeStatus="busy"
-          selected={nodeProps.selected}
           title={nodeProps.data?.remotePath?.split('/').pop() ?? 'new dataset'}
           subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
             nodeProps.data.jobStatus || 'checking status..'
           }`}
+          {...nodeProps}
         />
         <BusySheet
           selected={nodeProps.selected}
@@ -235,13 +239,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          nodeType="dataset"
-          nodeStatus="success"
-          selected={nodeProps.selected}
           title={nodeProps.data?.remotePath?.split('/').pop() ?? 'new dataset'}
           subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
             nodeProps.data.jobStatus || 'jobStatus'
           }`}
+          {...nodeProps}
         />
         <SuccessSheet
           selected={nodeProps.selected}
@@ -303,13 +305,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          nodeType="dataset"
-          nodeStatus="error"
-          selected={nodeProps.selected}
           title={nodeProps.data?.remotePath?.split('/').pop() ?? 'new dataset'}
           subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
             nodeProps.data.jobStatus || 'jobStatus'
           }`}
+          {...nodeProps}
         />
         <ErrorSheet
           selected={nodeProps.selected}

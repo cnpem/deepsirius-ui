@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -31,62 +30,28 @@ const slurmOptions = z.object({
 });
 
 const patchSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
-export const networkSchema = z.object({
+export const finetuneSchema = z.object({
   slurmOptions,
-  // field of type z.string() with no spaces or special characters allowed
-  networkUserLabel: z
-    .string()
-    .min(2, {
-      message: 'Network label name must be at least 2 characters.',
-    })
-    .regex(/^[a-zA-Z0-9_]*$/, {
-      message:
-        'Network label name must contain only letters, numbers underscores and no spaces.',
-    }),
-  //
-  // field dropClassifier of type z.boolean()
   dropClassifier: z.boolean(),
-  // field of type z.enum() with options of '1', '2', '4'
-  jobGPUs: z.enum(['1', '2', '4']),
-  // field of type z.number() with a minimum value of 1
   iterations: z.coerce.number().gte(1, { message: 'Must be >= 1' }),
-  // field of type z.number() with a minimum value of 0
   learningRate: z.coerce.number().gt(0, { message: 'Must be greater than 0' }),
-  // field of type z.enum() with options of 'Adam', 'SGD'
   optimizer: z.enum(['adam', 'adagrad', 'gradientdescent']),
-  // field of type z.enum() with options of 'CrossEntropy', 'dice', 'xent_dice'
-  // meaning cross entropy, dice or both combined
   lossFunction: z.enum(['CrossEntropy', 'dice', 'xent_dice']),
-  // field of type z.enum() with options of 'unet2D', 'unet3D', 'vnet'
-  networkTypeName: z.enum(['unet2d', 'unet3d', 'vnet']),
-  // field of type z.enum() with options of powers of 2
   patchSize: z.enum(patchSizes),
 });
 
-export type FormType = z.infer<typeof networkSchema>;
+export type FormType = z.infer<typeof finetuneSchema>;
 type FormCallback = (data: FormType) => void;
 
-type NetworkFormProps = {
+type FormProps = {
   onSubmitHandler: FormCallback;
-  networkUserLabel?: string;
-  networkTypeName?: z.infer<typeof networkSchema>['networkTypeName'];
-  jobType: 'create' | 'retry';
 };
 
-export function useNetworkForm({
-  networkUserLabel = '',
-  networkTypeName = 'vnet',
-}: {
-  networkUserLabel?: string;
-  networkTypeName?: z.infer<typeof networkSchema>['networkTypeName'];
-}) {
+export function useFinetuneForm() {
   const form = useForm<FormType>({
-    resolver: zodResolver(networkSchema),
+    resolver: zodResolver(finetuneSchema),
     defaultValues: {
-      networkUserLabel: networkUserLabel,
-      networkTypeName: networkTypeName,
       dropClassifier: false,
-      jobGPUs: '1',
       iterations: 1,
       learningRate: 0.00001,
       optimizer: 'adam',
@@ -110,12 +75,6 @@ type FieldItem = {
 
 type FormFieldItems = FieldItem[];
 
-const networkOpts: FormFieldItems = [
-  { label: 'unet 2D', value: 'unet2d' },
-  { label: 'unet 3D', value: 'unet3d' },
-  { label: 'vnet', value: 'vnet' },
-];
-
 const optimizerOpts: FormFieldItems = [
   { label: 'Adam', value: 'adam' },
   { label: 'Adagrad', value: 'adagrad' },
@@ -128,12 +87,8 @@ const lossOpts: FormFieldItems = [
   { label: 'Cross Entropy + Dice', value: 'xent_dice' },
 ];
 
-export function NetworkForm({
-  networkUserLabel,
-  networkTypeName,
-  onSubmitHandler,
-}: NetworkFormProps) {
-  const form = useNetworkForm({ networkUserLabel, networkTypeName });
+export function FinetuneForm({ onSubmitHandler }: FormProps) {
+  const form = useFinetuneForm();
 
   const onSubmit = () => {
     onSubmitHandler(form.getValues());
@@ -145,51 +100,6 @@ export function NetworkForm({
         className="flex flex-col gap-4"
         onSubmit={(...args) => void form.handleSubmit(onSubmit)(...args)}
       >
-        <FormField
-          name="networkUserLabel"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Network Label</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="MyFancyNetwork" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          name="networkTypeName"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between">
-              <FormLabel>Network Type</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex justify-center gap-1"
-                >
-                  {networkOpts.map((option) => (
-                    <div key={option.value} className="flex">
-                      <RadioGroupItem
-                        className="peer sr-only"
-                        id={option.label}
-                        value={option.value}
-                      />
-                      <FormLabel
-                        htmlFor={option.label}
-                        className="cursor-pointer rounded-sm border p-2 peer-data-[state=checked]:border-violet-600 peer-data-[state=checked]:bg-violet-400 dark:peer-data-[state=checked]:bg-violet-800 peer-data-[state=checked]:[&>p]:text-violet-700"
-                      >
-                        {option.label}
-                      </FormLabel>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </FormControl>
-            </FormItem>
-          )}
-        />
         <FormField
           name="dropClassifier"
           control={form.control}

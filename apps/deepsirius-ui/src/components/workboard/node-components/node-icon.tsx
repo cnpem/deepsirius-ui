@@ -6,11 +6,10 @@ import {
   GoalIcon,
   type LucideProps,
 } from 'lucide-react';
-import { type NodeTypeName } from '~/hooks/use-store';
 import { cn } from '~/lib/utils';
 
 interface NodeIconProps extends Omit<LucideProps, 'ref'> {
-  nodeType: NodeTypeName;
+  nodeType: string;
 }
 export default function NodeIcon({
   nodeType,

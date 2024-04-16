@@ -16,6 +16,7 @@ import {
   ErrorSheet,
   SuccessSheet,
 } from './node-components/node-sheet';
+import { type DataSchema } from './node-component-forms/dataset-form';
 
 export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
   const [open, setOpen] = useState(false);
@@ -23,26 +24,32 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
   const { onUpdateNode, getSourceData } = useStoreActions();
 
   const [formData, setFormData] = useState<FormType | undefined>(
-    nodeProps.data.form as FormType,
+    nodeProps.data.augmentationData?.form,
   );
 
-  const getSourceDatasetName = () => {
+  const getSourceDatasetData = () => {
     const sourceNode = getSourceData(nodeProps.id);
-    if (sourceNode?.remotePath) {
-      try {
-        return (
-          sourceNode.remotePath.split('/')?.pop()?.replace('.h5', '') || ''
-        );
-      } catch (e) {
-        console.error(e);
-      }
+    if (sourceNode?.datasetData) {
+      const images = sourceNode.datasetData.form.data.map(
+        ({ image }: DataSchema) => image,
+      );
+
+      return {
+        sourceDatasetName: sourceNode.datasetData.name,
+        images: images,
+      };
     }
-    return '';
+    return {
+      sourceDatasetName: '',
+      images: [] as string[],
+    };
   };
 
   const getSuggestedName = () => {
-    const name = getSourceDatasetName();
-    return name ? name + '_augmented' : '';
+    const { sourceDatasetName } = getSourceDatasetData();
+    return sourceDatasetName
+      ? sourceDatasetName + '_augmented'
+      : 'source_not_found';
   };
 
   useEffect(() => {
@@ -65,10 +72,10 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
   );
 
   useEffect(() => {
+    if (nodeProps.data.status !== 'busy') return;
     if (!jobData) return;
     if (jobData.jobStatus === 'COMPLETED') {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      console.log('Job completed');
       toast.success('Job completed');
       onUpdateNode({
         id: nodeProps.id,
@@ -78,7 +85,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
           message: `Job ${
-            nodeProps.data.jobId ?? 'aa'
+            nodeProps.data.jobId ?? 'Err'
           } finished successfully in ${date}`,
           updatedAt: date,
         },
@@ -95,14 +102,13 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
           status: 'error',
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
-          message: `Job ${nodeProps.data.jobId ?? 'aa'} failed in ${date}`,
+          message: `Job ${nodeProps.data.jobId ?? 'Err'} failed in ${date}`,
           updatedAt: date,
         },
       });
       updateNodeInternals(nodeProps.id);
     } else {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      console.log('Job is busy');
       onUpdateNode({
         id: nodeProps.id,
         data: {
@@ -110,8 +116,8 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
           status: 'busy',
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
-          message: `Job ${nodeProps.data.jobId ?? 'aa'} is ${
-            jobData.jobStatus?.toLocaleLowerCase() ?? 'aa'
+          message: `Job ${nodeProps.data.jobId ?? 'Err'} is ${
+            jobData.jobStatus?.toLocaleLowerCase() ?? 'Err'
           }, last checked at ${date}`,
           updatedAt: date,
         },
@@ -131,15 +137,16 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
     api.deepsiriusJob.submitAugmentation.useMutation();
 
   const handleSubmit = (formData: FormType) => {
-    const baseDatasetName = getSourceDatasetName();
-    if (!baseDatasetName) {
+    const { sourceDatasetName, images } = getSourceDatasetData();
+    if (!sourceDatasetName) {
       toast.warning('Please connect a dataset');
       return;
     }
     submitJob({
       formData,
-      baseDatasetName,
+      sourceDatasetName,
       workspacePath: nodeProps.data.workspacePath,
+      baseDatasetFullImages: images,
     })
       .then(({ jobId }) => {
         onUpdateNode({
@@ -152,7 +159,12 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
             message: `Job ${jobId} submitted in ${dayjs().format(
               'YYYY-MM-DD HH:mm:ss',
             )}`,
-            form: formData,
+            augmentationData: {
+              sourceDatasetName,
+              form: formData,
+              name: formData.augmentedDatasetName,
+              remotePath: `${nodeProps.data.workspacePath}/datasets/${formData.augmentedDatasetName}.h5`,
+            },
           },
         });
         updateNodeInternals(nodeProps.id);
@@ -178,7 +190,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
             status: 'error',
             jobId: nodeProps.data.jobId,
             jobStatus: 'CANCELLED',
-            message: `Job ${nodeProps.data.jobId ?? 'aa'} canceled in ${date}`,
+            message: `Job ${nodeProps.data.jobId ?? 'Err'} canceled in ${date}`,
             updatedAt: date,
           },
         });
@@ -194,11 +206,9 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          nodeType={nodeProps.type}
-          selected={nodeProps.selected}
           title={'augmentation'}
-          subtitle={'Click to augment a dataset'}
-          nodeStatus={nodeProps.data.status}
+          subtitle={'click to augment a dataset'}
+          {...nodeProps}
         />
         <ActiveSheet
           selected={nodeProps.selected}
@@ -217,11 +227,11 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          nodeType={nodeProps.type}
-          selected={nodeProps.selected}
-          title={'augmentation'}
-          subtitle={'Busy'}
-          nodeStatus={nodeProps.data.status}
+          title={nodeProps.data.augmentationData?.name || 'augmentation'}
+          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
+            nodeProps.data.jobStatus || 'jobStatus'
+          }`}
+          {...nodeProps}
         />
         <BusySheet
           selected={nodeProps.selected}
@@ -240,31 +250,19 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
     return (
       <>
         <NodeCard
-          nodeType={nodeProps.type}
-          selected={nodeProps.selected}
-          title={'augmentation'}
-          subtitle={'Success'}
-          nodeStatus={nodeProps.data.status}
+          title={nodeProps.data.augmentationData?.name || 'augmentation'}
+          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
+            nodeProps.data.jobStatus || 'jobStatus'
+          }`}
+          {...nodeProps}
         />
         <SuccessSheet
           selected={nodeProps.selected}
           message={nodeProps.data.message}
         >
           <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
-            {formData &&
-              Object.entries(formData)
-                .filter(([_, value]) => typeof value === 'string')
-                .map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="flex flex-row items-center justify-between gap-1"
-                  >
-                    <p className="font-medium">{key}</p>
-                    <p className="text-end text-violet-600">
-                      {value as string}
-                    </p>
-                  </div>
-                ))}
+            {/* {formData?.augmentationArgs && <></>} */}
+            {/* <ShowSelectedAugmentationArgs args={formData?.augmentationArgs} /> */}
           </div>
         </SuccessSheet>
       </>
@@ -274,13 +272,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
   if (nodeProps.data.status === 'error') {
     return (
       <>
-        <NodeCard
-          nodeType={nodeProps.type}
-          selected={nodeProps.selected}
-          title={'augmentation'}
-          subtitle={'Error'}
-          nodeStatus={nodeProps.data.status}
-        />
+        <NodeCard title={'augmentation'} subtitle={'Error'} {...nodeProps} />
         <ErrorSheet
           selected={nodeProps.selected}
           message={nodeProps.data.message}
@@ -296,3 +288,36 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
 
   return null;
 }
+
+// function ShowSelectedAugmentationArgs({
+//   args,
+// }: {
+//   args: AugmentationArgs | undefined;
+// }) {
+//   if (!args) return null;
+//   return Object.entries(args)
+//     .filter(([_, value]) => value.select)
+//     .flatMap(([key, value]) => {
+//       if (typeof value === 'boolean')
+//         return (
+//           <div
+//             key={'key'}
+//             className="flex flex-row items-center justify-between gap-1"
+//           >
+//             <p className="font-medium">key</p>
+//             <p className="text-end">{true}</p>
+//           </div>
+//         );
+//       if (typeof value === 'object')
+//         return Object.entries(value).map(([k, v]) => (
+//           <div
+//             key={k}
+//             className="flex flex-row items-center justify-between gap-1"
+//           >
+//             <p className="font-medium">{k}</p>
+//             <p className="text-end">{v}</p>
+//           </div>
+//         ));
+//       return null;
+//     });
+// }

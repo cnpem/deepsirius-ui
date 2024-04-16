@@ -112,11 +112,12 @@ export function ErrorSheet(props: ErrorSheetProps) {
 interface SuccessSheetProps {
   selected: boolean;
   message?: string;
+  title?: string;
   children: ReactNode;
 }
 
 export function SuccessSheet(props: SuccessSheetProps) {
-  const { selected, message, children } = props;
+  const { selected, message, children, title } = props;
 
   return (
     <Sheet open={selected} modal={false}>
@@ -128,7 +129,7 @@ export function SuccessSheet(props: SuccessSheetProps) {
           </AlertDescription>
         </Alert>
         <SheetHeader>
-          <SheetTitle>Details</SheetTitle>
+          <SheetTitle>{title ? title : 'Details'}</SheetTitle>
         </SheetHeader>
         {children}
       </SheetContent>

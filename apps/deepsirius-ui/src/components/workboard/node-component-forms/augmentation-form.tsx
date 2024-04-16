@@ -30,13 +30,13 @@ const slurmOptions = z.object({
 });
 
 const floatInterval = z
-  .tuple([z.number(), z.number()])
+  .tuple([z.coerce.number(), z.coerce.number()])
   .refine(([min, max]) => min < max, 'Min must be less than max')
   .refine(([min, max]) => min >= 0 && max >= 0, 'Must be greater than 0')
   .optional();
 
 const intInterval = z
-  .tuple([z.number(), z.number()])
+  .tuple([z.coerce.number(), z.coerce.number()])
   .refine(([min, max]) => min < max, 'Min must be less than max')
   .refine(([min, max]) => min >= 0 && max >= 0, 'Must be greater than 0')
   .refine(
@@ -46,10 +46,18 @@ const intInterval = z
   .optional();
 
 const augmentationArgs = z.object({
-  rot90: z.boolean(),
-  rot270: z.boolean(),
-  flipHorizontal: z.boolean(),
-  flipVertical: z.boolean(),
+  rot90: z.object({
+    select: z.boolean(),
+  }),
+  rot270: z.object({
+    select: z.boolean(),
+  }),
+  flipHorizontal: z.object({
+    select: z.boolean(),
+  }),
+  flipVertical: z.object({
+    select: z.boolean(),
+  }),
   elastic: z.object({
     select: z.boolean(),
     alpha: floatInterval,
@@ -81,6 +89,8 @@ const augmentationArgs = z.object({
   }),
 });
 
+export type AugmentationArgs = z.infer<typeof augmentationArgs>;
+
 export const augmentationSchema = z.object({
   slurmOptions,
   augmentedDatasetName: z
@@ -104,10 +114,18 @@ function useAugmentationForm(name: FormProps['name'] = '') {
     defaultValues: {
       augmentedDatasetName: name,
       augmentationArgs: {
-        rot90: false,
-        rot270: false,
-        flipHorizontal: false,
-        flipVertical: false,
+        rot90: {
+          select: false,
+        },
+        rot270: {
+          select: false,
+        },
+        flipHorizontal: {
+          select: false,
+        },
+        flipVertical: {
+          select: false,
+        },
         elastic: {
           select: false,
           alpha: [25, 50],
@@ -172,7 +190,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
           <div className="my-2 flex flex-row items-center justify-between">
             <FormLabel>Rotation</FormLabel>
             <FormField
-              name="augmentationArgs.rot90"
+              name="augmentationArgs.rot90.select"
               control={form.control}
               render={({ field }) => (
                 <FormItem className="">
@@ -191,7 +209,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
               )}
             />
             <FormField
-              name="augmentationArgs.rot270"
+              name="augmentationArgs.rot270.select"
               control={form.control}
               render={({ field }) => (
                 <FormItem className="">
@@ -213,7 +231,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
           <div className="my-2 flex flex-row items-center justify-between">
             <FormLabel>Flip</FormLabel>
             <FormField
-              name="augmentationArgs.flipHorizontal"
+              name="augmentationArgs.flipHorizontal.select"
               control={form.control}
               render={({ field }) => (
                 <FormItem className="">
@@ -234,7 +252,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
               )}
             />
             <FormField
-              name="augmentationArgs.flipVertical"
+              name="augmentationArgs.flipVertical.select"
               control={form.control}
               render={({ field }) => (
                 <FormItem className="">
@@ -433,7 +451,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
           <FormField
             name="augmentationArgs.contrast"
             control={form.control}
-            render={({ field }) => (
+            render={() => (
               <FormItem className="">
                 <FormControl>
                   <div className="my-2 flex flex-col">
@@ -569,7 +587,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
           <FormField
             name="augmentationArgs.linearContrast"
             control={form.control}
-            render={({ field }) => (
+            render={() => (
               <FormItem className="">
                 <FormControl>
                   <div className="my-2 flex flex-col">
@@ -637,7 +655,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
           <FormField
             name="augmentationArgs.dropout"
             control={form.control}
-            render={({ field }) => (
+            render={() => (
               <FormItem className="">
                 <FormControl>
                   <div className="my-2 flex flex-col">

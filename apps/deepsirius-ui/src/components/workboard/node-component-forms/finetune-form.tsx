@@ -30,6 +30,7 @@ const slurmOptions = z.object({
 });
 
 const patchSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
+const batchSizes = ['2', '4', '8', '16', '32'] as const;
 export const finetuneSchema = z.object({
   slurmOptions,
   dropClassifier: z.boolean(),
@@ -38,6 +39,7 @@ export const finetuneSchema = z.object({
   optimizer: z.enum(['adam', 'adagrad', 'gradientdescent']),
   lossFunction: z.enum(['CrossEntropy', 'dice', 'xent_dice']),
   patchSize: z.enum(patchSizes),
+  batchSize: z.enum(batchSizes),
 });
 
 export type FormType = z.infer<typeof finetuneSchema>;
@@ -56,6 +58,7 @@ export function useFinetuneForm() {
       learningRate: 0.00001,
       optimizer: 'adam',
       patchSize: '32',
+      batchSize: '32',
       lossFunction: 'CrossEntropy',
       slurmOptions: {
         nGPU: '1',
@@ -141,11 +144,13 @@ export function FinetuneForm({ onSubmitHandler }: FormProps) {
               </FormItem>
             )}
           />
+        </div>
+        <div className="flex justify-center gap-1">
           <FormField
             control={form.control}
             name="patchSize"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-1/2">
                 <FormLabel>Patch Size</FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -168,6 +173,33 @@ export function FinetuneForm({ onSubmitHandler }: FormProps) {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="batchSize"
+            render={({ field }) => (
+              <FormItem className="w-1/2">
+                <FormLabel>Batch Size</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="px-4">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {batchSizes.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="flex flex-row items-center gap-1">
@@ -175,7 +207,7 @@ export function FinetuneForm({ onSubmitHandler }: FormProps) {
             name="optimizer"
             control={form.control}
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-1/2">
                 <FormLabel>Optimizer</FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -201,7 +233,7 @@ export function FinetuneForm({ onSubmitHandler }: FormProps) {
             name="lossFunction"
             control={form.control}
             render={({ field }) => (
-              <FormItem className="grow">
+              <FormItem className="w-1/2">
                 <FormLabel>Loss Function</FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -224,12 +256,12 @@ export function FinetuneForm({ onSubmitHandler }: FormProps) {
             )}
           />
         </div>
-        <footer className="flex flex-row items-center justify-end gap-1.5">
+        <footer className="flex flex-row items-center gap-1">
           <FormField
             control={form.control}
             name="slurmOptions.partition"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-1/3">
                 <FormLabel className="sr-only">Slurm Partition</FormLabel>
                 <Select onValueChange={field.onChange}>
                   <FormControl>
@@ -261,7 +293,7 @@ export function FinetuneForm({ onSubmitHandler }: FormProps) {
             control={form.control}
             name="slurmOptions.nGPU"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-1/3">
                 <FormLabel className="sr-only">Slurm gres GPUs</FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -292,7 +324,7 @@ export function FinetuneForm({ onSubmitHandler }: FormProps) {
               </FormItem>
             )}
           />
-          <Button className="mt-2 grow px-6" size="sm" type="submit">
+          <Button className="mt-2 w-1/3 px-6" type="submit">
             Submit
           </Button>
         </footer>

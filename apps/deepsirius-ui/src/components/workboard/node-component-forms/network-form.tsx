@@ -31,9 +31,9 @@ const slurmOptions = z.object({
 });
 
 const patchSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
+const batchSizes = ['2', '4', '8', '16', '32'] as const;
 export const networkSchema = z.object({
   slurmOptions,
-  // field of type z.string() with no spaces or special characters allowed
   networkUserLabel: z
     .string()
     .min(2, {
@@ -43,24 +43,15 @@ export const networkSchema = z.object({
       message:
         'Network label name must contain only letters, numbers underscores and no spaces.',
     }),
-  //
-  // field dropClassifier of type z.boolean()
   dropClassifier: z.boolean(),
-  // field of type z.enum() with options of '1', '2', '4'
   jobGPUs: z.enum(['1', '2', '4']),
-  // field of type z.number() with a minimum value of 1
   iterations: z.coerce.number().gte(1, { message: 'Must be >= 1' }),
-  // field of type z.number() with a minimum value of 0
   learningRate: z.coerce.number().gt(0, { message: 'Must be greater than 0' }),
-  // field of type z.enum() with options of 'Adam', 'SGD'
   optimizer: z.enum(['adam', 'adagrad', 'gradientdescent']),
-  // field of type z.enum() with options of 'CrossEntropy', 'dice', 'xent_dice'
-  // meaning cross entropy, dice or both combined
   lossFunction: z.enum(['CrossEntropy', 'dice', 'xent_dice']),
-  // field of type z.enum() with options of 'unet2D', 'unet3D', 'vnet'
   networkTypeName: z.enum(['unet2d', 'unet3d', 'vnet']),
-  // field of type z.enum() with options of powers of 2
   patchSize: z.enum(patchSizes),
+  batchSize: z.enum(batchSizes),
 });
 
 export type FormType = z.infer<typeof networkSchema>;
@@ -91,6 +82,7 @@ export function useNetworkForm({
       learningRate: 0.00001,
       optimizer: 'adam',
       patchSize: '32',
+      batchSize: '32',
       lossFunction: 'CrossEntropy',
       slurmOptions: {
         nGPU: '1',
@@ -231,11 +223,13 @@ export function NetworkForm({
               </FormItem>
             )}
           />
+        </div>
+        <div className="flex justify-center gap-1">
           <FormField
             control={form.control}
             name="patchSize"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-1/2">
                 <FormLabel>Patch Size</FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -258,6 +252,33 @@ export function NetworkForm({
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="batchSize"
+            render={({ field }) => (
+              <FormItem className="w-1/2">
+                <FormLabel>Batch Size</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="px-4">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {batchSizes.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="flex flex-row items-center gap-1">
@@ -265,7 +286,7 @@ export function NetworkForm({
             name="optimizer"
             control={form.control}
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="w-1/2">
                 <FormLabel>Optimizer</FormLabel>
                 <Select
                   onValueChange={field.onChange}
@@ -291,7 +312,7 @@ export function NetworkForm({
             name="lossFunction"
             control={form.control}
             render={({ field }) => (
-              <FormItem className="grow">
+              <FormItem className="w-1/2">
                 <FormLabel>Loss Function</FormLabel>
                 <Select
                   onValueChange={field.onChange}

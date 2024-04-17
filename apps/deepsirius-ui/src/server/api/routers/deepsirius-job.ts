@@ -267,7 +267,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       // mapping formData to cli kwargs
       const kwArgs = {
         'max-iter': input.formData.iterations,
-        // batch-size: formData.batchSize,
+        'batch-size': input.formData.batchSize,
         'learning-rate': input.formData.learningRate,
         optimiser: input.formData.optimizer,
         'drop-classifier': input.formData.dropClassifier,
@@ -328,7 +328,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       // mapping formData to cli kwargs
       const kwArgs = {
         'max-iter': input.formData.iterations,
-        // batch-size: formData.batchSize,
+        'batch-size': input.formData.batchSize,
         'learning-rate': input.formData.learningRate,
         optimiser: input.formData.optimizer,
         'drop-classifier': input.formData.dropClassifier,

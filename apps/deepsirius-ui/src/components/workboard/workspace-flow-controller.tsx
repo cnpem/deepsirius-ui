@@ -36,7 +36,7 @@ import { ControlHelpButton } from '../help';
 import { LayoutNav } from '../layout-nav';
 import AlertDelete from '~/components/alert-delete';
 import { PlusOneMenu } from '~/components/workboard/plusone-menu';
-import NodeIcon from './node-components/node-icon';
+import NodeIcon from '~/components/workboard/node-components/node-icon';
 
 const nodeTypes: NodeTypes = {
   dataset: DatasetNode,
@@ -132,9 +132,13 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
       }
 
       const targetNodes = getTargetNodes(selectedNode.id, edges, nodes);
-      const hasProtectedInferenceNodes = targetNodes.some(
-        (node) => node.data.status === 'busy' || node.data.status === 'success',
-      );
+      const hasProtectedInferenceNodes = targetNodes.some((node) => {
+        if (node.data.status === 'busy') return true;
+        if (node.type === 'inference' && node.data.status === 'success') {
+          return true;
+        }
+        return false;
+      });
       if (hasProtectedInferenceNodes) {
         toast.error(
           'Cannot delete network node with protected inference nodes',
@@ -158,7 +162,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
       const targetFinetuneNodes = getTargetFinetuneNodes(selectedNode);
 
       const hasProtectedFinetuneNodes = targetFinetuneNodes.some(
-        (node) => node.data.status === 'busy' || node.data.status === 'success',
+        (node) => node.data.status === 'busy',
       );
       if (hasProtectedFinetuneNodes) {
         toast.error('Cannot delete network node with protected finetune nodes');

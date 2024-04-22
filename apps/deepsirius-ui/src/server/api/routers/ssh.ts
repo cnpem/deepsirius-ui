@@ -6,6 +6,12 @@ import {
   protectedProcedure,
   protectedSSHProcedure,
 } from '~/server/api/trpc';
+import JSZip from 'jszip';
+
+const unzippedImage = z.object({
+  name: z.string(),
+  src: z.string(),
+});
 
 export const sshRouter = createTRPCRouter({
   ls: protectedProcedure
@@ -73,6 +79,104 @@ export const sshRouter = createTRPCRouter({
       );
 
       return { files: noHiddenFiles };
+    }),
+  catImage: protectedProcedure
+    .input(
+      z
+        .object({
+          path: z.string(),
+        })
+        .transform((data) => {
+          return {
+            path: data.path.replace(/^\/ibira/, ''),
+          };
+        }),
+    )
+    .query(async ({ ctx, input }) => {
+      const cookie = ctx.storageApiCookie;
+      if (!cookie) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      const path = input.path;
+      const params = new URLSearchParams({
+        key: env.STORAGE_API_KEY,
+        path: path || '/',
+      });
+      const url = `${env.STORAGE_API_URL}/api/files/cat?${params.toString()}`;
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Cookie: cookie,
+        },
+      });
+      const data = await res.arrayBuffer();
+      const base64data = Buffer.from(data).toString('base64');
+      return { src: `data:image/png;base64,${base64data}` };
+    }),
+  unzipImagesFromPath: protectedProcedure
+    .input(
+      z
+        .object({
+          dirPath: z.string(),
+        })
+        .transform((data) => {
+          return {
+            dirPath: data.dirPath.replace(/^\/ibira/, ''),
+          };
+        }),
+    )
+    .query(async ({ ctx, input }) => {
+      const cookie = ctx.storageApiCookie;
+      if (!cookie) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      const path = input.dirPath;
+      const params = new URLSearchParams({
+        key: env.STORAGE_API_KEY,
+        path: path || '/',
+      });
+      const url = `${env.STORAGE_API_URL}/api/files/zip?${params.toString()}`;
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Cookie: cookie,
+        },
+      });
+      if (!res.ok) {
+        throw new Error(`Failed to fetch: ${res.statusText}`);
+      }
+      const buffer = await res.arrayBuffer().catch((err: Error) => {
+        throw new Error(`Failed to fetch buffer file: ${err.message}`);
+      });
+      const zip = await JSZip.loadAsync(buffer).catch((err: Error) => {
+        throw new Error(`Failed to load ZIP file: ${err.message}`);
+      });
+      // const imagesBase64: string[] = [];
+      const unzippedImages: z.infer<typeof unzippedImage>[] = [];
+      for (const [filename, fileData] of Object.entries(zip.files)) {
+        if (filename.endsWith('.png')) {
+          const fileContent = await fileData.async('nodebuffer'); // For Node.js environment
+          const base64data = fileContent.toString('base64');
+          // const [path, name, extension] = filename.split('[/\\.]');
+          const [path, fname] = filename.split('/');
+          if (!fname) {
+            throw new Error(
+              'Invalid file name. Expected format: path/to/file.png',
+            );
+          }
+          const [name, extension] = fname.split('.');
+          if (extension !== 'png') {
+            throw new Error('Invalid file extension');
+          }
+          if (!name) {
+            throw new Error('Could not extract file name');
+          }
+          unzippedImages.push({
+            name,
+            src: `data:image/png;base64,${base64data}`,
+          });
+        }
+      }
+      if (unzippedImages.length === 0) {
+        throw new Error('No PNG images found in ZIP file');
+      }
+      return { srcList: unzippedImages };
     }),
   rmWorkspace: protectedSSHProcedure
     .input(

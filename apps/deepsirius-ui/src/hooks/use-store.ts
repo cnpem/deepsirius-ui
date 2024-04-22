@@ -41,6 +41,40 @@ export type WorkspaceInfo = {
 
 export type NodeStatus = 'success' | 'error' | 'active' | 'busy';
 
+export type DatasetData = {
+  form: DatasetForm;
+  name: string;
+  remotePath: string;
+};
+
+export type AugmentationData = {
+  sourceDatasetName: string;
+  form: AugmentationForm;
+  name: string;
+  remotePath: string;
+};
+
+export type NetworkData = {
+  sourceDatasetName: string;
+  networkType: string;
+  form: NetworkForm;
+  label: string;
+  remotePath: string;
+};
+
+export type FinetuneData = {
+  sourceDatasetName: string;
+  sourceNetworkLabel: string;
+  sourceNetworkType: string;
+  form: FinetuneForm;
+};
+
+export type InferenceData = {
+  networkLabel: string;
+  form: InferenceForm;
+  outputPath: string;
+};
+
 export type NodeData = {
   workspacePath: string;
   status: NodeStatus;
@@ -49,35 +83,11 @@ export type NodeData = {
   jobStatus?: string;
   message?: string;
   updatedAt?: string;
-  datasetData?: {
-    form: DatasetForm;
-    name: string;
-    remotePath: string;
-  };
-  augmentationData?: {
-    sourceDatasetName: string;
-    form: AugmentationForm;
-    name: string;
-    remotePath: string;
-  };
-  networkData?: {
-    sourceDatasetName: string;
-    networkType: string;
-    form: NetworkForm;
-    label: string;
-    remotePath: string;
-  };
-  finetuneData?: {
-    sourceDatasetName: string;
-    sourceNetworkLabel: string;
-    sourceNetworkType: string;
-    form: FinetuneForm;
-  };
-  inferenceData?: {
-    networkLabel: string;
-    form: InferenceForm;
-    outputPath: string;
-  };
+  datasetData?: DatasetData;
+  augmentationData?: AugmentationData;
+  networkData?: NetworkData;
+  finetuneData?: FinetuneData;
+  inferenceData?: InferenceData;
 };
 
 type RFState = {

@@ -17,8 +17,12 @@ import {
   SuccessSheet,
 } from './node-components/node-sheet';
 import { type DataSchema } from './node-component-forms/dataset-form';
+import Link from 'next/link';
+import { useUser } from '~/hooks/use-user';
 
 export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
+  const user = useUser();
+
   const [open, setOpen] = useState(false);
 
   const { onUpdateNode, getSourceData } = useStoreActions();
@@ -202,6 +206,13 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
     toast.info('Canceling job..');
   };
 
+  if (!user) return null;
+  if (!nodeProps.data.workspacePath) return null;
+
+  const workspaceName = nodeProps.data.workspacePath.split('/').pop();
+  if (!workspaceName) return null;
+  const galleryRoute = user.route + '/' + workspaceName + '/gallery';
+
   if (nodeProps.data.status === 'active') {
     return (
       <>
@@ -261,6 +272,9 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
           message={nodeProps.data.message}
         >
           <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
+            <Link href={galleryRoute}>
+              <p className="text-blue-500 underline">View Gallery</p>
+            </Link>
             {/* {formData?.augmentationArgs && <></>} */}
             {/* <ShowSelectedAugmentationArgs args={formData?.augmentationArgs} /> */}
           </div>
@@ -288,36 +302,3 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
 
   return null;
 }
-
-// function ShowSelectedAugmentationArgs({
-//   args,
-// }: {
-//   args: AugmentationArgs | undefined;
-// }) {
-//   if (!args) return null;
-//   return Object.entries(args)
-//     .filter(([_, value]) => value.select)
-//     .flatMap(([key, value]) => {
-//       if (typeof value === 'boolean')
-//         return (
-//           <div
-//             key={'key'}
-//             className="flex flex-row items-center justify-between gap-1"
-//           >
-//             <p className="font-medium">key</p>
-//             <p className="text-end">{true}</p>
-//           </div>
-//         );
-//       if (typeof value === 'object')
-//         return Object.entries(value).map(([k, v]) => (
-//           <div
-//             key={k}
-//             className="flex flex-row items-center justify-between gap-1"
-//           >
-//             <p className="font-medium">{k}</p>
-//             <p className="text-end">{v}</p>
-//           </div>
-//         ));
-//       return null;
-//     });
-// }

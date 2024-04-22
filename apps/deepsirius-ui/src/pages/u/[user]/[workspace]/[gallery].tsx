@@ -109,20 +109,6 @@ function AugmentationGallery({
     .slice(0, -1)
     .join('/')}/${augmentedDatasetName}_preview/`;
 
-  const outputImgPaths = Object.entries(augmentationArgs)
-    .filter(([_, value]) => value.select === true)
-    .map(([key, value]) => {
-      const snakeKey = camelToSnake(key);
-      if (Object.keys(value).length > 1) {
-        return [
-          `${outputImgDir}${snakeKey}_min.png`,
-          `${outputImgDir}${snakeKey}_max.png`,
-        ];
-      }
-      return `${outputImgDir}${snakeKey}.png`;
-    })
-    .flat();
-
   const { data, error, isLoading } = api.ssh.unzipImagesFromPath.useQuery(
     {
       dirPath: outputImgDir,
@@ -148,7 +134,7 @@ function AugmentationGallery({
                 return a.name.localeCompare(b.name);
               })
               .map(({ name, src }) => (
-                <ImageDialog key={src} src={src} name={name} />
+                <ImageDialog key={name} src={src} name={name} />
               ))}
           </div>
         </div>
@@ -162,17 +148,12 @@ function ImageDialog({ src, name }: { src: string; name: string }) {
     <Dialog>
       <DialogTrigger className="flex flex-shrink flex-col gap-1 p-1">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          key={src}
-          src={src}
-          alt={name}
-          className="h-32 w-fit object-contain"
-        />
+        <img src={src} alt={name} className="h-32 w-fit object-contain" />
         <Label>{name}</Label>
       </DialogTrigger>
       <DialogContent className="flex flex-shrink flex-col items-center gap-1 p-10 ">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img key={src} src={src} alt={name} className="w-full object-contain" />
+        <img src={src} alt={name} className="w-full object-contain" />
         <Label>{name}</Label>
       </DialogContent>
     </Dialog>

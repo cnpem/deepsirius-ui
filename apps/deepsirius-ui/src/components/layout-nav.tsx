@@ -15,8 +15,8 @@ export function LayoutNav({ children, title }: LayoutProps) {
         <meta name="deepsirius-ui" content="Deepsirius UI Nav" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="flex min-h-dvh w-full flex-col bg-light-ocean dark:bg-dark-ocean">
-        <div className="m-4 flex justify-end">
+      <div className="h-screen w-full bg-light-ocean dark:bg-dark-ocean">
+        <div className="absolute right-0 top-0 z-10">
           <AvatarDrop />
         </div>
         <div className="relative my-auto flex h-32 flex-row justify-center overflow-hidden">

@@ -333,66 +333,70 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
 
   //TODO: would be nice to change the height for full screen mode to h-[930px]
   return (
-    <div className="h-screen">
-      <AlertDelete
-        open={alertOpen}
-        onOpenChange={setAlertOpen}
-        onConfirm={handleNodesDelete}
-      />
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeDragStop={onNodeDragStop}
-        deleteKeyCode={[]} // disable delete key
-        connectionLineComponent={CustomConnectionLine}
-        nodeTypes={nodeTypes}
-        fitView
-      >
-        <Panel position="top-left" className="flex flex-col gap-2">
-          <PlusOneMenu />
-        </Panel>
-        <Panel position="bottom-center">
-          <span className="flex w-fit rounded-sm border bg-muted p-2 text-sm font-semibold text-slate-500 dark:text-slate-400 ">
-            <span className="mr-2 text-purple-500 dark:text-purple-400">
-              Workspace:
-            </span>
-            {`"${workspaceInfo.name}"`}
-          </span>
-        </Panel>
-        {nodes.length === 0 && (
-          <Panel position="top-center">
-            <AlertDemo />
-          </Panel>
-        )}
-        <Panel position="top-right">
-          <div id="node-props-panel"></div>
-          <AvatarDrop />
-        </Panel>
-        <Controls
-          showZoom={false}
-          showInteractive={false}
-          className="bg-transparent px-1 dark:fill-slate-400 [&>button:hover]:dark:bg-slate-700 [&>button:hover]:dark:fill-slate-100 [&>button]:my-2 [&>button]:h-6 [&>button]:w-6 [&>button]:rounded-sm [&>button]:border-none [&>button]:dark:bg-muted"
+    <>
+      <div className="absolute right-0 top-0 z-10">
+        <AvatarDrop />
+      </div>
+      <div className="h-screen">
+        <AlertDelete
+          open={alertOpen}
+          onOpenChange={setAlertOpen}
+          onConfirm={handleNodesDelete}
+        />
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeDragStop={onNodeDragStop}
+          deleteKeyCode={[]} // disable delete key
+          connectionLineComponent={CustomConnectionLine}
+          nodeTypes={nodeTypes}
+          fitView
         >
-          <ControlHelpButton />
-        </Controls>
-        <MiniMap
-          nodeColor={nodeColor}
-          nodeComponent={MiniMapNode}
-          maskColor="rgba(0,0,0,0.2)"
-          className="scale-90 rounded-sm dark:bg-muted/70"
-          pannable
-          zoomable
-        />
-        <Background
-          className="bg-light-ocean dark:bg-dark-ocean"
-          variant={variant}
-          gap={24}
-        />
-      </ReactFlow>
-    </div>
+          <Panel position="top-left" className="flex flex-col gap-2">
+            <PlusOneMenu />
+          </Panel>
+          <Panel position="bottom-center">
+            <span className="flex w-fit rounded-sm border bg-muted p-2 text-sm font-semibold text-slate-500 dark:text-slate-400 ">
+              <span className="mr-2 text-purple-500 dark:text-purple-400">
+                Workspace:
+              </span>
+              {`"${workspaceInfo.name}"`}
+            </span>
+          </Panel>
+          {nodes.length === 0 && (
+            <Panel position="top-center">
+              <AlertDemo />
+            </Panel>
+          )}
+          <Panel position="top-right">
+            <div id="node-props-panel"></div>
+          </Panel>
+          <Controls
+            showZoom={false}
+            showInteractive={false}
+            className="bg-transparent px-1 dark:fill-slate-400 [&>button:hover]:dark:bg-slate-700 [&>button:hover]:dark:fill-slate-100 [&>button]:my-2 [&>button]:h-6 [&>button]:w-6 [&>button]:rounded-sm [&>button]:border-none [&>button]:dark:bg-muted"
+          >
+            <ControlHelpButton />
+          </Controls>
+          <MiniMap
+            nodeColor={nodeColor}
+            nodeComponent={MiniMapNode}
+            maskColor="rgba(0,0,0,0.2)"
+            className="scale-90 rounded-sm dark:bg-muted/70"
+            pannable
+            zoomable
+          />
+          <Background
+            className="bg-light-ocean dark:bg-dark-ocean"
+            variant={variant}
+            gap={24}
+          />
+        </ReactFlow>
+      </div>
+    </>
   );
 }
 

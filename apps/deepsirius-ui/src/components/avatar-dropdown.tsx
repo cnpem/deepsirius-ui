@@ -32,7 +32,7 @@ import { cn } from '~/lib/utils';
 const AvatarButton = React.forwardRef<HTMLButtonElement>((props, ref) => (
   <Button
     variant="ghost"
-    className="rounded-sm border-2 border-slate-300/20 bg-slate-400/10 hover:bg-slate-400/80 dark:border-slate-500/20 dark:bg-slate-700/10 dark:hover:bg-slate-700/80"
+    className="m-4 rounded-sm border-2 border-slate-300/20 bg-slate-400/10 hover:bg-slate-400/80 dark:border-slate-500/20 dark:bg-slate-700/10 dark:hover:bg-slate-700/80"
     size="icon"
     title="user info"
     ref={ref}

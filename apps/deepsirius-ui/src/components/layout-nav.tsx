@@ -19,11 +19,11 @@ export function LayoutNav({ children, title }: LayoutProps) {
         <div className="absolute right-0 top-0 z-10">
           <AvatarDrop />
         </div>
-        <div className="relative my-auto flex h-32 flex-row justify-center overflow-hidden">
+        <div className="relative h-1/6 justify-center overflow-hidden py-4">
           <TopBgImage />
         </div>
-        {children}
-        <div className="relative my-auto flex h-40 flex-row justify-center overflow-hidden">
+        <div className="relative h-4/6">{children}</div>
+        <div className="relative h-1/6 justify-center overflow-hidden py-4">
           <BottomBgImage />
         </div>
       </div>

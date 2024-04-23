@@ -4,11 +4,23 @@ import bottomImg from '../../public/bottom.svg';
 import fullImg from '../../public/full.svg';
 
 const TopBgImage = () => (
-  <Image src={topImg as StaticImageData} alt={''} fill priority />
+  <Image
+    src={topImg as StaticImageData}
+    alt={''}
+    fill
+    priority
+    className="py-4"
+  />
 );
 
 const BottomBgImage = () => (
-  <Image src={bottomImg as StaticImageData} alt={''} fill priority />
+  <Image
+    src={bottomImg as StaticImageData}
+    alt={''}
+    fill
+    priority
+    className="py-4"
+  />
 );
 
 const FullBgImage = () => (

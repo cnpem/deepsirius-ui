@@ -51,14 +51,14 @@ function Gallery() {
   };
 
   return (
-    <div className="mx-auto flex w-3/4 flex-row items-center justify-center gap-4">
+    <div className="mx-auto flex h-full w-3/4 flex-row items-center justify-center gap-4">
       <SidePanel
-        className="w-1/4 rounded-sm border border-blue-400 bg-white text-blue-800 shadow-md dark:border-blue-600 dark:bg-slate-900 dark:text-blue-500"
+        className=" h-full w-1/4 rounded-sm border border-blue-400 bg-white text-blue-800 shadow-md dark:border-blue-600 dark:bg-slate-900 dark:text-blue-500"
         nodes={nodes.filter((node) => node.data.status === 'success')}
         selectedNode={selectedNode}
         onNodeSelect={onNodeSelect}
       />
-      <div className="w-3/4 rounded-sm border border-blue-400 bg-white text-blue-800 shadow-md dark:border-blue-600 dark:bg-slate-900 dark:text-blue-500">
+      <div className="h-full w-3/4 rounded-sm border border-blue-400 bg-white text-blue-800 shadow-md dark:border-blue-600 dark:bg-slate-900 dark:text-blue-500">
         <GallerySwitch selectedNode={selectedNode} />
       </div>
     </div>
@@ -120,14 +120,15 @@ function AugmentationGallery({
   );
 
   return (
-    <div>
-      <h2>Augmentation</h2>
-      <p>{augmentedDatasetName}</p>
-      <p>output: {outputImgDir}</p>
-
+    <div className="h-full">
+      <div className="flex h-1/5 flex-col px-4 pt-4">
+        <h2>Augmentation</h2>
+        <p>{augmentedDatasetName}</p>
+        <p>output: {outputImgDir}</p>
+      </div>
       {data && (
-        <div className="flex flex-row items-center justify-center gap-3">
-          <div className="grid grid-cols-3 gap-4">
+        <div className="grid h-4/5 grid-rows-[auto,1fr] px-4 pb-4">
+          <div className="overflow-y-scroll">
             {data.srcList
               .sort((a, b) => {
                 if (a.name === 'original') return -1;
@@ -146,14 +147,24 @@ function AugmentationGallery({
 function ImageDialog({ src, name }: { src: string; name: string }) {
   return (
     <Dialog>
-      <DialogTrigger className="flex flex-shrink flex-col gap-1 p-1">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={name} className="h-32 w-fit object-contain" />
+      <DialogTrigger className="mx-3 my-1 rounded-md">
+        <Image
+          src={src}
+          alt={name}
+          width={128}
+          height={128}
+          className="rounded-md"
+        />
         <Label>{name}</Label>
       </DialogTrigger>
       <DialogContent className="flex flex-shrink flex-col items-center gap-1 p-10 ">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={name} className="w-full object-contain" />
+        <Image
+          src={src}
+          alt={name}
+          width={512}
+          height={512}
+          className="mb-4 rounded-md"
+        />
         <Label>{name}</Label>
       </DialogContent>
     </Dialog>
@@ -343,7 +354,7 @@ export default function GalleryRouter() {
   if (searchingWorkspace) {
     return (
       <LayoutNav title="Loading workspace...">
-        <div className="my-40 flex flex-row items-center justify-center gap-4">
+        <div className="flex flex-row items-center justify-center gap-4">
           <p className="text-center text-slate-300">Loading workspace...</p>
           <div className="mr-2 h-5 w-5 animate-spin rounded-full border-4 border-sky-600"></div>
         </div>

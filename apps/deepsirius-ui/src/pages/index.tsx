@@ -2,6 +2,7 @@ import { type NextPage } from 'next';
 import { signIn } from 'next-auth/react';
 import Head from 'next/head';
 import Link, { type LinkProps } from 'next/link';
+import { AvatarDrop } from '~/components/avatar-dropdown';
 import { FullBgImage } from '~/components/bg-images';
 import { Layout } from '~/components/layout';
 import { useUser } from '~/hooks/use-user';
@@ -52,6 +53,9 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="flex min-h-dvh w-full flex-col bg-light-ocean dark:bg-dark-ocean">
+        <div className="absolute right-0 top-0 z-10">
+          <AvatarDrop />
+        </div>
         <div className="container my-auto flex flex-col items-center justify-center gap-4 lg:flex-row lg:gap-12 ">
           <div className="relative flex h-[32vh] w-[32vh] justify-center overflow-hidden">
             <FullBgImage />

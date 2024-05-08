@@ -78,13 +78,15 @@ export function AvatarDrop() {
         }),
   );
 
-  if (!user)
+  if (!user) {
+    if (router.pathname === '/') return null;
     return (
       <Link href="/" className={cn(buttonVariants({ variant: 'link' }))}>
         <ArrowLeftIcon className="mr-2 h-4 w-4" />
         Home
       </Link>
     );
+  }
 
   return (
     <DropdownMenu>
@@ -103,13 +105,13 @@ export function AvatarDrop() {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href="/">
+          <Link href="/" hidden={router.pathname === '/'}>
             <DropdownMenuItem className="cursor-pointer">
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
               <span>Home</span>
             </DropdownMenuItem>
           </Link>
-          <Link href={user.route}>
+          <Link href={user.route} hidden={router.pathname === '/u/[user]'}>
             <DropdownMenuItem className="cursor-pointer">
               <SquareStackIcon className="mr-2 h-4 w-4" />
               <span>My Workspaces</span>

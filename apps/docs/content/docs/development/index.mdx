@@ -1,0 +1,18 @@
+---
+title: Development
+description: Development guide
+---
+
+Welcome to the developer guide!
+
+There are two dimensions to developing for DeepSirius.
+
+1. **DeepSirius UI**: The UI is built with Next.js, ... It interacts with an HPC cluster and Storage system throug ssh, SLURM and APIs. It runs jobs calling containers with Singularity through bash scripts that runs python packages for the pre defining processing steps.
+2. **ssc-deepsirius processing package**: The processing package is a python package that contains the a CLI to interact with the UI for every processing job run by the UI. Its built to be run in a container with Singularity in the HPC cluster.
+
+## What is Next?
+
+<Cards>
+  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
+  <Card title="Learn more about Fumadocs" href="https://fumadocs.vercel.app" />
+</Cards>

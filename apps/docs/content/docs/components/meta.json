@@ -1,0 +1,4 @@
+{
+  "title": "Components",
+  "pages": ["workspace", "dataset", "network", "inference"]
+}

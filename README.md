@@ -6,23 +6,34 @@ The interface is meant to be used as a client for the ssc-deepsirius package, wh
 
 Its logic is based on the ssc-deepsirius structure, which divides the workflow in three main independent steps:
 
-1. **Dataset creation**: This steps consists in the creation of a dataset from a set of tomographic images. The dataset is a set of numpy arrays that are saved in a hdf5 file. This step is meant to be run only once for a given set of images, and the dataset can be used for multiple analysis. The dataset creation is done by the `create_dataset` and `augmented_dataset` function in the ssc-deepsirius package cli.
+1. **Dataset creation**: This steps consists in the creation of a dataset from a set of tomographic images. The dataset is a set of numpy arrays that are saved in a hdf5 file. This step is meant to be run only once for a given set of images, and the dataset can be used for multiple analysis. The dataset creation is done by the `create_dataset` function in the ssc-deepsirius package cli.
 
-2. **Network training**: This step consists in the training of a deep learning model for the segmentation of the dataset created in the previous step. The training is done by the `train_model` and `finetune_model` functions in the ssc-deepsirius package cli.
+   1.1. **Augmented dataset creation**: This step consists in the creation of data
+   based on the original dataset, but with some transformations applied to the images. This is done to increase the size of the dataset and improve the generalization of the model. The augmented dataset creation is done by the `augmented_dataset` function in the ssc-deepsirius package cli.
+
+2. **Network training**: This step consists in the training of a deep learning model for the segmentation of the dataset created in the previous step. The training is done by the `train_model` function in the ssc-deepsirius package cli.
+
+   2.1. **Finetuning**: This step consists in the finetuning of a pre-trained model with a dataset, even if the dataset is different from the one used for the previous training. The finetuning is done by the `finetune_model` function in the ssc-deepsirius package cli.
 
 3. **Inference**: This step consists in the segmentation of a set of tomographic images using the model trained in the previous step. The segmentation is done by the `run_inference` function in the ssc-deepsirius package cli.
 
-These steps are meant to be run in sequence for a complete cycle of the deep learning process, but as the jobs associated with each step are independent and can take a long time to run, the user is able to run them independently, as long as the previous step has been run before without errors. This opens the possibility for the user to create more than one possible path of analysis, by creating more than one dataset, training more than one model with the same dataset of different training parameters, and running minferences with more than one model for different sets of images.
+These steps are meant to be run in sequence for a complete cycle of the deep learning process, but as the jobs associated with each step are independent and can take a long time to run, the user is able to run them independently, as long as the previous step has been run before without errors. This opens the possibility for the user to create more than one possible path of analysis, by creating multiple datasets, training multiple models with the same dataset of different training parameters, refining these models with new data and parameters, and then running inferences with more than one model for different sets of images.
 
-To accomplish this, the interface has a workflow view that allows the user to create and connect many components that represent the steps of the analysis. The user can create any number of components of each type, and connect them in any order, as long as the previous step is completed and the steps are in the right order (1 -> 2 -> 3).
+To accomplish this, the interface is divided in the so called `workspaces`, which
+are simply workflows that allow the user to create and connect many components that represent the steps of the analysis. The user can have multiple workspaces, which are saved in the database and can be loaded by the user at any time.
 
-When a component is created, it is added to the workflow view, and the user can click to activate it, which transforms the state of the component into a form that allows the user to input the parameters for the active component. When the user clicks the run button, the component sends the information to the server, which creates the slurm job and runs the analysis on the Sirius cluster. This changes the state of the client component, that now checks the server for the status of the job, and updates the state of the component accordingly. The changes in the workflow view and component states and connections are also reflected in the database, so that the user can close the browser and logging it again, and the workflow will be loaded with the same state as before so that when a job is in a running state, the user can check the status of the job when logging in again.
+In a workspace, the user can create any number of components of each type, and connect them in any order, as long as the previous step is completed and the steps are in the right order (1 -> 2 -> 3).
 
-The interface also has a tree view that allows the user to navigate the filesystem of the Sirius cluster, and select the images that will be used for the dataset creation and inference components.
+When a component is created and focused by the user it displays a form with the parameters of the component, which the user can fill and submit to the server. The server will then create a slurm job in the Sirius cluster with the parameters of the component, and update the state of the component in the interface as the job runs. The user can check the status of the job as the component changes itself. All of these changes are reflected in the database, so that the user can logoff and close the browser, and the jobs will continue to run in the cluster.
 
-When accessing the web app on the browser, the user is presented with a login page, where the user can login with their credentials. The credentials are checked against the Sirius LDAP server, and if the user is authenticated, the user is redirected to the workflow selection view. If the user is not authenticated, the user is redirected to the login page again.
+When the user logs in again and opens its workspace, the previous state of the 
+components will be loaded from the database, compared to the current state of the jobs in the cluster, and then updated in the interface.
 
-The workflow selection view is a list of workflows that the user has created in the interface. The user can create a new workflow by clicking the new workflow button, which redirects the user to the workflow view. The user can also click on an existing workflow to edit it, which redirects the user to the workflow view with the selected workflow loaded.
+> Note: In order to use the app the user must be registered in the CNPEM LDAP server and have access to the Sirius cluster, with permissions to run slurm jobs in the appropriate queue.
+
+For more information on how to use the app, please refer to the [documentation](https://deepsirius.lnls.br/dive). The documentation is hosted internally at the LNLS server and can be accessed only by users with access to the local network, but it is also available in the [docs](./apps/docs) folder of this repository.
+
+Check the [#development](#development) section for more information on how to run the app/docs locally.
 
 ## Development
 
@@ -58,19 +69,27 @@ Then, open [http://localhost:3000](http://localhost:3000) with your browser to s
 
 ### Start development environment
 
-To start the development environment, you should fill the apps .env files with the appropriate variables for each app torun by itsekf. There is a .env.example in the apps file that you can use as a template.
+To start the development environment, you should fill the apps .env files with the appropriate variables for each app to run by itself. There is a .env.example in the apps file that you can use as a template.
 
 To run slurm jobs, the app service need to be able to connect via ssh to a slurm management node with the same credentials of the ldap client.
 
-With these requirements satisfied, you can go to one of the apps base path
-and start the development i.e:
+Requirements satisfied, you can start the development environment with:
 
 ```shell
-   cd apps/deepsirius-ui
-   pnpm run dev
+   pnpm run dev --filter=app
 ```
 
 Then, open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+### Documentation
+The documentation for the app can be found in the [docs](./apps/docs) folder. 
+Start the documentation server with:
+
+```shell
+   pnpm run dev --filter=docs
+```
+
+Then, open [http://localhost:4321](http://localhost:4321) with your browser to see the result.
 
 ## License
 

@@ -5,7 +5,6 @@ import { useRouter } from 'next/router';
 import { api } from '~/utils/api';
 import { cn } from '~/lib/utils';
 import {
-  WorkspaceInfo,
   useStore,
   useStoreActions,
   type NodeData,
@@ -18,15 +17,6 @@ import { type Node, type Edge } from 'reactflow';
 import { Layout } from '~/components/layout';
 import { Button } from '~/components/ui/button';
 import NodeIcon from '~/components/workboard/node-components/node-icon';
-import {
-  type DatasetData,
-  type AugmentationData,
-  type NetworkData,
-  type FinetuneData,
-  type InferenceData,
-} from '~/hooks/use-store';
-import { Label } from '~/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import AugmentationGallery from '~/components/workboard/node-components/gallery-components/augmentation-gallery';
 import { AvatarDrop } from '~/components/avatar-dropdown';
 import Link from 'next/link';
@@ -69,7 +59,7 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
       <div className="flex h-[92%] flex-row">
         <SidePanel
           className="h-full w-1/6 border-r border-blue-600 "
-          nodes={[...completeNodes, ...completeNodes, ...completeNodes]}
+          nodes={completeNodes}
           selectedNode={selectedNode}
           onNodeSelect={onNodeSelect}
         />
@@ -167,7 +157,7 @@ function SidePanel({
       <Button
         variant="link"
         size={'sm'}
-        className="w-full justify-start p-0 text-muted-foreground data-[selected=true]:font-extrabold data-[selected=true]:text-blue-800 data-[selected=true]:hover:text-accent-foreground dark:data-[selected=true]:bg-blue-500"
+        className="w-full justify-start p-0 text-muted-foreground data-[selected=true]:font-extrabold data-[selected=true]:text-blue-800 data-[selected=true]:hover:text-accent-foreground "
         onClick={() => onNodeSelect(node)}
         data-selected={isNodeSelected(node)}
       >

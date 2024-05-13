@@ -173,9 +173,9 @@ function AugmentationArgLabel({ argname, select, params }: AugmentationArg) {
   return (
     <Badge>
       {argname}
-      <div className="border-l border-gray-400 h-4"></div>
+      <div className="border-l border-gray-400 h-4 mx-1"></div>
       {params.map((param, i) => (
-        <span key={i} className="ml-1">
+        <span key={i} className='mr-1'>
           {param.key}: {param.value?.toString() ?? ''}
         </span>
       ))}

@@ -168,6 +168,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
               form: formData,
               name: formData.augmentedDatasetName,
               remotePath: `${nodeProps.data.workspacePath}/datasets/${formData.augmentedDatasetName}.h5`,
+              remotePreviewPath: `${nodeProps.data.workspacePath}/datasets/${formData.augmentedDatasetName}_preview/`,
             },
           },
         });

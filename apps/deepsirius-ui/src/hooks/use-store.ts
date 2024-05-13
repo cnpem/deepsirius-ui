@@ -52,6 +52,7 @@ export type AugmentationData = {
   form: AugmentationForm;
   name: string;
   remotePath: string;
+  remotePreviewPath: string;
 };
 
 export type NetworkData = {

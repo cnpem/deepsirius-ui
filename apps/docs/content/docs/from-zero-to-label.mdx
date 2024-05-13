@@ -3,39 +3,74 @@ title: From Zero to Label
 description: From Zero to Label
 ---
 
-Here we will guide you through the process of creating a new workspace and a basic deep learning workflow using the DeepSirius UI app.
+import { Step, Steps } from "fumadocs-ui/components/steps";
+import { Callout } from "fumadocs-ui/components/callout";
 
-## Step 0: Making sure you have access and loging in
+This tutorial will guide you through the process of creating a new workspace and a 
+basic deep learning workflow using the DeepSirius UI app. By the end, you should
+be able to create a dataset, augment it, train a network, fine-tune it and run an
+inference. Start with nothing, and end with a fresh set of labels.
 
-This steps means you can access the DeepSirius Web App i.e. the CNPEM network or the VPN is working properly. But also that you have the necessary permissions to create jobs on the cluster.
-You will need a CNPEM account to access the DeepSirius Web App and know the SLURM queues you are allowed to use.
+Have fun!
 
-Knowing your credentials, you can log in to the DeepSirius Web App by going to the [DeepSirius Web App](https://deepsirius.lnls.br) and logging in with your CNPEM credentials.
+<Steps>
+  <Step>
+  ## Sign in
+  Please make sure you have access to the CNPEM internal network or the VPN. 
+  Also that you have the necessary permissions to create jobs on the cluster. 
+  You will need a CNPEM account to access the DeepSirius Web App and know the 
+  SLURM queues you are allowed to use.
 
-## Step 1: Creating a new workspace
+  With that settled you can log into the [DeepSirius](https://deepsirius.lnls.br)
+  with your CNPEM email address and password.
 
-After logging in, you can acces your workspaces page by clicking on the "Workspaces" button on the top right corner of the page.
-This will redirect you to the workspaces page, where you can see all the workspaces you have already created or create a new one.
+  <video controls>
+    <source src="/dive/assets/signin.webm" type="video/webm" />
+    Sign in
+  </video>
 
-### The workspace workboard
+  </Step>
+  <Step>
+  ## Create a new workspace
+  Access your workspaces by clicking on the `Workspaces` button on the center of 
+  the homepage. This will redirect you to your workspaces page, where you can see
+  all the workspaces you have already created or create a new one.
 
-This is the main page of the DeepSirius Web App, and were you will spend most of your time. Here you can create individual nodes that represent the basic units of the deepsirius deep learning workflow, such as datasets, augmentations, networks, finetunings and inferences. Each of these units mean an independent job you cant configure and submit to the cluster.
+  Click on the `New` button to create a new workspace. You'll be redirected to a 
+  new page where you can fill a form with the path in the storage to where the 
+  workspace will be created, the name of the workspace and a slurm partition to 
+  run this creation job.
 
-In this page, you will be able to see the status of each node, based on the state of the jobs and its relations with each other an the workspace itself and the files it generates in the storage.
+  On job completion, you will be redirected to the workspace workboard, where you 
+  can create and connect the components of your workflow. Each component represents
+  a job that will be run in the cluster and corresponds to a step in the deep
+  learning workflow.
 
-## Step 2: Creating a dataset
+  <video controls>
+    <source src="/dive/assets/create-workspace.webm" type="video/webm" />
+    Create a new workspace
+  </video>
+  </Step>
+  <Step>
+  ## Create a new dataset
+  <Callout title="Get in the workspace!" type="warn" >
+  The next steps will be done in the workspace you just created. If, for some
+  reason, you are not there, please go back to the workspaces page and click on
+  the workspace you just created to open it.
+  </Callout>
 
-## Step 3: Augmenting a dataset
+  </Step>
+  <Step>
+  ## Make the dataset bigger
+  </Step>
+  <Step>
+  ## Train a network
+  </Step>
+  <Step>
+  ## Not enough? Fine-tune it!
+  </Step>
+  <Step>
+  ## Time to label
+  </Step>
 
-## Step 4: Training a network
-
-## Step 5: Fine-tuning a network
-
-## Step 6: Running an inference
-
-## What is Next?
-
-<Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.vercel.app" />
-</Cards>
+</Steps>

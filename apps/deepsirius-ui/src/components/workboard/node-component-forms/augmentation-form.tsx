@@ -60,8 +60,8 @@ const augmentationArgs = z.object({
   }),
   elastic: z.object({
     select: z.boolean(),
-    alpha: floatInterval,
-    sigma: floatInterval,
+    alpha: intInterval,
+    sigma: intInterval,
   }),
   gaussianBlur: z.object({
     select: z.boolean(),

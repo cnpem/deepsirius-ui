@@ -5,7 +5,7 @@
   "scripts": {
     "build": "next build",
     "clean": "rm -rf .next .turbo node_modules",
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "lint": "next lint",
     "start": "next start",
     "start:migrate:prod": "prisma migrate deploy && node server.js"
@@ -85,7 +85,6 @@
     "tailwindcss": "^3.3.1",
     "typescript": "^5.4.2"
   },
-  "packageManager": "pnpm@9.1.0",
   "ct3aMetadata": {
     "initVersion": "7.10.2"
   },

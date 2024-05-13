@@ -4,6 +4,7 @@ import { Dialog, DialogTrigger, DialogContent } from '~/components/ui/dialog';
 import { Label } from '~/components/ui/label';
 import { ArrowLeftCircleIcon, ArrowRightCircleIcon } from 'lucide-react';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { Skeleton } from './ui/skeleton';
 
 type ImageProps = {
   src: string;
@@ -22,10 +23,7 @@ type ImageGalleryProps = {
   sizelg?: number;
 };
 
-export default function ImageGallery({
-  images,
-  sizelg,
-}: ImageGalleryProps) {
+export function ImageGallery({ images, sizelg }: ImageGalleryProps) {
   const [selected, setSelected] = useState<SelectedProps | undefined>(
     undefined,
   );
@@ -148,5 +146,22 @@ function ImageFull({
       />
       <Label>{name}</Label>
     </>
+  );
+}
+
+export function ImageGalleryLoading({ quantity }: { quantity: number }) {
+  return (
+    <div className="grid h-full w-full grid-rows-[auto,1fr]">
+      <div className="overflow-y-scroll">
+        <div className="flex flex-wrap justify-center gap-1">
+          {[...Array(quantity).keys()].map((i) => (
+            <div key={i} className="mx-auto flex flex-col items-center">
+              <Skeleton key={`image-${i}`} className="h-28 w-28 rounded-md" />
+              <Skeleton key={`label-${i}`} className="mt-2 h-4 w-28" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

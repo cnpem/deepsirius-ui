@@ -113,16 +113,28 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
         return;
       }
       // delete the remote files
-      const remotePath = selectedNode.data.remotePath;
+      if (selectedNode.type === 'dataset') {
+        const remotePath = selectedNode.data.datasetData?.remotePath || selectedNode.data.remotePath;
+        if (remotePath) {
+          rmFile({ path: remotePath });
+        }
+      }
+      if (selectedNode.type === 'augmentation') {
+        const remotePath = selectedNode.data.augmentationData?.remotePath || selectedNode.data.remotePath;
       if (remotePath) {
         rmFile({ path: remotePath });
+      }
+        const remotePreviewPath = selectedNode.data.augmentationData?.remotePreviewPath;
+        if (remotePreviewPath) {
+          rmDir({ path: remotePreviewPath });
+        }
       }
       // delete the node on the store
       onNodesDelete([selectedNode]);
       toast.info('Dataset node deleted');
       return;
     },
-    [edges, nodes, onNodesDelete, rmFile],
+    [edges, nodes, onNodesDelete, rmDir, rmFile],
   );
 
   const handleDeleteNetworkNode = useCallback(
@@ -466,10 +478,13 @@ export default function FlowRouter() {
     resetStore,
     updateStateSnapshot,
   } = useStoreActions();
-  const { workspaceInfo } = useStore();
-  const storeWorkspace = workspaceInfo?.name;
+  const { workspaceInfo: workspaceInStore } = useStore();
+  const storeWorkspace = workspaceInStore?.name;
   const router = useRouter();
-  const routeWorkspace = router.query.workspace as string; // parent component should handle the case when workspace is undefined
+  const { workspace } = router.query; // Assuming 'user' and 'workspace' are dynamic segments
+  const routeWorkspace = typeof workspace === 'string' ? workspace : '';
+  const isGalleryRoute = router.pathname.includes('/gallery');
+
   const workspaceChanged = routeWorkspace !== storeWorkspace;
 
   const { data, error, isLoading } = api.db.getWorkspaceByName.useQuery(
@@ -515,10 +530,11 @@ export default function FlowRouter() {
     updateStateSnapshot,
   ]);
 
-  const canCreateWorkspace = !workspaceChanged && workspaceInfo;
+  const workspaceIsLoaded = !workspaceChanged && workspaceInStore;
   const searchingWorkspace = workspaceChanged && !error;
 
-  if (canCreateWorkspace) return <Geppetto workspaceInfo={workspaceInfo} />;
+  if (workspaceIsLoaded && !isGalleryRoute)
+    return <Geppetto workspaceInfo={workspaceInStore} />;
 
   if (searchingWorkspace) {
     return (
@@ -536,13 +552,15 @@ export default function FlowRouter() {
     return <ErrorPage statusCode={500} title={error.message} />;
   }
 
-  console.error('Forbidden state!');
-  console.error('workspaceChanged', workspaceChanged);
-  console.error('workspaceInfo', workspaceInfo);
-  console.error('workspaceInRoute', routeWorkspace);
-  console.error('data', data);
-  console.error('isLoading', isLoading);
-  console.error('error', error);
+  console.error('Hey! Forbidden state!', {
+    workspaceChanged,
+    workspaceInStore,
+    routeWorkspace,
+    isGalleryRoute,
+    data,
+    isLoading,
+    error,
+  });
 
   return <ErrorPage statusCode={404} />;
 }

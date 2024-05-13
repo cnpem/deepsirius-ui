@@ -153,8 +153,7 @@ export const sshRouter = createTRPCRouter({
         if (filename.endsWith('.png')) {
           const fileContent = await fileData.async('nodebuffer'); // For Node.js environment
           const base64data = fileContent.toString('base64');
-          // const [path, name, extension] = filename.split('[/\\.]');
-          const [path, fname] = filename.split('/');
+          const fname = filename.split('/')[1];
           if (!fname) {
             throw new Error(
               'Invalid file name. Expected format: path/to/file.png',

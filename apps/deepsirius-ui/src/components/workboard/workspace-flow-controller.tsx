@@ -37,6 +37,7 @@ import { LayoutNav } from '../layout-nav';
 import AlertDelete from '~/components/alert-delete';
 import { PlusOneMenu } from '~/components/workboard/plusone-menu';
 import NodeIcon from '~/components/workboard/node-components/node-icon';
+import { TooltipProvider } from '../ui/tooltip';
 
 const nodeTypes: NodeTypes = {
   dataset: DatasetNode,
@@ -338,6 +339,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
         <AvatarDrop />
       </div>
       <div className="h-screen">
+      <TooltipProvider>
         <AlertDelete
           open={alertOpen}
           onOpenChange={setAlertOpen}
@@ -395,6 +397,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
             gap={24}
           />
         </ReactFlow>
+      </TooltipProvider>
       </div>
     </>
   );

@@ -95,7 +95,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       await connection.mkdir(base);
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
-      const scriptName = 'deepSirius-workspace.sbatch';
+      const scriptName = 'deepsirius-workspace.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });

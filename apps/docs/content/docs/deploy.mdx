@@ -3,11 +3,17 @@ title: Deploy
 description: Deploy
 ---
 
-Welcome to the docs! You can start writing documents in `/content/docs`.
+The deployment of the DeepSirius application is a delicate process for it relies
+on a very specific infrastructure and a set of dependencies to work properly.
 
-## What is Next?
+## Requirements
+The application setup itself is quite simple, just set the environment variables
+and run some docker containers. However, the infrastructure setup is a bit more 
+complex.
 
-<Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.vercel.app" />
-</Cards>
+This app assumes that you have a HPC cluster with a SLURM scheduler running,
+a LDAP server for authentication that its users are also in the HPC cluster, and
+some shared storage for the data with API endpoints for the I/O operations.
+
+## Deployment
+🚧 Coming soon 🚧

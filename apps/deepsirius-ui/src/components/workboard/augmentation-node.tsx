@@ -17,12 +17,10 @@ import {
   SuccessSheet,
 } from './node-components/node-sheet';
 import { type DataSchema } from './node-component-forms/dataset-form';
-import Link from 'next/link';
 import { useUser } from '~/hooks/use-user';
 
 export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
   const user = useUser();
-
   const [open, setOpen] = useState(false);
 
   const { onUpdateNode, getSourceData } = useStoreActions();
@@ -212,7 +210,15 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
 
   const workspaceName = nodeProps.data.workspacePath.split('/').pop();
   if (!workspaceName) return null;
-  const galleryRoute = user.route + '/' + workspaceName + '/gallery';
+  const augmentationNodeIdSearchparams = new URLSearchParams({
+    nodeId: nodeProps.id,
+  });
+  const augmentationNodeRoute =
+    user.route +
+    '/' +
+    workspaceName +
+    '/gallery?' +
+    augmentationNodeIdSearchparams.toString();
 
   if (nodeProps.data.status === 'active') {
     return (
@@ -253,6 +259,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
           updatedAt={nodeProps.data.updatedAt}
           message={nodeProps.data.message}
           handleCancel={handleCancel}
+          hrefToGallery={augmentationNodeRoute}
         />
       </>
     );
@@ -271,13 +278,10 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
         <SuccessSheet
           selected={nodeProps.selected}
           message={nodeProps.data.message}
+          hrefToGallery={augmentationNodeRoute}
         >
           <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
-            <Link href={galleryRoute}>
-              <p className="text-blue-500 underline">View Gallery</p>
-            </Link>
-            {/* {formData?.augmentationArgs && <></>} */}
-            {/* <ShowSelectedAugmentationArgs args={formData?.augmentationArgs} /> */}
+            <p>Show something here</p>
           </div>
         </SuccessSheet>
       </>
@@ -287,14 +291,21 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
   if (nodeProps.data.status === 'error') {
     return (
       <>
-        <NodeCard title={'augmentation'} subtitle={'Error'} {...nodeProps} />
+        <NodeCard
+          title={nodeProps.data.augmentationData?.name || 'augmentation'}
+          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
+            nodeProps.data.jobStatus || 'jobStatus'
+          }`}
+          {...nodeProps}
+        />
         <ErrorSheet
           selected={nodeProps.selected}
           message={nodeProps.data.message}
+          hrefToGallery={augmentationNodeRoute}
         >
           <AugmentationForm
             onSubmitHandler={handleSubmit}
-            name={formData?.augmentedDatasetName || ''}
+            name={nodeProps.data.augmentationData?.name || 'augmentation'}
           />
         </ErrorSheet>
       </>

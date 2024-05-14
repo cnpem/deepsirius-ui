@@ -20,22 +20,14 @@ import { ArrowLeftIcon } from 'lucide-react';
 import { Badge } from '~/components/ui/badge';
 import { cva } from 'class-variance-authority';
 import { ViewRemoteLog, ViewRemoteImages } from '~/components/gallery-views';
-// import { logPaths } from '~/server/api/routers/deepsirius-job';
-
-type NodeTypes =
-  | 'dataset'
-  | 'augmentation'
-  | 'network'
-  | 'finetune'
-  | 'inference';
 
 const nodeStatusBadgeVariants = cva('', {
   variants: {
     status: {
-      active: 'bg-green-500',
-      busy: 'bg-yellow-500',
-      error: 'bg-red-500',
-      success: 'bg-blue-500',
+      active: 'bg-green-500 hover:bg-green-600',
+      busy: 'bg-yellow-500 hover:bg-yellow-600',
+      error: 'bg-red-500 hover:bg-red-600',
+      success: 'bg-blue-500 hover:bg-blue-600',
     },
   },
 });
@@ -75,15 +67,7 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
     return (
       <div className="flex h-screen w-screen flex-col bg-light-ocean dark:bg-dark-ocean ">
         <div className="flex h-[8%] w-full flex-row justify-between">
-          <Link
-            href={`/u/${user}/${workspace}`}
-            className="flex flex-row items-center p-4 "
-          >
-            <ArrowLeftIcon className="h-5 w-5 " />
-            {'Back to'}
-            <p className="ml-1 text-blue-800 dark:text-blue-500">{workspace}</p>
-            {"'s board."}
-          </Link>
+          <BoardLink user={user} workspace={workspace} />
           <AvatarDrop />
         </div>
         <div className="flex h-[92%] flex-row">
@@ -96,29 +80,18 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
   return (
     <div className="flex h-screen w-screen flex-col bg-light-ocean dark:bg-dark-ocean ">
       <div className="flex h-[8%] w-full flex-row justify-between">
-        <Link
-          href={`/u/${user}/${workspace}`}
-          className="flex flex-row items-center p-4 "
-        >
-          <ArrowLeftIcon className="h-5 w-5 " />
-          {'Back to'}
-          <p className="ml-1 text-blue-800 dark:text-blue-500">{workspace}</p>
-          {"'s board."}
-        </Link>
+        <BoardLink user={user} workspace={workspace} />
         <AvatarDrop />
       </div>
-      <div className="flex h-[92%] flex-row">
-        <div className="h-full w-1/6 border-r border-blue-600 ">
+      <div className="flex h-[92%] gap-4 p-2">
+        <div className="h-fit rounded-lg border p-2 shadow-lg">
           <div className="flex flex-col space-y-4 p-4">
-            <div className="flex flex-row">
+            <div className="flex items-center">
               <NodeIcon nodeType={selectedNode.type} />
-              <p className="ml-2 text-lg font-bold">{getNodeName()}</p>
-            </div>
-            <div className="flex flex-row">
-              <p className="text-md font-bold">Status:</p>
+              <p className="ml-2 text-lg font-semibold">{getNodeName()}</p>
               <Badge
                 className={cn(
-                  'mx-2 text-sm',
+                  'ml-auto text-xs',
                   nodeStatusBadgeVariants({
                     status: selectedNode.data?.status,
                   }),
@@ -127,42 +100,38 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
                 {selectedNode.data?.status}
               </Badge>
             </div>
-            <p className="text-md font-bold">Job Message:</p>
-            <p>{selectedNode.data?.message}</p>
-            {/* formData needs to be customized for each node type */}
-            <p className="text-md font-bold">Form Data:</p>
-            {/* view selection */}
-            <p className="text-md font-bold">Views:</p>
+            <p className="text-muted-foreground">
+              {selectedNode.data?.message}
+            </p>
             <Button
               onClick={() => void setView('log-output')}
-              variant={(view === 'log-output' && 'default') || 'secondary'}
+              variant={(view === 'log-output' && 'default') || 'outline'}
             >
               Output Logs
             </Button>
             <Button
               onClick={() => void setView('log-err')}
-              variant={(view === 'log-err' && 'default') || 'secondary'}
+              variant={(view === 'log-err' && 'default') || 'outline'}
             >
               Error Logs
             </Button>
             <Button
               onClick={() => void setView('preview-imgs')}
-              variant={(view === 'preview-imgs' && 'default') || 'secondary'}
+              variant={(view === 'preview-imgs' && 'default') || 'outline'}
               disabled={!['augmentation'].includes(selectedNode.type)}
             >
               Preview Images
             </Button>
             <Button
               onClick={() => void setView('tensorboard')}
-              variant={(view === 'tensorboard' && 'default') || 'secondary'}
+              variant={(view === 'tensorboard' && 'default') || 'outline'}
               disabled={!['network', 'finetune'].includes(selectedNode.type)}
             >
               Tensorboard
             </Button>
           </div>
-          {/* side panel */}
         </div>
-        <div className="h-full w-5/6 ">
+        <div className="h-full w-full">
           <GalleryView view={view} node={selectedNode} />
         </div>
       </div>
@@ -170,27 +139,61 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
   );
 }
 
-function GalleryView({ view, node }: { view: string | null; node: Node<NodeData> }) {
+function BoardLink({ user, workspace }: { user: string; workspace: string }) {
+  return (
+    <Link
+      href={`/u/${user}/${workspace}`}
+      className="flex flex-row items-center p-4 hover:underline"
+    >
+      <ArrowLeftIcon className="mr-2 h-4 w-4" />
+      {'Back to'}
+      <p className="ml-1 text-blue-800 dark:text-blue-500">{`"${workspace}"`}</p>
+    </Link>
+  );
+}
+
+function GalleryView({
+  view,
+  node,
+}: {
+  view: string | null;
+  node: Node<NodeData>;
+}) {
   const workspacePath = node.data.workspacePath;
   const jobId = node.data.jobId;
   const jobName = node.type ? `deepsirius-${node.type}` : '';
-  const imagesPath = node.type === 'augmentation' ? node.data.augmentationData?.remotePreviewPath : '';
+  const imagesPath =
+    node.type === 'augmentation'
+      ? node.data.augmentationData?.remotePreviewPath
+      : '';
   switch (view) {
     case 'log-output':
       if (!jobId) return <p>Job Id not found</p>;
       if (!node.type) return <p>Node type not found</p>;
-      return <ViewRemoteLog path={`${workspacePath}/logs/log-${jobId}-${jobName}.out`} />;
+      return (
+        <ViewRemoteLog
+          path={`${workspacePath}/logs/log-${jobId}-${jobName}.out`}
+        />
+      );
     case 'log-err':
       if (!jobId) return <p>Job Id not found</p>;
       if (!node.type) return <p>Node type not found</p>;
-      return <ViewRemoteLog path={`${workspacePath}/logs/log-${jobId}-${jobName}.err`} />;
+      return (
+        <ViewRemoteLog
+          path={`${workspacePath}/logs/log-${jobId}-${jobName}.err`}
+        />
+      );
     case 'preview-imgs':
       if (!imagesPath) return <p>Images path not found</p>;
       return <ViewRemoteImages path={imagesPath} />;
     case 'tensorboard':
       return <p>Tensorboard</p>;
     default:
-      return <p>View not found</p>;
+      return (
+        <div className="flex h-1/2 w-3/4 items-center justify-center rounded-lg border border-dashed">
+          <p className="text-center text-muted-foreground">Select a view</p>
+        </div>
+      );
   }
 }
 
@@ -270,7 +273,7 @@ export default function GalleryRouter() {
       <Layout>
         <div className="flex flex-row items-center justify-center gap-4">
           <p className="text-center text-slate-300">Loading workspace...</p>
-          <div className="mr-2 h-5 w-5 animate-spin rounded-full border-4 border-sky-600"></div>
+          {/* <div className="mr-2 h-5 w-5 animate-spin rounded-full border-4 border-sky-600"></div> */}
         </div>
       </Layout>
     );

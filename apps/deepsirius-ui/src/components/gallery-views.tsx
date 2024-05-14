@@ -17,26 +17,25 @@ export function ViewRemoteLog({ path }: { path: string }) {
   }
 
   return (
-    <div className="h-full p-4">
-      <Textarea
-        className="text-md h-full resize-none bg-neutral-200"
-        value={data.content}
-        readOnly={true}
-      />
-    </div>
+    <Textarea
+      className="text-md h-full w-3/4 resize-none bg-muted"
+      value={data.content}
+      readOnly={true}
+    />
   );
 }
 
 export function ViewRemoteImages({ path }: { path: string }) {
-  const { data, error, isLoading, isError } = api.ssh.unzipImagesFromPath.useQuery(
-    {
-      dirPath: path,
-    },
-    {
-      enabled: !!path,
-      refetchOnMount: false,
-    },
-  );
+  const { data, error, isLoading, isError } =
+    api.ssh.unzipImagesFromPath.useQuery(
+      {
+        dirPath: path,
+      },
+      {
+        enabled: !!path,
+        refetchOnMount: false,
+      },
+    );
 
   if (isLoading) {
     return <p>Wait a minute</p>;

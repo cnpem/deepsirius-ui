@@ -22,6 +22,7 @@ import { AvatarDrop } from '~/components/avatar-dropdown';
 import Link from 'next/link';
 import { useUser } from '~/hooks/use-user';
 import { ArrowLeftIcon } from 'lucide-react';
+import DatasetGallery from '~/components/workboard/node-components/gallery-components/dataset-gallery';
 
 type NodeTypes =
   | 'dataset'
@@ -89,6 +90,12 @@ function GallerySwitch({
         <AugmentationGallery
           augmentationData={selectedNode.data.augmentationData}
         />
+      );
+    }
+    case 'dataset': {
+      if (!selectedNode.data.datasetData) return null;
+      return (
+        <DatasetGallery datasetData={selectedNode.data.datasetData} />
       );
     }
     default:

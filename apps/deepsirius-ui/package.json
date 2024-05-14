@@ -46,6 +46,7 @@
     "next-auth": "^4.24.5",
     "next-themes": "^0.2.1",
     "node-ssh": "^13.1.0",
+    "nuqs": "^1.17.4",
     "react": "^18.2.0",
     "react-arborist": "^3.0.2",
     "react-dom": "^18.2.0",

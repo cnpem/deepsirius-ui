@@ -80,6 +80,45 @@ export const sshRouter = createTRPCRouter({
 
       return { files: noHiddenFiles };
     }),
+  catTxt: protectedProcedure
+    .input(
+      z
+        .object({
+          path: z.string(),
+        })
+        .transform((data) => {
+          return {
+            path: data.path.replace(/^\/ibira/, ''),
+          };
+        }),
+    )
+    .query(async ({ ctx, input }) => {
+      const cookie = ctx.storageApiCookie;
+      if (!cookie) throw new TRPCError({ code: 'UNAUTHORIZED' });
+
+      const path = input.path;
+      const params = new URLSearchParams({
+        key: env.STORAGE_API_KEY,
+        path: path || '/',
+      });
+      const url = `${env.STORAGE_API_URL}/api/files/cat?${params.toString()}`;
+
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Cookie: cookie,
+        },
+      });
+
+      const data = await res.text();
+      if (!res.ok) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: data,
+        });
+      }
+      return { content: data };
+    }), 
   catImage: protectedProcedure
     .input(
       z

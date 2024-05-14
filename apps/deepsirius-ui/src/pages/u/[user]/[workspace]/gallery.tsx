@@ -1,28 +1,26 @@
-import { useEffect, useState } from 'react';
+'use client';
+import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-// import { useSearchParams } from 'next/navigation';
+import { useQueryState } from 'nuqs';
 
 import { api } from '~/utils/api';
 import { cn } from '~/lib/utils';
-import {
-  useStore,
-  useStoreActions,
-  type NodeData,
-} from '~/hooks/use-store';
+import { useStore, useStoreActions, type NodeData } from '~/hooks/use-store';
 
 import ErrorPage from 'next/error';
 import { toast } from 'sonner';
 import { type Node, type Edge } from 'reactflow';
-// import { LayoutNav } from '~/components/layout-nav';
 import { Layout } from '~/components/layout';
 import { Button } from '~/components/ui/button';
 import NodeIcon from '~/components/workboard/node-components/node-icon';
-import AugmentationGallery from '~/components/workboard/node-components/gallery-components/augmentation-gallery';
 import { AvatarDrop } from '~/components/avatar-dropdown';
 import Link from 'next/link';
 import { useUser } from '~/hooks/use-user';
 import { ArrowLeftIcon } from 'lucide-react';
-import DatasetGallery from '~/components/workboard/node-components/gallery-components/dataset-gallery';
+import { Badge } from '~/components/ui/badge';
+import { cva } from 'class-variance-authority';
+import { ViewRemoteLog, ViewRemoteImages } from '~/components/gallery-views';
+// import { logPaths } from '~/server/api/routers/deepsirius-job';
 
 type NodeTypes =
   | 'dataset'
@@ -31,17 +29,69 @@ type NodeTypes =
   | 'finetune'
   | 'inference';
 
-function Gallery({ user, workspace }: { user: string; workspace: string }) {
-  const { nodes } = useStore();
-  const [selectedNode, setSelectedNode] = useState<Node<NodeData> | undefined>(
-    nodes.find((node) => node.selected) ?? undefined,
-  );
+const nodeStatusBadgeVariants = cva('', {
+  variants: {
+    status: {
+      active: 'bg-green-500',
+      busy: 'bg-yellow-500',
+      error: 'bg-red-500',
+      success: 'bg-blue-500',
+    },
+  },
+});
 
-  const onNodeSelect = (node: Node<NodeData>) => {
-    setSelectedNode(node);
+function Gallery({ user, workspace }: { user: string; workspace: string }) {
+  const [nodeId] = useQueryState('nodeId');
+  const [view, setView] = useQueryState('view');
+  const { nodes } = useStore();
+  const selectedNode = nodes.find((node) => node.id === nodeId);
+
+  const getNodeName = () => {
+    if (!selectedNode) return undefined;
+    if (!selectedNode.type) return undefined;
+    switch (selectedNode.type) {
+      case 'dataset':
+        return selectedNode.data?.datasetData?.name;
+      case 'augmentation':
+        return selectedNode.data?.augmentationData?.name;
+      case 'network':
+        return selectedNode.data?.networkData?.label;
+      case 'finetune':
+        const sourceLabel =
+          selectedNode.data?.finetuneData?.sourceNetworkLabel ?? undefined;
+        return sourceLabel
+          ? `${sourceLabel} finetune_id: ${selectedNode.id}`
+          : undefined;
+      case 'inference':
+        const outputPath =
+          selectedNode.data?.inferenceData?.outputPath ?? undefined;
+        return outputPath ? `inference ${outputPath}` : undefined;
+      default:
+        return undefined;
+    }
   };
 
-  const completeNodes = nodes.filter((node) => node.data.status === 'success');
+  if (!selectedNode || !selectedNode.type) {
+    return (
+      <div className="flex h-screen w-screen flex-col bg-light-ocean dark:bg-dark-ocean ">
+        <div className="flex h-[8%] w-full flex-row justify-between">
+          <Link
+            href={`/u/${user}/${workspace}`}
+            className="flex flex-row items-center p-4 "
+          >
+            <ArrowLeftIcon className="h-5 w-5 " />
+            {'Back to'}
+            <p className="ml-1 text-blue-800 dark:text-blue-500">{workspace}</p>
+            {"'s board."}
+          </Link>
+          <AvatarDrop />
+        </div>
+        <div className="flex h-[92%] flex-row">
+          <p className="text-center text-slate-300">No node selected</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-screen flex-col bg-light-ocean dark:bg-dark-ocean ">
@@ -58,174 +108,90 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
         <AvatarDrop />
       </div>
       <div className="flex h-[92%] flex-row">
-        <SidePanel
-          className="h-full w-1/6 border-r border-blue-600 "
-          nodes={completeNodes}
-          selectedNode={selectedNode}
-          onNodeSelect={onNodeSelect}
-        />
+        <div className="h-full w-1/6 border-r border-blue-600 ">
+          <div className="flex flex-col space-y-4 p-4">
+            <div className="flex flex-row">
+              <NodeIcon nodeType={selectedNode.type} />
+              <p className="ml-2 text-lg font-bold">{getNodeName()}</p>
+            </div>
+            <div className="flex flex-row">
+              <p className="text-md font-bold">Status:</p>
+              <Badge
+                className={cn(
+                  'mx-2 text-sm',
+                  nodeStatusBadgeVariants({
+                    status: selectedNode.data?.status,
+                  }),
+                )}
+              >
+                {selectedNode.data?.status}
+              </Badge>
+            </div>
+            <p className="text-md font-bold">Job Message:</p>
+            <p>{selectedNode.data?.message}</p>
+            {/* formData needs to be customized for each node type */}
+            <p className="text-md font-bold">Form Data:</p>
+            {/* view selection */}
+            <p className="text-md font-bold">Views:</p>
+            <Button
+              onClick={() => void setView('log-output')}
+              variant={(view === 'log-output' && 'default') || 'secondary'}
+            >
+              Output Logs
+            </Button>
+            <Button
+              onClick={() => void setView('log-err')}
+              variant={(view === 'log-err' && 'default') || 'secondary'}
+            >
+              Error Logs
+            </Button>
+            <Button
+              onClick={() => void setView('preview-imgs')}
+              variant={(view === 'preview-imgs' && 'default') || 'secondary'}
+              disabled={!['augmentation'].includes(selectedNode.type)}
+            >
+              Preview Images
+            </Button>
+            <Button
+              onClick={() => void setView('tensorboard')}
+              variant={(view === 'tensorboard' && 'default') || 'secondary'}
+              disabled={!['network', 'finetune'].includes(selectedNode.type)}
+            >
+              Tensorboard
+            </Button>
+          </div>
+          {/* side panel */}
+        </div>
         <div className="h-full w-5/6 ">
-          <GallerySwitch selectedNode={selectedNode} />
+          <GalleryView view={view} node={selectedNode} />
         </div>
       </div>
     </div>
   );
 }
 
-function GallerySwitch({
-  selectedNode,
-}: {
-  selectedNode: Node<NodeData> | undefined;
-}) {
-  if (!selectedNode)
-    return (
-      <div className="p-4 text-center text-slate-300">
-        <p>Select a node to see details</p>
-      </div>
-    );
-  switch (selectedNode.type) {
-    case 'augmentation': {
-      if (!selectedNode.data.augmentationData) return null;
-      return (
-        <AugmentationGallery
-          augmentationData={selectedNode.data.augmentationData}
-        />
-      );
-    }
-    case 'dataset': {
-      if (!selectedNode.data.datasetData) return null;
-      return (
-        <DatasetGallery datasetData={selectedNode.data.datasetData} />
-      );
-    }
+function GalleryView({ view, node }: { view: string | null; node: Node<NodeData> }) {
+  const workspacePath = node.data.workspacePath;
+  const jobId = node.data.jobId;
+  const jobName = node.type ? `deepsirius-${node.type}` : '';
+  const imagesPath = node.type === 'augmentation' ? node.data.augmentationData?.remotePreviewPath : '';
+  switch (view) {
+    case 'log-output':
+      if (!jobId) return <p>Job Id not found</p>;
+      if (!node.type) return <p>Node type not found</p>;
+      return <ViewRemoteLog path={`${workspacePath}/logs/log-${jobId}-${jobName}.out`} />;
+    case 'log-err':
+      if (!jobId) return <p>Job Id not found</p>;
+      if (!node.type) return <p>Node type not found</p>;
+      return <ViewRemoteLog path={`${workspacePath}/logs/log-${jobId}-${jobName}.err`} />;
+    case 'preview-imgs':
+      if (!imagesPath) return <p>Images path not found</p>;
+      return <ViewRemoteImages path={imagesPath} />;
+    case 'tensorboard':
+      return <p>Tensorboard</p>;
     default:
-      return <GenericGallery selectedNode={selectedNode} />;
+      return <p>View not found</p>;
   }
-}
-
-function GenericGallery({ selectedNode }: { selectedNode: Node<NodeData> }) {
-  return (
-    <div>
-      <h2>Generic</h2>
-      <p>status: {selectedNode.data.status}</p>
-      <p>type: {selectedNode.type}</p>
-    </div>
-  );
-}
-
-interface SidePanelProps extends React.HTMLAttributes<HTMLDivElement> {
-  nodes: Node<NodeData>[];
-  selectedNode: Node<NodeData> | undefined;
-  onNodeSelect: (node: Node<NodeData>) => void;
-}
-function SidePanel({
-  nodes,
-  selectedNode,
-  onNodeSelect,
-  className,
-}: SidePanelProps) {
-  const isNodeSelected = (node: Node<NodeData>) => {
-    return selectedNode && selectedNode.id === node.id;
-  };
-
-  const networkNodes = nodes.filter((node) => node.type === 'network');
-  const datasetNodes = nodes.filter((node) => node.type === 'dataset');
-  const augmentationNodes = nodes.filter(
-    (node) => node.type === 'augmentation',
-  );
-  const finetuneNodes = nodes.filter((node) => node.type === 'finetune');
-  const inferenceNodes = nodes.filter((node) => node.type === 'inference');
-
-  const NodeButton = ({ node }: { node: Node<NodeData> }) => {
-    const getButtonName = (nodeType: NodeTypes | unknown) => {
-      switch (nodeType) {
-        case 'dataset':
-          return node.data.datasetData?.name ?? '';
-        case 'augmentation':
-          return node.data.augmentationData?.name ?? '';
-        case 'network':
-          return node.data.networkData?.label ?? '';
-        case 'finetune':
-          return node.data.finetuneData
-            ? `${node.data.finetuneData.sourceNetworkLabel}_finetune`
-            : '';
-        case 'inference':
-          return node.data.inferenceData
-            ? `${node.data.inferenceData.networkLabel}_inference`
-            : '';
-        default:
-          return null;
-      }
-    };
-
-    if (!node.type) return null;
-
-    return (
-      <Button
-        variant="link"
-        size={'sm'}
-        className="w-full justify-start p-0 text-muted-foreground data-[selected=true]:font-extrabold data-[selected=true]:text-blue-800 data-[selected=true]:hover:text-accent-foreground "
-        onClick={() => onNodeSelect(node)}
-        data-selected={isNodeSelected(node)}
-      >
-        {getButtonName(node.type)}
-      </Button>
-    );
-  };
-
-  return (
-    <div className={cn('pb-12', className)}>
-      <div className="space-y-4 py-4">
-        <div className="px-3 py-2">
-          <h2 className="text-md my-2 px-4 font-semibold tracking-tight">
-            <NodeIcon nodeType={'dataset'} className="mr-1 w-5" />
-            Datasets
-          </h2>
-          <div className="ml-4 -space-y-1">
-            {datasetNodes.map((node) => (
-              <NodeButton key={node.id} node={node} />
-            ))}
-          </div>
-          <h2 className="text-md my-2 px-4 font-semibold tracking-tight">
-            <NodeIcon nodeType={'augmentation'} className="mr-1 w-5" />
-            Augmented Datasets
-          </h2>
-          <div className="ml-4 -space-y-1">
-            {augmentationNodes.map((node) => (
-              <NodeButton key={node.id} node={node} />
-            ))}
-          </div>
-          <h2 className="text-md my-2 px-4 font-semibold tracking-tight">
-            <NodeIcon nodeType={'network'} className="mr-1 w-5" />
-            Networks
-          </h2>
-          <div className="ml-4 -space-y-1">
-            {networkNodes.map((node) => (
-              <NodeButton key={node.id} node={node} />
-            ))}
-          </div>
-          <h2 className="text-md my-2 px-4 font-semibold tracking-tight">
-            <NodeIcon nodeType={'finetune'} className="mr-1 w-5" />
-            Finetune
-          </h2>
-          <div className="ml-4 -space-y-1">
-            {finetuneNodes.map((node) => (
-              <NodeButton key={node.id} node={node} />
-            ))}
-          </div>
-          <h2 className="text-md my-2 px-4 font-semibold tracking-tight">
-            <NodeIcon nodeType={'inference'} className="mr-1 w-5" />
-            Inferences
-          </h2>
-          <div className="ml-4 -space-y-1">
-            {inferenceNodes.map((node) => (
-              <NodeButton key={node.id} node={node} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function GalleryRouter() {

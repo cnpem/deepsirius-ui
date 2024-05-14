@@ -8,6 +8,7 @@ import {
 import { AlertTriangleIcon } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import { Button } from '~/components/ui/button';
+import Link from 'next/link';
 
 export function ActiveSheet(props: {
   selected: boolean;
@@ -35,6 +36,7 @@ interface BusySheet {
   jobStatus?: string;
   updatedAt?: string;
   message?: string;
+  hrefToGallery?: string;
   handleCancel: () => void;
 }
 
@@ -46,6 +48,7 @@ export function BusySheet(props: BusySheet) {
     jobStatus,
     updatedAt,
     message,
+    hrefToGallery,
     handleCancel,
   } = props;
 
@@ -53,7 +56,16 @@ export function BusySheet(props: BusySheet) {
     <Sheet open={selected} modal={false}>
       <SheetContent className="flex flex-col gap-4">
         <Alert>
-          <AlertDescription>{message}</AlertDescription>
+          <AlertDescription>
+            {message}
+            {hrefToGallery && (
+              <p>
+                <Link href={hrefToGallery} className="text-blue-500 underline">
+                  Check gallery logs and details.
+                </Link>
+              </p>
+            )}
+          </AlertDescription>
         </Alert>
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
@@ -82,11 +94,12 @@ export function BusySheet(props: BusySheet) {
 interface ErrorSheetProps {
   selected: boolean;
   message?: string;
+  hrefToGallery?: string;
   children: ReactNode;
 }
 
 export function ErrorSheet(props: ErrorSheetProps) {
-  const { selected, message, children } = props;
+  const { selected, message, hrefToGallery, children } = props;
   // TODO: Add a view logs action in this component, that will read the proper error log file
   // using the filesystem API and displayng it as an infinite scrollable modal or another page
 
@@ -98,6 +111,13 @@ export function ErrorSheet(props: ErrorSheetProps) {
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
             {message || 'Something went wrong'}
+            {hrefToGallery && (
+              <p>
+                <Link href={hrefToGallery} className="text-blue-500 underline">
+                  Check gallery logs and details.
+                </Link>
+              </p>
+            )}
           </AlertDescription>
         </Alert>
         <SheetHeader>
@@ -113,11 +133,12 @@ interface SuccessSheetProps {
   selected: boolean;
   message?: string;
   title?: string;
+  hrefToGallery?: string;
   children: ReactNode;
 }
 
 export function SuccessSheet(props: SuccessSheetProps) {
-  const { selected, message, children, title } = props;
+  const { selected, message, hrefToGallery, children, title } = props;
 
   return (
     <Sheet open={selected} modal={false}>
@@ -126,6 +147,13 @@ export function SuccessSheet(props: SuccessSheetProps) {
           <AlertTitle>Success</AlertTitle>
           <AlertDescription>
             {message || 'Operation successful'}
+            {hrefToGallery && (
+              <p>
+                <Link href={hrefToGallery} className="text-blue-500 underline">
+                  Check gallery logs and details.
+                </Link>
+              </p>
+            )}
           </AlertDescription>
         </Alert>
         <SheetHeader>

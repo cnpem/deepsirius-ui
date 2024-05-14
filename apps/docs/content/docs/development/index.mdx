@@ -3,16 +3,33 @@ title: Development
 description: Development guide
 ---
 
-Welcome to the developer guide!
+The DeepSirius project is divided in two main parts: the UI and the processing 
+package, which are described below.
 
-There are two dimensions to developing for DeepSirius.
+1. **DeepSirius UI**: The UI is built using Next.js, a React framework.
+It interacts with an HPC cluster and storage system through SSH, SLURM and APIs. 
+It runs jobs by calling containers with Singularity through bash scripts that run 
+Python packages for the predefined processing steps.
 
-1. **DeepSirius UI**: The UI is built with Next.js, ... It interacts with an HPC cluster and Storage system throug ssh, SLURM and APIs. It runs jobs calling containers with Singularity through bash scripts that runs python packages for the pre defining processing steps.
-2. **ssc-deepsirius processing package**: The processing package is a python package that contains the a CLI to interact with the UI for every processing job run by the UI. Its built to be run in a container with Singularity in the HPC cluster.
+2. **ssc-deepsirius processing package**: The processing package is a Python 
+package that contains a CLI to interact with the UI for every processing job
+run by the UI. It is the main processing engine of the DeepSirius project and
+all the deeplearning models are run using this package.
 
-## What is Next?
+The following sections will guide you through the development process for both
+the UI and the processing package. We will focus briefly on the main concepts
+and tools used in the project, and provide you with the necessary information
+to start contributing to the project.
 
 <Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.vercel.app" />
+  <Card
+    title="DeepSirius UI"
+    description="Development guide for the DeepSirius UI"
+    href="/docs/development/ui"
+  />
+  <Card
+    title="ssc-deepsirius processing package"
+    description="Development guide for the ssc-deepsirius processing package"
+    href="/docs/development/processing"
+  />
 </Cards>

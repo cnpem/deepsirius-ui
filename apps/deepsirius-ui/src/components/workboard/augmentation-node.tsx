@@ -208,17 +208,13 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
   if (!user) return null;
   if (!nodeProps.data.workspacePath) return null;
 
-  const workspaceName = nodeProps.data.workspacePath.split('/').pop();
-  if (!workspaceName) return null;
-  const augmentationNodeIdSearchparams = new URLSearchParams({
-    nodeId: nodeProps.id,
-  });
-  const augmentationNodeRoute =
-    user.route +
-    '/' +
-    workspaceName +
-    '/gallery?' +
-    augmentationNodeIdSearchparams.toString();
+    const workspaceName = nodeProps.data.workspacePath.split('/').pop();
+    if (!workspaceName) return null;
+    const nodeIdParams = new URLSearchParams({
+      nodeId: nodeProps.id,
+    });
+    const galleryUrl =
+      user.route + '/' + workspaceName + '/gallery?' + nodeIdParams.toString();
 
   if (nodeProps.data.status === 'active') {
     return (
@@ -259,7 +255,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
           updatedAt={nodeProps.data.updatedAt}
           message={nodeProps.data.message}
           handleCancel={handleCancel}
-          hrefToGallery={augmentationNodeRoute}
+          hrefToGallery={galleryUrl}
         />
       </>
     );
@@ -278,7 +274,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
         <SuccessSheet
           selected={nodeProps.selected}
           message={nodeProps.data.message}
-          hrefToGallery={augmentationNodeRoute}
+          hrefToGallery={galleryUrl}
         >
           <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
             <p>Show something here</p>
@@ -301,7 +297,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
         <ErrorSheet
           selected={nodeProps.selected}
           message={nodeProps.data.message}
-          hrefToGallery={augmentationNodeRoute}
+          hrefToGallery={galleryUrl}
         >
           <AugmentationForm
             onSubmitHandler={handleSubmit}

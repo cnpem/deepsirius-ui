@@ -2,12 +2,103 @@
 title: Workspace
 description: Workspace
 ---
+import Image from 'next/image'
+import { File, Folder, Files } from 'fumadocs-ui/components/files';
 
-Welcome to the docs! You can start writing documents in `/content/docs`.
+
+
+## Workspace file structure
+
+<Files>
+  <Folder name="workspace_name" defaultOpen>
+    <Folder name="datasets">
+      <File name="my_dataset.h5" />
+      <Folder name="aug_dataset_preview">
+        <File name="average_blur_max.png" />
+        <File name="average_blur_min.png" />
+        <File name="contrast_max.png" />
+        <File name="contrast_min.png" />
+        <File name="dropout_max.png" />
+        <File name="dropout_min.png" />
+        <File name="flip_horizontal.png" />
+        <File name="gaussian_blur_max.png" />
+        <File name="gaussian_blur_min.png" />
+        <File name="linearContrast_max.png" />
+        <File name="linearContrast_min.png" />
+        <File name="original.png" />
+      </Folder>
+      <File name="my_augmented_dataset.h5" />
+    </Folder>
+    <File name="info.json" />
+    <Folder name="logs">
+      <File name="log-JOB ID-deepsirius-dataset.err" />
+      <File name="log-JOB ID-deepsirius-dataset.out" />
+    </Folder>
+
+    <Folder name="networks">
+      <Folder name="unet2d">
+        <File name="bin" />
+        <File name="data.csv" />
+        <File name="frozen" />
+        <File name="label.csv" />
+        <File name="logs" />
+        <File name="models" />
+        <File name="niftynet" />
+        <File name="params.json" />
+        <File name="utils" />
+        <File name="weight.csv" />
+      </Folder>
+
+      <Folder name="unet3d">
+        <Folder name="bin" />
+        <File name="data.csv" />
+        <Folder name="frozen" />
+        <File name="label.csv" />
+        <Folder name="logs" />
+        <Folder name="models" />
+        <Folder name="niftynet" />
+        <File name="params.json" />
+        <Folder name="utils" />
+        <File name="weight.csv" />
+      </Folder>
+
+      <Folder name="vnet">
+        <Folder name="bin" />
+        <File name="data.csv" />
+        <Folder name="frozen" />
+        <File name="label.csv" />
+        <Folder name="logs" />
+        <Folder name="models" />
+        <Folder name="niftynet" />
+        <File name="params.json" />
+        <Folder name="utils" />
+        <File name="weight.csv" />
+      </Folder>
+
+      <Folder name="my_trained_network">
+        <Folder name="bin" />
+        <File name="data.csv" />
+        <Folder name="frozen" />
+        <File name="label.csv" />
+        <Folder name="logs" />
+        <Folder name="models" />
+        <Folder name="niftynet" />
+        <File name="params.json" />
+        <Folder name="utils" />
+        <File name="weight.csv" />
+        <File name="normalization.h5" />
+      </Folder>
+
+      </Folder>
+      <Folder name="bin" >
+      <File name="copy_train.py" />
+      </Folder>
+    </Folder>
+
+</Files>
 
 ## What is Next?
 
 <Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.vercel.app" />
+  <Card title="Dataset" href="/docs/components/dataset" />
 </Cards>

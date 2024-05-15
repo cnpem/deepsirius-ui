@@ -15,8 +15,10 @@ import {
   ErrorSheet,
   SuccessSheet,
 } from './node-components/node-sheet';
+import { useUser } from '~/hooks/use-user';
 
 export function NetworkNode(nodeProps: NodeProps<NodeData>) {
+  const user = useUser();
   const [open, setOpen] = useState(false);
 
   const { onUpdateNode, getSourceData } = useStoreActions();
@@ -226,6 +228,17 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     toast.info('Canceling job..');
   };
 
+  if (!user) return null;
+  if (!nodeProps.data.workspacePath) return null;
+
+  const workspaceName = nodeProps.data.workspacePath.split('/').pop();
+  if (!workspaceName) return null;
+  const nodeIdParams = new URLSearchParams({
+    nodeId: nodeProps.id,
+  });
+  const galleryUrl =
+    user.route + '/' + workspaceName + '/gallery?' + nodeIdParams.toString();
+
   if (nodeProps.data.status === 'active') {
     return (
       <>
@@ -256,12 +269,13 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
         />
         <BusySheet
           selected={nodeProps.selected}
-          title={'Details'}
+          title={'Overview'}
           jobId={nodeProps.data.jobId}
           jobStatus={nodeProps.data.jobStatus}
           updatedAt={nodeProps.data.updatedAt}
           message={nodeProps.data.message}
           handleCancel={handleCancel}
+          hrefToGallery={galleryUrl}
         />
       </>
     );
@@ -280,6 +294,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
         <SuccessSheet
           selected={nodeProps.selected}
           message={nodeProps.data.message}
+          hrefToGallery={galleryUrl}
         >
           <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
             {formData &&
@@ -329,6 +344,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
         <ErrorSheet
           selected={nodeProps.selected}
           message={nodeProps.data.message}
+          hrefToGallery={galleryUrl}
         >
           <NetworkForm
             networkTypeName={formData?.networkTypeName || 'vnet'}

@@ -27,6 +27,8 @@ const server = z.object({
   PROCESSING_CONTAINER_PATH: z.string(),
   STORAGE_API_URL: z.string().url(),
   STORAGE_API_KEY: z.string(),
+  TENSORBOARD_API_URL: z.string().url(),
+  TENSORBOARD_API_KEY: z.string(),
 });
 
 /**
@@ -53,13 +55,14 @@ const processEnv = {
   SSH_HOST: process.env.SSH_HOST,
   CA_CERT: process.env.CA_CERT,
   PRIVATE_KEY_PASSPHRASE: process.env.PRIVATE_KEY_PASSPHRASE,
-
   NEXT_PUBLIC_STORAGE_PATH: process.env.NEXT_PUBLIC_STORAGE_PATH,
   PROCESSING_CONTAINER_STORAGE_BIND:
     process.env.PROCESSING_CONTAINER_STORAGE_BIND,
   PROCESSING_CONTAINER_PATH: process.env.PROCESSING_CONTAINER_PATH,
   STORAGE_API_URL: process.env.STORAGE_API_URL,
   STORAGE_API_KEY: process.env.STORAGE_API_KEY,
+  TENSORBOARD_API_URL: process.env.TENSORBOARD_API_URL,
+  TENSORBOARD_API_KEY: process.env.TENSORBOARD_API_KEY,
 };
 
 // Don't touch the part below

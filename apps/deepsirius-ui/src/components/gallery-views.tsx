@@ -18,7 +18,7 @@ export function ViewRemoteLog({ path }: { path: string }) {
 
   return (
     <Textarea
-      className="text-md h-full w-3/4 resize-none bg-muted shadow-lg"
+      className="text-md h-full w-full resize-none bg-muted shadow-lg"
       value={data.content}
       readOnly={true}
     />
@@ -54,6 +54,37 @@ export function ViewRemoteImages({ path }: { path: string }) {
       })}
       sizesm={128}
     />
+  );
+}
+
+export function Tensorboard({
+  logdir,
+  name,
+}: {
+  logdir: string;
+  name: string;
+}) {
+  const { data, error, isLoading, isError } = api.tbConsumer.start.useQuery(
+    {
+      logdir,
+      name,
+    },
+    {
+      refetchInterval: 1000 * 60 * 3,
+    },
+  );
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (isError) {
+    console.error('Error starting tensorboard', error);
+    return <p>Error: {error.message}</p>;
+  }
+
+  return (
+    <iframe src={data.url} className="h-full w-full rounded-lg" />
   );
 }
 

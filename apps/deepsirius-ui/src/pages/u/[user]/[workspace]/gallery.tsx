@@ -19,7 +19,7 @@ import { useUser } from '~/hooks/use-user';
 import { ArrowLeftIcon } from 'lucide-react';
 import { Badge } from '~/components/ui/badge';
 import { cva } from 'class-variance-authority';
-import { ViewRemoteLog, ViewRemoteImages } from '~/components/gallery-views';
+import { ViewRemoteLog, ViewRemoteImages, Tensorboard } from '~/components/gallery-views';
 
 const nodeStatusBadgeVariants = cva('', {
   variants: {
@@ -187,7 +187,7 @@ function GalleryView({
       if (!imagesPath) return <p>Images path not found</p>;
       return <ViewRemoteImages path={imagesPath} />;
     case 'tensorboard':
-      return <p>Tensorboard</p>;
+      return <Tensorboard logdir={`${node.data?.networkData?.remotePath ?? '/dummy'}/logs`} name={node.data?.networkData?.form.networkUserLabel ?? 'network'} />;
     default:
       return (
         <div className="flex h-full w-3/4 items-center justify-center rounded-lg border border-dashed">

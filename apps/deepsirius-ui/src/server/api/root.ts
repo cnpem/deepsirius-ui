@@ -3,6 +3,7 @@ import { jobRouter } from './routers/job';
 import { deepsiriusJobRouter } from './routers/deepsirius-job';
 import { sshRouter } from './routers/ssh';
 import { dbRouter } from './routers/db';
+import { tbConsumerRouter } from './routers/tb_consumer';
 
 /**
  * This is the primary router for your server.
@@ -14,6 +15,7 @@ export const appRouter = createTRPCRouter({
   db: dbRouter,
   job: jobRouter,
   deepsiriusJob: deepsiriusJobRouter,
+  tbConsumer: tbConsumerRouter,
 });
 
 // export type definition of API

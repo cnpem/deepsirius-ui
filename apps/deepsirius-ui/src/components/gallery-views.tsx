@@ -8,7 +8,7 @@ export function ViewRemoteLog({ path }: { path: string }) {
   });
 
   if (isLoading) {
-    return <p>Wait a minute</p>;
+    return <Loading />;
   }
 
   if (isError) {
@@ -18,7 +18,7 @@ export function ViewRemoteLog({ path }: { path: string }) {
 
   return (
     <Textarea
-      className="text-md h-full w-3/4 resize-none bg-muted"
+      className="text-md h-full w-3/4 resize-none bg-muted shadow-lg"
       value={data.content}
       readOnly={true}
     />
@@ -38,7 +38,7 @@ export function ViewRemoteImages({ path }: { path: string }) {
     );
 
   if (isLoading) {
-    return <p>Wait a minute</p>;
+    return <Loading />;
   }
 
   if (isError) {
@@ -54,5 +54,13 @@ export function ViewRemoteImages({ path }: { path: string }) {
       })}
       sizesm={128}
     />
+  );
+}
+
+function Loading() {
+  return (
+    <div className="flex h-full w-3/4 items-center justify-center rounded-lg border border-dashed">
+      <p className="h-1/2 text-center text-muted-foreground">Loading..</p>
+    </div>
   );
 }

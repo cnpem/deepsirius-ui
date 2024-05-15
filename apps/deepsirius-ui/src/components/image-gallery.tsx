@@ -44,53 +44,53 @@ export function ImageGallery({ images, sizelg }: ImageGalleryProps) {
   const open = selected?.image !== undefined;
 
   return (
-    <div className="grid h-full w-full grid-rows-[auto,1fr]">
-      <div className="overflow-y-scroll">
-        <Dialog
-          open={open}
-          onOpenChange={(open) => {
-            if (!open) {
-              onSelectionChange(undefined);
-            }
-          }}
-        >
-          <div className="flex flex-wrap justify-center">
-            {images.map((image) => (
-              <DialogTrigger
-                key={image.name}
-                className={
-                  'mx-auto w-full rounded-md md:mx-4 md:w-32 lg:mx-4 lg:w-32'
-                }
-                onClick={() => onSelectionChange(image)}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={image.src}
-                  alt={image.name}
-                  style={{
-                    objectFit: 'contain',
-                    alignSelf: 'center',
-                  }}
-                  className="rounded-md"
-                  loading="lazy"
-                />
-                <Label>{image.name}</Label>
-              </DialogTrigger>
-            ))}
-          </div>
-          <DialogContent className="flex flex-shrink flex-col items-center gap-1 p-10 ">
-            {open && (
-              <ImageFull
-                image={selected.image}
-                size={sizelg}
-                leftNeighbour={selected.leftNeighbour}
-                rightNeighbour={selected.rightNeighbour}
-                onSelectionChange={onSelectionChange}
+    <div className="h-full w-3/4 overflow-y-auto rounded-lg border bg-muted pt-4 shadow-lg">
+      <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          if (!open) {
+            onSelectionChange(undefined);
+          }
+        }}
+      >
+        <div className="flex flex-wrap justify-center">
+          {images.map((image) => (
+            <DialogTrigger
+              key={image.name}
+              className={
+                'mx-auto w-full rounded-md p-1 md:mx-4 md:w-32 lg:mx-4 lg:w-32'
+              }
+              onClick={() => onSelectionChange(image)}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={image.src}
+                alt={image.name}
+                style={{
+                  objectFit: 'contain',
+                  alignSelf: 'center',
+                }}
+                className="rounded-md transition-all duration-300 ease-in-out hover:scale-105 hover:opacity-95"
+                loading="lazy"
               />
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
+              <Label className="capitalize text-muted-foreground">
+                {image.name}
+              </Label>
+            </DialogTrigger>
+          ))}
+        </div>
+        <DialogContent className="flex flex-shrink flex-col items-center gap-1 p-10 ">
+          {open && (
+            <ImageFull
+              image={selected.image}
+              size={sizelg}
+              leftNeighbour={selected.leftNeighbour}
+              rightNeighbour={selected.rightNeighbour}
+              onSelectionChange={onSelectionChange}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -44,7 +44,7 @@ export function ImageGallery({ images, sizelg }: ImageGalleryProps) {
   const open = selected?.image !== undefined;
 
   return (
-    <div className="h-full w-3/4 overflow-y-auto rounded-lg border bg-muted pt-4 shadow-lg">
+    <div className="h-full w-full overflow-y-auto rounded-lg border bg-muted pt-4 shadow-lg">
       <Dialog
         open={open}
         onOpenChange={(open) => {

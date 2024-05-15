@@ -158,7 +158,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const connection = ctx.connection;
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
-      const scriptName = 'deepSirius-dataset.sbatch';
+      const scriptName = 'deepsirius-dataset.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });
@@ -188,38 +188,90 @@ export const deepsiriusJobRouter = createTRPCRouter({
       // defining the container script
       const containerScript = `singularity exec --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       // mapping formData to cli kwargs
-      const flagArgs = {
-        '--rot90': input.formData.augmentationArgs.rot90,
-        '--rot270': input.formData.augmentationArgs.rot270,
-        '--flip-horizontal': input.formData.augmentationArgs.flipHorizontal,
-        '--flip-vertical': input.formData.augmentationArgs.flipVertical,
-      };
-      const flagArgsString = Object.entries(flagArgs)
-        .map(([key, value]) => (value ? key : ''))
-        .join(' ');
-
-      const kwArgs = {
-        '--elastic-alpha': input.formData.augmentationArgs.elastic.alpha,
-        '--elastic-sigma': input.formData.augmentationArgs.elastic.sigma,
-        '--gaussian-blur': input.formData.augmentationArgs.gaussianBlur.sigma,
-        '--contrast': input.formData.augmentationArgs.contrast.factor,
-        '--average-blur':
-          input.formData.augmentationArgs.averageBlur.kernelSize,
-        '--linear-contrast':
-          input.formData.augmentationArgs.linearContrast.factor,
-        '--dropout': input.formData.augmentationArgs.dropout.factor,
-        '--poisson-noise': input.formData.augmentationArgs.poissonNoise.scale,
-      };
-      const kwArgsString = Object.entries(kwArgs)
-        .map(([key, value]) => (value ? `${key} ${value.join(' ')}` : ''))
-        .join(' ');
+      const formArgs = input.formData.augmentationArgs;
+      function formatNamedTuple({
+        name,
+        tuple,
+      }: {
+        name: string;
+        tuple: [number, number] | undefined;
+      }) {
+        if (!tuple) return '';
+        return `${name} ${tuple.join(' ')}`;
+      }
+      const kwArgsArray = [
+        `${formArgs.rot90.select ? '--rot90' : ''}`,
+        `${formArgs.rot270.select ? '--rot270' : ''}`,
+        `${formArgs.flipHorizontal.select ? '--flip-horizontal' : ''}`,
+        `${formArgs.flipVertical.select ? '--flip-vertical' : ''}`,
+        `${
+          formArgs.elastic.select
+            ? `${formatNamedTuple({
+                name: '--elastic-alpha',
+                tuple: formArgs.elastic.alpha,
+              })} ${formatNamedTuple({
+                name: '--elastic-sigma',
+                tuple: formArgs.elastic.sigma,
+              })}`
+            : ''
+        }`,
+        `${
+          formArgs.gaussianBlur.select
+            ? `${formatNamedTuple({
+                name: '--gaussian-blur',
+                tuple: formArgs.gaussianBlur.sigma,
+              })}`
+            : ''
+        }`,
+        `${
+          formArgs.contrast.select
+            ? `${formatNamedTuple({
+                name: '--contrast',
+                tuple: formArgs.contrast.factor,
+              })}`
+            : ''
+        }`,
+        `${
+          formArgs.averageBlur.select
+            ? `${formatNamedTuple({
+                name: '--average-blur',
+                tuple: formArgs.averageBlur.kernelSize,
+              })}`
+            : ''
+        }`,
+        `${
+          formArgs.linearContrast.select
+            ? `${formatNamedTuple({
+                name: '--linear-contrast',
+                tuple: formArgs.linearContrast.factor,
+              })}`
+            : ''
+        }`,
+        `${
+          formArgs.dropout.select
+            ? `${formatNamedTuple({
+                name: '--dropout',
+                tuple: formArgs.dropout.factor,
+              })}`
+            : ''
+        }`,
+        `${
+          formArgs.poissonNoise.select
+            ? `${formatNamedTuple({
+                name: '--poisson-noise',
+                tuple: formArgs.poissonNoise.scale,
+              })}`
+            : ''
+        }`,
+      ];
+      const kwArgsString = kwArgsArray.filter(Boolean).join(' ');
 
       const inputImgageArgs = input.baseDatasetFullImages
         .map((image) => `${image}`)
         .join(' ');
 
       // defining the full command
-      const command = `${containerScript} ssc-deepsirius augment_dataset ${input.workspacePath} ${input.sourceDatasetName} ${input.formData.augmentedDatasetName} ${inputImgageArgs} ${flagArgsString} ${kwArgsString}`;
+      const command = `${containerScript} ssc-deepsirius augment_dataset ${input.workspacePath} ${input.sourceDatasetName} ${input.formData.augmentedDatasetName} ${inputImgageArgs} ${kwArgsString}`;
       const { out, err } = logPaths({ workspacePath: input.workspacePath });
       const sbatchContent = [
         '#!/bin/bash',
@@ -235,7 +287,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const connection = ctx.connection;
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
-      const scriptName = 'deepSirius-augmentation.sbatch';
+      const scriptName = 'deepsirius-augmentation.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });
@@ -296,7 +348,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const connection = ctx.connection;
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
-      const scriptName = 'deepSirius-network.sbatch';
+      const scriptName = 'deepsirius-network.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });
@@ -358,7 +410,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const connection = ctx.connection;
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
-      const scriptName = 'deepSirius-network.sbatch';
+      const scriptName = 'deepsirius-network.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });
@@ -424,7 +476,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const connection = ctx.connection;
 
       const { tempDir, scriptPath } = createTempScript(sbatchContent);
-      const scriptName = 'deepSirius-inference.sbatch';
+      const scriptName = 'deepsirius-inference.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
       fs.rmdirSync(tempDir, { recursive: true });

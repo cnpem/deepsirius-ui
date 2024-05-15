@@ -31,16 +31,8 @@ const slurmOptions = z.object({
   nGPU: z.enum(slurmGPUOptions),
 });
 
-const powerSizes = [
-  '0',
-  '16',
-  '32',
-  '64',
-  '128',
-  '256',
-  '512',
-  '1024',
-] as const;
+const paddingSizes = ['0', '2', '4', '8'] as const;
+const patchSizes = ['0', '2', '4', '8', '16'] as const;
 export const inferenceSchema = z.object({
   slurmOptions: slurmOptions,
   outputDir: z
@@ -61,8 +53,8 @@ export const inferenceSchema = z.object({
     .nonempty({ message: 'Must have at least one image!' }),
   saveProbMap: z.boolean(),
   normalize: z.boolean(),
-  paddingSize: z.enum(powerSizes),
-  patchSize: z.enum(powerSizes),
+  paddingSize: z.enum(paddingSizes),
+  patchSize: z.enum(patchSizes),
 });
 
 export type FormType = z.infer<typeof inferenceSchema>;
@@ -84,8 +76,8 @@ export function useInferenceForm(
       inputImages: inputImages,
       saveProbMap: false,
       normalize: false,
-      paddingSize: '32',
-      patchSize: '32',
+      paddingSize: '0',
+      patchSize: '0',
       slurmOptions: {
         nGPU: '1',
       },
@@ -247,18 +239,18 @@ export function InferenceForm({
             name="paddingSize"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Padding Size</FormLabel>
+                <FormLabel>Volume Padding</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a verified email to display" />
+                      <SelectValue placeholder="Select a value for the volume padding size" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {powerSizes.map((item) => (
+                    {paddingSizes.map((item) => (
                       <SelectItem key={item} value={item}>
                         {item}
                       </SelectItem>
@@ -274,18 +266,18 @@ export function InferenceForm({
             name="patchSize"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Patch Size</FormLabel>
+                <FormLabel>Patch Border</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a verified email to display" />
+                      <SelectValue placeholder="Select value for the patch border size" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {powerSizes.map((item) => (
+                    {patchSizes.map((item) => (
                       <SelectItem key={item} value={item}>
                         {item}
                       </SelectItem>

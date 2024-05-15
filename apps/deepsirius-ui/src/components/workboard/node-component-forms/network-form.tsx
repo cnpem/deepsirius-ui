@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select';
-import { Switch } from '~/components/ui/switch';
 import { slurmGPUOptions, slurmPartitionOptions } from '~/lib/constants';
 
 const slurmOptions = z.object({
@@ -43,7 +42,6 @@ export const networkSchema = z.object({
       message:
         'Network label name must contain only letters, numbers underscores and no spaces.',
     }),
-  dropClassifier: z.boolean(),
   jobGPUs: z.enum(['1', '2', '4']),
   iterations: z.coerce.number().gte(1, { message: 'Must be >= 1' }),
   learningRate: z.coerce.number().gt(0, { message: 'Must be greater than 0' }),
@@ -76,7 +74,6 @@ export function useNetworkForm({
     defaultValues: {
       networkUserLabel: networkUserLabel,
       networkTypeName: networkTypeName,
-      dropClassifier: false,
       jobGPUs: '1',
       iterations: 1,
       learningRate: 0.00001,
@@ -178,21 +175,6 @@ export function NetworkForm({
                     </div>
                   ))}
                 </RadioGroup>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <FormField
-          name="dropClassifier"
-          control={form.control}
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between">
-              <FormLabel>Drop Classifier</FormLabel>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
               </FormControl>
             </FormItem>
           )}

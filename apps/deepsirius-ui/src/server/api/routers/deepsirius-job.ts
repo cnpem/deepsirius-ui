@@ -322,7 +322,9 @@ export const deepsiriusJobRouter = createTRPCRouter({
         'batch-size': input.formData.batchSize,
         'learning-rate': input.formData.learningRate,
         optimiser: input.formData.optimizer,
-        'drop-classifier': input.formData.dropClassifier,
+        // in the ui, theres a separation of concerns between the network form and the finetune component, but the cli uses the same function for both
+        // so we need to pass this value as a boolean to the cli.
+        'drop-classifier': false, 
         // this is a silly way to get around the fact that the cli expects 3 values for patch size
         'net-patch-size': (input.formData.patchSize + ' ').repeat(3),
       };

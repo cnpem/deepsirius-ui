@@ -91,7 +91,7 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
               <p className="ml-2 text-lg font-semibold">{getNodeName()}</p>
               <Badge
                 className={cn(
-                  'ml-auto text-xs',
+                  'ml-auto text-xs rounded-full',
                   nodeStatusBadgeVariants({
                     status: selectedNode.data?.status,
                   }),
@@ -190,8 +190,8 @@ function GalleryView({
       return <p>Tensorboard</p>;
     default:
       return (
-        <div className="flex h-1/2 w-3/4 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-center text-muted-foreground">Select a view</p>
+        <div className="flex h-full w-3/4 items-center justify-center rounded-lg border border-dashed">
+          <p className="h-1/2 text-center text-muted-foreground">Select a view</p>
         </div>
       );
   }
@@ -273,7 +273,6 @@ export default function GalleryRouter() {
       <Layout>
         <div className="flex flex-row items-center justify-center gap-4">
           <p className="text-center text-slate-300">Loading workspace...</p>
-          {/* <div className="mr-2 h-5 w-5 animate-spin rounded-full border-4 border-sky-600"></div> */}
         </div>
       </Layout>
     );

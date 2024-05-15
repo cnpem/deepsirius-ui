@@ -5,7 +5,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '~/components/ui/sheet';
-import { AlertTriangleIcon } from 'lucide-react';
+import { AlertTriangleIcon, MoveUpRightIcon } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import { Button } from '~/components/ui/button';
 import Link from 'next/link';
@@ -56,16 +56,7 @@ export function BusySheet(props: BusySheet) {
     <Sheet open={selected} modal={false}>
       <SheetContent className="flex flex-col gap-4">
         <Alert>
-          <AlertDescription>
-            {message}
-            {hrefToGallery && (
-              <p>
-                <Link href={hrefToGallery} className="text-blue-500 underline">
-                  Check gallery logs and details.
-                </Link>
-              </p>
-            )}
-          </AlertDescription>
+          <AlertDescription>{message}</AlertDescription>
         </Alert>
         <SheetHeader>
           <SheetTitle>{title}</SheetTitle>
@@ -84,6 +75,7 @@ export function BusySheet(props: BusySheet) {
             <p className="text-end text-violet-600">{updatedAt}</p>
           </div>
         </div>
+        {hrefToGallery && <GalleryLink href={hrefToGallery} />}
         <hr />
         <Button onClick={handleCancel}>cancel</Button>
       </SheetContent>
@@ -111,19 +103,13 @@ export function ErrorSheet(props: ErrorSheetProps) {
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
             {message || 'Something went wrong'}
-            {hrefToGallery && (
-              <p>
-                <Link href={hrefToGallery} className="text-blue-500 underline">
-                  Check gallery logs and details.
-                </Link>
-              </p>
-            )}
           </AlertDescription>
         </Alert>
         <SheetHeader>
           <SheetTitle>Retry</SheetTitle>
         </SheetHeader>
         {children}
+        {hrefToGallery && <GalleryLink href={hrefToGallery} />}
       </SheetContent>
     </Sheet>
   );
@@ -147,20 +133,26 @@ export function SuccessSheet(props: SuccessSheetProps) {
           <AlertTitle>Success</AlertTitle>
           <AlertDescription>
             {message || 'Operation successful'}
-            {hrefToGallery && (
-              <p>
-                <Link href={hrefToGallery} className="text-blue-500 underline">
-                  Check gallery logs and details.
-                </Link>
-              </p>
-            )}
           </AlertDescription>
         </Alert>
         <SheetHeader>
-          <SheetTitle>{title ? title : 'Details'}</SheetTitle>
+          <SheetTitle>{title ? title : 'Overview'}</SheetTitle>
         </SheetHeader>
         {children}
+        {hrefToGallery && <GalleryLink href={hrefToGallery} />}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function GalleryLink({ href }: { href: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center font-semibold text-blue-500 hover:underline"
+    >
+      Details
+      <MoveUpRightIcon className="ml-1 h-5 w-5" />
+    </Link>
   );
 }

@@ -1,11 +1,16 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useQueryState } from 'nuqs';
+import dayjs from 'dayjs';
 
 import { api } from '~/utils/api';
-import { cn } from '~/lib/utils';
-import { useStore, useStoreActions, type NodeData } from '~/hooks/use-store';
+import {
+  useStore,
+  useStoreActions,
+  type NodeData,
+  type NodeStatus,
+} from '~/hooks/use-store';
 
 import ErrorPage from 'next/error';
 import { toast } from 'sonner';
@@ -17,51 +22,21 @@ import { AvatarDrop } from '~/components/avatar-dropdown';
 import Link from 'next/link';
 import { useUser } from '~/hooks/use-user';
 import { ArrowLeftIcon } from 'lucide-react';
-import { Badge } from '~/components/ui/badge';
-import { cva } from 'class-variance-authority';
-import { ViewRemoteLog, ViewRemoteImages, Tensorboard } from '~/components/gallery-views';
-
-const nodeStatusBadgeVariants = cva('', {
-  variants: {
-    status: {
-      active: 'bg-green-500 hover:bg-green-600',
-      busy: 'bg-yellow-500 hover:bg-yellow-600',
-      error: 'bg-red-500 hover:bg-red-600',
-      success: 'bg-blue-500 hover:bg-blue-600',
-    },
-  },
-});
+import {
+  ViewRemoteLog,
+  ViewRemoteImages,
+  Tensorboard,
+} from '~/components/gallery-views';
+import { StatusBadge } from '~/components/workboard/status-badge';
 
 function Gallery({ user, workspace }: { user: string; workspace: string }) {
   const [nodeId] = useQueryState('nodeId');
-  const [view, setView] = useQueryState('view');
+  const [view] = useQueryState('view');
   const { nodes } = useStore();
-  const selectedNode = nodes.find((node) => node.id === nodeId);
-
-  const getNodeName = () => {
-    if (!selectedNode) return undefined;
-    if (!selectedNode.type) return undefined;
-    switch (selectedNode.type) {
-      case 'dataset':
-        return selectedNode.data?.datasetData?.name;
-      case 'augmentation':
-        return selectedNode.data?.augmentationData?.name;
-      case 'network':
-        return selectedNode.data?.networkData?.label;
-      case 'finetune':
-        const sourceLabel =
-          selectedNode.data?.finetuneData?.sourceNetworkLabel ?? undefined;
-        return sourceLabel
-          ? `${sourceLabel} finetune_id: ${selectedNode.id}`
-          : undefined;
-      case 'inference':
-        const outputPath =
-          selectedNode.data?.inferenceData?.outputPath ?? undefined;
-        return outputPath ? `inference ${outputPath}` : undefined;
-      default:
-        return undefined;
-    }
-  };
+  const selectedNode = useMemo(
+    () => nodes.find((node) => node.id === nodeId),
+    [nodes, nodeId],
+  );
 
   if (!selectedNode || !selectedNode.type) {
     return (
@@ -85,57 +60,133 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
       </div>
       <div className="flex h-[92%] gap-4 p-2">
         <div className="h-fit rounded-lg border p-2 shadow-lg">
-          <div className="flex flex-col space-y-4 p-4">
-            <div className="flex items-center">
-              <NodeIcon nodeType={selectedNode.type} />
-              <p className="ml-2 text-lg font-semibold">{getNodeName()}</p>
-              <Badge
-                className={cn(
-                  'ml-auto text-xs rounded-full',
-                  nodeStatusBadgeVariants({
-                    status: selectedNode.data?.status,
-                  }),
-                )}
-              >
-                {selectedNode.data?.status}
-              </Badge>
-            </div>
-            <p className="text-muted-foreground">
-              {selectedNode.data?.message}
-            </p>
-            <Button
-              onClick={() => void setView('log-output')}
-              variant={(view === 'log-output' && 'default') || 'outline'}
-            >
-              Output Logs
-            </Button>
-            <Button
-              onClick={() => void setView('log-err')}
-              variant={(view === 'log-err' && 'default') || 'outline'}
-            >
-              Error Logs
-            </Button>
-            <Button
-              onClick={() => void setView('preview-imgs')}
-              variant={(view === 'preview-imgs' && 'default') || 'outline'}
-              disabled={!['augmentation'].includes(selectedNode.type)}
-            >
-              Preview Images
-            </Button>
-            <Button
-              onClick={() => void setView('tensorboard')}
-              variant={(view === 'tensorboard' && 'default') || 'outline'}
-              disabled={!['network', 'finetune'].includes(selectedNode.type)}
-            >
-              Tensorboard
-            </Button>
-          </div>
+          <SidePanelContent node={selectedNode} />
         </div>
         <div className="h-full w-full">
           <GalleryView view={view} node={selectedNode} />
         </div>
       </div>
     </div>
+  );
+}
+
+function SidePanelContent({ node }: { node: Node<NodeData> }) {
+  const [view, setView] = useQueryState('view');
+  const nodeName = useMemo(() => {
+    if (!node.type) return undefined;
+    switch (node.type) {
+      case 'dataset':
+        return node.data?.datasetData?.name;
+      case 'augmentation':
+        return node.data?.augmentationData?.name;
+      case 'network':
+        return node.data?.networkData?.label;
+      case 'finetune':
+        const sourceLabel =
+          node.data?.finetuneData?.sourceNetworkLabel ?? undefined;
+        return sourceLabel
+          ? `${sourceLabel} finetune_id: ${node.id}`
+          : undefined;
+      case 'inference':
+        const outputPath = node.data?.inferenceData?.outputPath ?? undefined;
+        return outputPath ? `inference ${outputPath}` : undefined;
+      default:
+        return undefined;
+    }
+  }, [node]);
+
+  if (!node.data) return null;
+  if (!node.type) return null;
+
+  return (
+    <div className="flex flex-col space-y-4 p-4">
+      <NodeInfo name={nodeName} type={node.type} nodeData={node.data} />
+      <Button
+        onClick={() => void setView('log-output')}
+        variant={(view === 'log-output' && 'default') || 'outline'}
+      >
+        Output Logs
+      </Button>
+      <Button
+        onClick={() => void setView('log-err')}
+        variant={(view === 'log-err' && 'default') || 'outline'}
+      >
+        Error Logs
+      </Button>
+      <Button
+        onClick={() => void setView('preview-imgs')}
+        variant={(view === 'preview-imgs' && 'default') || 'outline'}
+        disabled={!['augmentation'].includes(node.type)}
+      >
+        Preview Images
+      </Button>
+      <Button
+        onClick={() => void setView('tensorboard')}
+        variant={(view === 'tensorboard' && 'default') || 'outline'}
+        disabled={!['network', 'finetune'].includes(node.type)}
+      >
+        Tensorboard
+      </Button>
+    </div>
+  );
+}
+
+function NodeInfo({
+  name,
+  type,
+  nodeData,
+}: {
+  name: string | undefined;
+  type: string;
+  nodeData: NodeData;
+}) {
+  const [status, setStatus] = useState<NodeStatus>(nodeData.status);
+  const [message, setMessage] = useState<string | undefined>(nodeData.message);
+
+  const { data: jobData } = api.job.checkStatus.useQuery(
+    { jobId: nodeData.jobId ?? '' },
+    {
+      refetchOnMount: false,
+      enabled: status === 'busy' && !!nodeData.jobId,
+      refetchInterval: 5000,
+      refetchIntervalInBackground: false,
+    },
+  );
+
+  useEffect(() => {
+    if (!jobData) return;
+    if (status === 'success' || status === 'error') return;
+    if (jobData.jobStatus === 'COMPLETED') {
+      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      setStatus('success');
+      setMessage(`Job ${
+        nodeData.jobId ?? 'Err'
+      } finished successfully in ${date}`);
+    } else if (jobData.jobStatus === 'FAILED') {
+      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      setStatus('error');
+      setMessage(`Job ${
+        nodeData.jobId ?? 'Err'
+      } failed in ${date}`);
+    } else if (jobData.jobStatus === 'RUNNING') {
+      console.log('Job is running');
+      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      setStatus('busy');
+      setMessage(`Job ${
+        nodeData.jobId ?? 'Err'
+      } last checked at ${date}`);
+    }
+  }, [jobData, status, nodeData.jobId]);
+
+  return (
+    <>
+      <div className="flex items-center">
+        <NodeIcon nodeType={type} />
+        <p className="ml-2 text-lg font-semibold">{name ?? 'node'}</p>
+        <StatusBadge status={status} />
+      </div>
+      <p className="text-muted-foreground">{message}</p>
+    </>
   );
 }
 
@@ -187,11 +238,18 @@ function GalleryView({
       if (!imagesPath) return <p>Images path not found</p>;
       return <ViewRemoteImages path={imagesPath} />;
     case 'tensorboard':
-      return <Tensorboard logdir={`${node.data?.networkData?.remotePath ?? '/dummy'}/logs`} name={node.data?.networkData?.form.networkUserLabel ?? 'network'} />;
+      return (
+        <Tensorboard
+          logdir={`${node.data?.networkData?.remotePath ?? '/dummy'}/logs`}
+          name={node.data?.networkData?.form.networkUserLabel ?? 'network'}
+        />
+      );
     default:
       return (
         <div className="flex h-full w-3/4 items-center justify-center rounded-lg border border-dashed">
-          <p className="h-1/2 text-center text-muted-foreground">Select a view</p>
+          <p className="h-1/2 text-center text-muted-foreground">
+            Select a view
+          </p>
         </div>
       );
   }

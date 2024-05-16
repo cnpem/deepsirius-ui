@@ -208,13 +208,13 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
   if (!user) return null;
   if (!nodeProps.data.workspacePath) return null;
 
-    const workspaceName = nodeProps.data.workspacePath.split('/').pop();
-    if (!workspaceName) return null;
-    const nodeIdParams = new URLSearchParams({
-      nodeId: nodeProps.id,
-    });
-    const galleryUrl =
-      user.route + '/' + workspaceName + '/gallery?' + nodeIdParams.toString();
+  const workspaceName = nodeProps.data.workspacePath.split('/').pop();
+  if (!workspaceName) return null;
+  const nodeIdParams = new URLSearchParams({
+    nodeId: nodeProps.id,
+  });
+  const galleryUrl =
+    user.route + '/' + workspaceName + '/gallery?' + nodeIdParams.toString();
 
   if (nodeProps.data.status === 'active') {
     return (
@@ -276,8 +276,61 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
           message={nodeProps.data.message}
           hrefToGallery={galleryUrl}
         >
-          <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono">
-            <p>Show something here</p>
+          <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono text-sm">
+            <FormatFormDataItem
+              content={formData?.augmentationArgs.rot90 ? 'Selected' : 'Not Selected'}
+              title="Rotation 90°"
+            />
+            <FormatFormDataItem
+              content={formData?.augmentationArgs.rot270 ? 'Selected' : 'Not Selected'}
+              title="Rotation 270°"
+              variant="even"
+            />
+            <FormatFormDataItem
+              content={
+                formData?.augmentationArgs.flipHorizontal ? 'Selected' : 'Not Selected'
+              }
+              title="Flip Horizontal"
+            />
+            <FormatFormDataItem
+              content={
+                formData?.augmentationArgs.flipVertical ? 'Selected' : 'Not Selected'
+              }
+              title="Flip Vertical"
+              variant="even"
+            />
+            <FormatFormDataItem
+              content={formData?.augmentationArgs.elastic.select ? `alpha: (${(formData?.augmentationArgs.elastic.alpha ?? '').toString()}), sigma: (${(formData?.augmentationArgs.elastic.sigma ?? '').toString()})` : 'Not Selected'}
+              title="Elastic"
+            />
+            <FormatFormDataItem
+              content={formData?.augmentationArgs.gaussianBlur.select ? `sigma: (${(formData?.augmentationArgs.gaussianBlur.sigma ?? '').toString()})` : 'Not Selected'}
+              title="Gaussian Blur"
+              variant="even"
+            />
+            <FormatFormDataItem
+              content={formData?.augmentationArgs.contrast.select ? `factor: (${(formData?.augmentationArgs.contrast.factor ?? '').toString()})` : 'Not Selected'}
+              title="Contrast"
+            />
+            <FormatFormDataItem
+              content={formData?.augmentationArgs.averageBlur.select ? `kernel size: (${(formData?.augmentationArgs.averageBlur.kernelSize ?? '').toString()})` : 'Not Selected'}
+              title="Average Blur"
+              variant="even"
+            />
+            <FormatFormDataItem
+              content={formData?.augmentationArgs.linearContrast.select ? `factor: (${(formData?.augmentationArgs.linearContrast.factor ?? '').toString()})` : 'Not Selected'}
+              title="Linear Contrast"
+            />
+            <FormatFormDataItem
+              content={formData?.augmentationArgs.dropout.select ? `factor: (${(formData?.augmentationArgs.dropout.factor ?? '').toString()})` : 'Not Selected'}
+              title="Dropout"
+              variant="even"
+            />
+            <FormatFormDataItem
+              content={formData?.augmentationArgs.poissonNoise.select ? `scale: (${(formData?.augmentationArgs.poissonNoise.scale ?? '').toString()})` : 'Not Selected'}
+              title="Poisson Noise"
+            />
+
           </div>
         </SuccessSheet>
       </>
@@ -309,4 +362,26 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
   }
 
   return null;
+}
+
+function FormatFormDataItem({
+  content,
+  title,
+  variant = 'odd',
+}: {
+  content: string;
+  title: string;
+  variant?: 'even' | 'odd';
+}) {
+  return (
+    <div className="flex flex-row items-center justify-between gap-1">
+      <p className="font-medium">{title}</p>
+      <p
+        data-variant={variant}
+        className="text-end data-[variant=even]:text-violet-600 "
+      >
+        {content}
+      </p>
+    </div>
+  );
 }

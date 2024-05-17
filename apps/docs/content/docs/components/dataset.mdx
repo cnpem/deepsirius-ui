@@ -20,10 +20,12 @@ First, you’ll need a set with original (grayscale) and segmented (label) image
 
 **Weight Map**: It is used when you want to make the classifier understand that it must focus on specific areas. The weight map is an image whose voxel intensities make the network training penalize the classification error proportionally to the value of the voxel. Higher values will force the network to improve classification for certain voxels. When certain materials/objects are small, for instance, it might be interesting to provide a weight image with higher values for those objects. If you do not provide a weight image, the network training will assume that the image has uniform weight equal to 1.0.
 
-**Note**: In case of raw images, it is important to point out that, in order to infer the image properties, the file must contain necessary information (size XxYxZ and bitdepth), for example:
+**Note**: In case of raw images, it is important to point out that, in order to infer the image properties, the file must contain necessary information (size XxYxZ and bitdepth and data type), for example:
 
 <Files>
-  <File name="this_is_my_file_200x200x100_16bit.raw" />
+  <File name="this_is_my_float_file_200x200x100_16float.raw" />
+  <File name="this_is_my_int_file_200x200x100_32bits.raw" />
+  <File name="this_is_my_uint_file_200x200x100_16bits.raw" />
 </Files>
 
 <div style={{

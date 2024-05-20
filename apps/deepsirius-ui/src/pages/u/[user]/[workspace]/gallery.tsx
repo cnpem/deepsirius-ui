@@ -149,7 +149,7 @@ function NodeInfo({
       refetchOnMount: false,
       enabled: status === 'busy' && !!nodeData.jobId,
       refetchInterval: 5000,
-      refetchIntervalInBackground: false,
+      refetchIntervalInBackground: true,
     },
   );
 

@@ -21,42 +21,34 @@ export const tbConsumerRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const url = `${env.TENSORBOARD_API_URL}/api/tensorboard/start`;
 
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-API-KEY': env.TENSORBOARD_API_KEY,
-          },
-          body: JSON.stringify(input),
-        });
-
-        const data: unknown = await res.json();
-
-        if (!res.ok) {
-          const error = z
-            .object({
-              status: z.string(),
-              message: z.string(),
-            })
-            .parse(data);
-
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: error.message,
-          });
-        }
-        const parsed = TensorboardResponseSchema.parse(data);
-
-        return parsed;
-      } catch (e) {
-        console.log(e);
-      }
-      return {
-        logdir: '',
-        name: '',
-        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        pid: 0,
+      const headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+      headers.append('x-api-key', env.TENSORBOARD_API_KEY);
+      const options = {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(input),
       };
+
+      const res = await fetch(url, { ...options, cache: 'no-store' });
+
+      const data: unknown = await res.json();
+
+      if (!res.ok) {
+        const error = z
+          .object({
+            status: z.string(),
+            message: z.string(),
+          })
+          .parse(data);
+
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error.message,
+        });
+      }
+      const parsed = TensorboardResponseSchema.parse(data);
+
+      return parsed;
     }),
 });

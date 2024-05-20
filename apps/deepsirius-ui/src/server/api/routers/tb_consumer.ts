@@ -52,5 +52,11 @@ export const tbConsumerRouter = createTRPCRouter({
       } catch (e) {
         console.log(e);
       }
+      return {
+        logdir: '',
+        name: '',
+        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        pid: 0,
+      };
     }),
 });

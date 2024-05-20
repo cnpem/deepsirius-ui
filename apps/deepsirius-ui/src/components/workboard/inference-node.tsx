@@ -233,7 +233,13 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
   if (nodeProps.data.status === 'busy') {
     return (
       <>
-        <NodeCard title={'inference'} subtitle={'Busy'} {...nodeProps} />
+        <NodeCard
+          title={'inference'}
+          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
+            nodeProps.data.jobStatus || 'jobStatus'
+          }`}
+          {...nodeProps}
+        />
         <BusySheet
           selected={nodeProps.selected}
           title={'Details'}

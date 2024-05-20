@@ -20,39 +20,37 @@ export const tbConsumerRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const url = `${env.TENSORBOARD_API_URL}/api/tensorboard/start`;
-      console.log(url);
 
-      const res = await fetch(url, {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-KEY': env.TENSORBOARD_API_KEY,
-        },
-        body: JSON.stringify(input),
-      });
-
-      console.log(res);
-
-      const data: unknown = await res.json();
-      console.log(data);
-
-      if (!res.ok) {
-        const error = z
-          .object({
-            status: z.string(),
-            message: z.string(),
-          })
-          .parse(data);
-
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error.message,
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-KEY': env.TENSORBOARD_API_KEY,
+          },
+          body: JSON.stringify(input),
         });
+
+        const data: unknown = await res.json();
+
+        if (!res.ok) {
+          const error = z
+            .object({
+              status: z.string(),
+              message: z.string(),
+            })
+            .parse(data);
+
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: error.message,
+          });
+        }
+        const parsed = TensorboardResponseSchema.parse(data);
+
+        return parsed;
+      } catch (e) {
+        console.log(e);
       }
-
-      const parsed = TensorboardResponseSchema.parse(data);
-
-      return parsed;
     }),
 });

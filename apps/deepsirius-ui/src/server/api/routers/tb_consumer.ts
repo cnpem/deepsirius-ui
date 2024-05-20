@@ -20,9 +20,11 @@ export const tbConsumerRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const url = `${env.TENSORBOARD_API_URL}/api/tensorboard/start`;
+      console.log(url);
 
       const res = await fetch(url, {
         method: 'POST',
+        mode: 'cors',
         headers: {
           'Content-Type': 'application/json',
           'X-API-KEY': env.TENSORBOARD_API_KEY,
@@ -30,7 +32,10 @@ export const tbConsumerRouter = createTRPCRouter({
         body: JSON.stringify(input),
       });
 
+      console.log(res);
+
       const data: unknown = await res.json();
+      console.log(data);
 
       if (!res.ok) {
         const error = z

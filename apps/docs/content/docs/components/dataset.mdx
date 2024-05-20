@@ -4,9 +4,30 @@ description: Dataset
 ---
 import Image from 'next/image'
 import { File, Folder, Files } from 'fumadocs-ui/components/files';
+import Node from '@/app/_components/node';
+import { Callout } from "fumadocs-ui/components/callout";
+
+The dataset component resembles the one below. It has four status, according
+to its job's progress: `Running`, `Completed`, and `Failed`. When created, 
+the dataset will be in an `Idle` state, waiting for the user to fill in the
+form and submit a creation job.
+
+- Active: waiting for the user to fill in the form and submit a creation job.
+- Busy: the dataset is being created.
+- Success: the dataset was created successfully.
+- Error: the dataset creation failed.
+
+The component will change its colors according to its status, like represented
+below:
+
+<Node name={'dataset'}/>
+
+When clicked, the dataset will open a form to be filled in with the necessary
+information to create a dataset. Let's go through the form fields, following
+the order depicted in the image below:
 
 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/dataset_ui.png" alt="Unet image" style={{ height: '450px', width: 'auto' }} />
+  <img src="/dive/assets/dataset_ui.png" alt="dataset form" style={{ height: '450px', width: 'auto' }} />
 </div>
 
 
@@ -28,16 +49,9 @@ First, you’ll need a set with original (grayscale) and segmented (label) image
   <File name="this_is_my_uint_file_200x200x100_16bits.raw" />
 </Files>
 
-<div style={{
-  border: '1px solid black',
-  padding: '6px',
-  borderRadius: '8px',
-  backgroundColor: '#f9f9f9',
-  margin: '6px 0',
-  textAlign: 'justify'
-}}>
-  ⚠ Keep in mind that the label must have enough visual field in order to understand the shape and texture of your object.
-</div>
+<Callout type="warn">
+Keep in mind that the label must have enough visual field in order to understand the shape and texture of your object.
+</Callout>
 
 ## 2 - Classes
 
@@ -65,6 +79,13 @@ Number of classes in the label file.
 
 # Augmentation
 
+Just like the dataset creation, the augmentation component has four status, 
+according to its job's progress: `Running`, `Completed`, and `Failed`. When 
+created, the augmentation will be in an `Idle` state, waiting for the user 
+to fill in the form and submit an augmentation job.
+
+<Node name='augmentation' />
+
 
 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
   <img src="/dive/assets/augmentation_ui.png" style={{ height: '450px', width: 'auto' }} />
@@ -72,10 +93,9 @@ Number of classes in the label file.
 
 Data augmentation strategies are able to generate artificial data by applying small deformations on the original data. The main purpose is to generate slightly different data, increasing the number of labeled data when scarce, and creating more challenging problems for the classifier, leading to a more generalized network. The following parameters are directly related to shape and are applied to the original image.
 
-<p style={{ fontWeight: 'bold', textAlign: 'justify', marginTop: '20px' }}>
-  <span style={{ color: 'lightcoral' }}>Watch out!</span>: When saving the dataset, take into account that each increment of augmentation will increase the size of the dataset in proportion to the sample size. In a sample size of 100 if we add vertical and horizontal flip, It would be the same as considering a sample size of 300 (100 + 100 + 100).
-
-</p>
+<Callout title="Watch out!" type="error">
+When saving the dataset, take into account that each increment of augmentation will increase the size of the dataset in proportion to the sample size. In a sample size of 100 if we add vertical and horizontal flip, It would be the same as considering a sample size of 300 (100 + 100 + 100).
+</Callout>
 
 
 **Vertical and Horizontal flip**: Enabling it allows the network to understand that different patterns of rotation exist.
@@ -127,10 +147,3 @@ Poisson noise is comparable to Gaussian noise. Poisson distributions produce onl
   <img src="/dive/assets/poisson.png" alt="Unet image" style={{ height: '200px', width: 'auto' }} />
 </div>
 
-
-## What is Next?
-
-<Cards>
-  <Card title="Workspace" href="/docs/components/workspace" />
-  <Card title="Inference" href="/docs/components/inference" />
-</Cards>

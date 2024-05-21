@@ -50,14 +50,28 @@ export const tbConsumerRouter = createTRPCRouter({
     }),
   hello: protectedProcedure.query(async () => {
     const url = `${env.TENSORBOARD_API_URL}/api/`;
-    const res = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'x-api-key': env.TENSORBOARD_API_KEY,
-      },
-    });
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'x-api-key': env.TENSORBOARD_API_KEY,
+        },
+      });
 
-    const data: unknown = await res.json();
-    return data;
+      const data: unknown = await res.json();
+      return data;
+    } catch (e) {
+      const error = z
+        .object({
+          status: z.string(),
+          message: z.string(),
+        })
+        .parse(e);
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: error.message,
+        cause: e,
+      });
+    }
   }),
 });

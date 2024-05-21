@@ -1,10 +1,18 @@
 import { api } from '~/utils/api';
 
 export default function Hello() {
-  const { data, isLoading } = api.tbConsumer.hello.useQuery();
+  const { data, isLoading, isError, error } = api.tbConsumer.hello.useQuery();
 
   if (isLoading) {
     return <div>Loading...</div>;
+  }
+  if (isError) {
+    return (
+      <div>
+        <div>Error: {error?.message}</div>
+        <pre>{JSON.stringify(error?.data, null, 2)}</pre>
+      </div>
+    );
   }
 
   return (

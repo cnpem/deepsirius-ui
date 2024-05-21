@@ -20,12 +20,11 @@ export const tbConsumerRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const url = `${env.TENSORBOARD_API_URL}/api/tensorboard/start`;
-
       const res = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-KEY': env.TENSORBOARD_API_KEY,
+          'x-api-key': env.TENSORBOARD_API_KEY,
         },
         body: JSON.stringify(input),
       });
@@ -45,9 +44,20 @@ export const tbConsumerRouter = createTRPCRouter({
           message: error.message,
         });
       }
-
       const parsed = TensorboardResponseSchema.parse(data);
 
       return parsed;
     }),
+  hello: protectedProcedure.query(async () => {
+    const url = `${env.TENSORBOARD_API_URL}/api/`;
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': env.TENSORBOARD_API_KEY,
+      },
+    });
+
+    const data: unknown = await res.json();
+    return data;
+  }),
 });

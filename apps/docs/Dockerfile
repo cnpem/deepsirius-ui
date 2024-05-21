@@ -1,34 +1,35 @@
-# Builder
-FROM node:alpine AS builder
-RUN apk add --no-cache libc6-compat
-RUN apk update
+FROM node:18-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
+
+# ----
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
-RUN yarn global add turbo
+RUN pnpm add --global turbo
 COPY . .
 RUN turbo prune @deepsirius-ui/docs --docker
 
 # Installer
-FROM node:alpine AS installer
-RUN apk add --no-cache libc6-compat
-RUN apk update
-
+FROM deps AS installer
 WORKDIR /app
-RUN yarn global add pnpm
-RUN yarn global add turbo
 
-COPY --from=builder /app/out/json/ .
-COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=builder /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=deps /app/out/json/ .
+COPY --from=deps /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=deps /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 RUN pnpm install
 
-COPY --from=builder /app/out/full/ .
+COPY --from=deps /app/out/full/ .
 COPY turbo.json turbo.json
 
 RUN turbo build --filter=@deepsirius-ui/docs...
 
 # Runner
-FROM node:alpine AS runner
+FROM base AS runner
 WORKDIR /app
 
 RUN addgroup --system --gid 1001 nodejs

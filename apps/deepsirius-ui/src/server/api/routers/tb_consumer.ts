@@ -20,17 +20,14 @@ export const tbConsumerRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       const url = `${env.TENSORBOARD_API_URL}/api/tensorboard/start`;
-
-      const headers = new Headers();
-      headers.append('Content-Type', 'application/json');
-      headers.append('x-api-key', env.TENSORBOARD_API_KEY);
-      const options = {
+      const res = await fetch(url, {
         method: 'POST',
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': env.TENSORBOARD_API_KEY,
+        },
         body: JSON.stringify(input),
-      };
-
-      const res = await fetch(url, { ...options, cache: 'no-store' });
+      });
 
       const data: unknown = await res.json();
 
@@ -51,4 +48,16 @@ export const tbConsumerRouter = createTRPCRouter({
 
       return parsed;
     }),
+  hello: protectedProcedure.query(async () => {
+    const url = `${env.TENSORBOARD_API_URL}/api/`;
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': env.TENSORBOARD_API_KEY,
+      },
+    });
+
+    const data: unknown = await res.json();
+    return data;
+  }),
 });

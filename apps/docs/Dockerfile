@@ -18,9 +18,9 @@ RUN turbo prune @deepsirius-ui/docs --docker
 FROM deps AS installer
 WORKDIR /app
 
-COPY --from=builder /app/out/json/ .
-COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=builder /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=deps /app/out/json/ .
+COPY --from=deps /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=deps /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
 RUN pnpm install
 
 COPY --from=deps /app/out/full/ .

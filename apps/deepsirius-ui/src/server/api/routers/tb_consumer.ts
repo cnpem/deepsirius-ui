@@ -36,12 +36,14 @@ export const tbConsumerRouter = createTRPCRouter({
           .object({
             status: z.string(),
             message: z.string(),
+
           })
           .parse(data);
 
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: error.message,
+          cause: data,      
         });
       }
       const parsed = TensorboardResponseSchema.parse(data);
@@ -61,15 +63,9 @@ export const tbConsumerRouter = createTRPCRouter({
       const data: unknown = await res.json();
       return data;
     } catch (e) {
-      const error = z
-        .object({
-          status: z.string(),
-          message: z.string(),
-        })
-        .parse(e);
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: error.message,
+        message: 'Failed to fetch Tensorboard API',
         cause: e,
       });
     }

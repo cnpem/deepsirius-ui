@@ -173,7 +173,7 @@ const NodeCard = ({ name, status, selected, onSelect }: NodeCardProps) => {
             </p>
             <p
               className={cn(
-                "text-sm uppercase",
+                "text-sm uppercase pb-4",
                 status === "active" && "text-green-600 dark:text-green-500",
                 status === "busy" && "text-yellow-600 dark:text-yellow-500",
                 status === "error" && "text-red-600 dark:text-red-500",
@@ -212,10 +212,36 @@ const Icon = ({ name }: { name: string }) => {
 const Node = ({ name }: { name: string }) => {
   const [status, setStatus] = useState<Status>("active");
   const [selected, setSelected] = useState(false);
+  const [selectedName, setSelectedName] = useState("dataset");
   const statuses: Status[] = ["active", "busy", "error", "success"];
+  const names: string[] = [
+    "dataset",
+    "augmentation",
+    "network",
+    "finetune",
+    "inference",
+  ];
   return (
     <div className="p-8 min-h-80 border flex flex-col gap-4 rounded-lg items-center justify-center relative">
-      <div className="flex gap-2 absolute left-4 top-4">
+      <div className="flex flex-wrap gap-2 absolute left-4 top-4">
+        {!name && (
+          <>
+            {'Type: '}
+            {names.map((name) => (
+              <button
+                key={name}
+                onClick={() => setSelectedName(name)}
+                data-selected={selectedName === name}
+                className={
+                  "px-2 rounded-full dark:hover:bg-gray-100/20 data-[selected=true]:dark:bg-gray-100/40 hover:bg-gray-700/20 data-[selected=true]:bg-gray-600/10"
+                }
+              >
+                <Icon name={name} />
+              </button>
+            ))}
+            {'Status: '}
+          </>
+        )}
         {statuses.map((status) => (
           <button
             key={status}
@@ -237,7 +263,7 @@ const Node = ({ name }: { name: string }) => {
         ))}
       </div>
       <NodeCard
-        name={name}
+        name={selectedName}
         status={status}
         selected={selected}
         onSelect={setSelected}

@@ -63,6 +63,7 @@ export const tbConsumerRouter = createTRPCRouter({
       const data: unknown = await res.json();
       return data;
     } catch (e) {
+      console.log('OLHA ESSE ERRO PLMDDS', e);
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to fetch Tensorboard API',

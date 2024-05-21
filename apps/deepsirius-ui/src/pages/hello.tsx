@@ -1,15 +1,9 @@
-import { api } from '~/utils/api';
+import dynamic from 'next/dynamic';
+
+const Hello = dynamic(() => import('~/components/hello'), {
+  ssr: false,
+});
 
 export default function Page() {
-  const { data, isLoading } = api.tbConsumer.hello.useQuery();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <div className="flex p-4">
-      <pre>{JSON.stringify(data, null, 2)}</pre>
-    </div>
-  );
+  return <Hello />;
 }

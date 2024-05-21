@@ -42,6 +42,19 @@
     hsl(225deg 75% 15%) 32%,
     hsl(236deg 42% 7%) 67%
   );
-
   --primary: 259deg 81% 66%;
+}
+
+/* preventing the background gradient from stretching with the content */
+body::before, .dark::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-image: var(--background-image);
+  background-size: cover;
+  background-attachment: fixed;
+  z-index: -1;
 }

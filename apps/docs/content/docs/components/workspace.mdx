@@ -2,18 +2,25 @@
 title: Workspace
 description: Workspace
 ---
-import { File, Folder, Files } from 'fumadocs-ui/components/files';
-import Node from '@/app/_components/node';
 
-The workspace is the canvas where the user can create and connect the components that represent the steps of the analysis. The user can have multiple workspaces, which are saved in the database and can be loaded by the user at any time.
-What is shown on the screen is a reflection of the workspace file structure and the database state, which is updated as the user interacts with the interface. 
+import { File, Folder, Files } from "fumadocs-ui/components/files";
+import Node from "@/app/_components/node";
+
+The workspace is the canvas where the user can create and connect the components
+that represent the steps of the analysis. The user can have multiple workspaces,
+which are saved in the database and can be loaded by the user at any time. What
+is shown on the screen is a reflection of the workspace file structure and the
+database state, which is updated as the user interacts with the interface.
 
 ## Creating a new workspace
 
-For creating a new workspace, the user needs to choose a name and a path for the files that will be created remotely in the Sirius storage server and will be changed as the user interacts with the interface. 
+For creating a new workspace, the user needs to choose a name and a path for the
+files that will be created remotely in the Sirius storage server and will be
+changed as the user interacts with the interface.
 
-![New Workspace](/assets/new_workspace.png)
-*New workspace page and form, where the user can choose a name for the workspace dir and a base path for the files that will be created remotely in the Sirius storage server.*
+![New Workspace](/assets/new_workspace.png) _New workspace page and form, where
+the user can choose a name for the workspace dir and a base path for the files
+that will be created remotely in the Sirius storage server._
 
 <Files>
   <Folder name="workspace_name" defaultOpen>
@@ -106,101 +113,184 @@ For creating a new workspace, the user needs to choose a name and a path for the
 
 ### Remote storage file system navigation
 
-The user can explore the remote storage file system by clicking on the Folder icon on the left side of the Workspace path input field. This will open a file explorer window where the user can navigate through the remote storage file system and select the desired base path for the workspace files.
-The user can only view and explore the files in the remote storage server that are allowed by the user's credential permissions. By selecting a base path, the user will be propted back to the workspace creation form with the selected path filled in the Workspace path input field and needs to fill in the Workspace name input field which will be the name of the new directory that will be created in the selected base path.
-Before submitting the form, the user must choose the Slurm partition where the workspace creation job will be sumitted. By now the user must know which partitions are available and scheduled for the user's group. 
+The user can explore the remote storage file system by clicking on the Folder
+icon on the left side of the Workspace path input field. This will open a file
+explorer window where the user can navigate through the remote storage file
+system and select the desired base path for the workspace files. The user can
+only view and explore the files in the remote storage server that are allowed by
+the user's credential permissions. By selecting a base path, the user will be
+propted back to the workspace creation form with the selected path filled in the
+Workspace path input field and needs to fill in the Workspace name input field
+which will be the name of the new directory that will be created in the selected
+base path. Before submitting the form, the user must choose the Slurm partition
+where the workspace creation job will be sumitted. By now the user must know
+which partitions are available and scheduled for the user's group.
 
-![Remote fs navigation](/assets/nautilus.png)
-*Remote file navigation for selecting the the workspace base path.*
+![Remote fs navigation](/assets/nautilus.png) _Remote file navigation for
+selecting the the workspace base path._
 
-## Finising filling the form and submitting the job
+## Finishing filling the form and submitting the job
 
-If the submitted data is correct, the job will be submitted and when the job is completed, the user will be redirected to the workspace page. 
-There are many reasons why the job could fail, even after the basic checks are done before sumitting the job. From network errors, to the selection of an unauthorized queue and  many types of server errors. 
-After the job is submitted, the form will be disabled and the interface will keep checking the job status until it is completed or show an error if the job fails.
+If the submitted data is correct, the job will be submitted and when the job is
+completed, the user will be redirected to the workspace page. There are many
+reasons why the job could fail, even after the basic checks are done before
+sumitting the job. From network errors, to the selection of an unauthorized
+queue and many types of server errors. After the job is submitted, the form will
+be disabled and the interface will keep checking the job status until it is
+completed or show an error if the job fails.
 
-![New Workspace Error](/assets/new_workspace_error.png)
-*Error message when the user tries to create a workspace with an already existing name.*
+![New Workspace Error](/assets/new_workspace_error.png) _Error message when the
+user tries to create a workspace with an already existing name._
 
-![New Workspace Job](/assets/new_workspace_job.png)
-*Job submission message when the user tries to create a workspace.*
+![New Workspace Job](/assets/new_workspace_job.png) _Job submission message when
+the user tries to create a workspace._
 
 ## The workspace page and its components
 
-The workspace page is the main page where the user can interact with the workspace components. 
-Here we call them *nodes*, because we can connect them to create multiple paths for the flow of data and operations that represent the analysis steps. 
+The workspace page is the main page where the user can interact with the
+workspace components. Here we call them _nodes_, because we can connect them to
+create multiple paths for the flow of data and operations that represent the
+analysis steps.
 
-![Workspace Page](/assets/new_workspace_done.png)
-*Workspace page ready to start working.*
+![Workspace Page](/assets/new_workspace_done.png) _Workspace page ready to start
+working._
 
 ### Nodes
 
-The nodes are the components that represent the steps of the analysis. They were created based on the ssc-deepsirius structure, which divides the workflow in three main independent steps:
+The nodes are the components that represent the steps of the analysis. They were
+created based on the ssc-deepsirius structure, which divides the workflow in
+three main independent concepts that can be subdivided in 5 independent steps:
 
-1. **Dataset creation**: This steps consists in the creation of a dataset from a set of tomographic images. The dataset is a set of numpy arrays that are saved in a hdf5 file. This step is meant to be run only once for a given set of images, and the dataset can be used for multiple analysis. The dataset creation is done by the `create_dataset` function in the ssc-deepsirius package cli.
+1. **Dataset creation**: This step consists in the creation of a dataset from a
+   set of tomographic images. The dataset is a set of numpy arrays that are
+   saved in a hdf5 file. This step is meant to be run only once for a given set
+   of images, and the dataset can be used for multiple analysis. The dataset
+   creation is done by the `create_dataset` function in the ssc-deepsirius
+   package cli.
 
-   1.1. **Augmented dataset creation**: This step consists in the creation of data
-   based on the original dataset, but with some transformations applied to the images. This is done to increase the size of the dataset and improve the generalization of the model. The augmented dataset creation is done by the `augmented_dataset` function in the ssc-deepsirius package cli.
+   1.1. **Augmented dataset creation**: This step consists in the creation of
+   data based on the original dataset, but with some transformations applied to
+   the images. This is done to increase the size of the dataset and improve the
+   generalization of the model. The augmented dataset creation is done by the
+   `augmented_dataset` function in the ssc-deepsirius package cli.
 
-2. **Network training**: This step consists in the training of a deep learning model for the segmentation of the dataset created in the previous step. The training is done by the `train_model` function in the ssc-deepsirius package cli.
+2. **Network training**: This step consists in the training of a deep learning
+   model for the segmentation of the dataset created in the previous step. The
+   training is done by the `train_model` function in the ssc-deepsirius package
+   cli.
 
-   2.1. **Finetuning**: This step consists in the finetuning of a pre-trained model with a dataset, even if the dataset is different from the one used for the previous training. The finetuning is done by the `finetune_model` function in the ssc-deepsirius package cli.
+   2.1. **Finetuning**: This step consists in the finetuning of a pre-trained
+   model with a dataset, even if the dataset is different from the one used for
+   the previous training. The finetuning is done by the `finetune_model`
+   function in the ssc-deepsirius package cli.
 
-3. **Inference**: This step consists in the segmentation of a set of tomographic images using the model trained in the previous step. The segmentation is done by the `run_inference` function in the ssc-deepsirius package cli.
+3. **Inference**: This step consists in the segmentation of a set of tomographic
+   images using the model trained in the previous step. The segmentation is done
+   by the `run_inference` function in the ssc-deepsirius package cli.
 
-These steps mean a complete processing step of the ssc-deepsirius package, with specific input and ouput parameter that changes or creates new data on the remote storage server. So they can be used as input for another processing step as an independent job without the user ocuppying the slurm queue and the cluster resources when preparing the data for the next step.
-This means also that the user can create jobs and check later if they are completed, since the interface and the job run independently of each other.
+Any combination of these steps that starts from 1 and ends in 3 mean a complete
+processing workflow of the ssc-deepsirius package, with specific input and ouput
+parameters that results in the creation or transformation of data between them
+on the remote storage server. So the results of a step can be used as input for
+another processing step as an independent job without the user ocuppying the
+slurm queue and the cluster resources when preparing the data for the next step.
 
-From these steps, the user can create multiple nodes on the interface from the following types:
+As the results of the steps are saved in the remote storage server, the user can
+check the results of the steps or use it as it see fit, even if the interface is
+not running - or start another variation of the analysis at any time during the
+life cycle of the files.
+
+These caracteristics of the ssc-deepsirius package are explored by the interface
+by describing the steps as nodes in a graph and the relations between them as
+edges. By saving the state of the nodes and the edges in the database, the user
+can load the workspace with the apropiate metadata telling a story of the
+analysis and the state of the files in the remote storage server, thus being
+able to continue the analysis and compare with other possible steps or
+variations of the analysis at any time.
+
+So, in the interface, those steps are represented as nodes as:
 
 - **dataset**: The node that represents the dataset creation step.
-- **augmentation**: The node that represents the augmented dataset creation step.
+- **augmentation**: The node that represents the augmented dataset creation
+  step.
 - **network**: The node that represents the network creation and training step.
-- **finetune**: The node that represents the step of finetuning of an existing network.
+- **finetune**: The node that represents the step of finetuning of an existing
+  network.
 - **inference**: The node that represents the inference step.
 
+Since every node represents a independent processing job, running on a remote
+server managed via slurm, every node can be in one of the following states:
 
-
-Since every node represents a independent job, every node can be in one of the following states:
-
-- **active**: The node is waiting for the user to fill in the form and submit a creation job.
-- **busy**: The job was submitted and the interface start checking the job status until it is completed.
-- **success**: The job was completed successfully. 
+- **active**: The node is waiting for the user to fill in the form and submit a
+  creation job.
+- **busy**: The job was submitted and the interface start checking the job
+  status until it is completed.
+- **success**: The job was completed successfully.
 - **error**: The job failed.
 
-To differentiate the nodes in the workspace, the interface will change its log according to its node type and colors according to its status, like represented below:
+To differentiate the nodes in the workspace, the interface will change its icon
+according to its node type and colors according to its status, like represented
+below:
 
 <Node />
-*Different states of a node: Click on the state names to see the component changing colors (check also the difference changing to light/dark modes) and the different icons to see the node types.*
+*Different states of a node: Click on the state names to see the component changing
+colors (check also the difference changing to light/dark modes) and the different
+icons to see the node types.*
 
-The nodes are created by the user by clicking on the "+" button on the top left corner of the screen and selecting the desired node type or by clicking on the available input/output handles on the corners of the nodes. The user can connect the nodes by dragging the output of one node to the input of another node. The nodes can be connected in any order, but the interface will check if the nodes are connected in a valid order before applying the connection or showing an error message.
+The nodes are created by the user by clicking on the "+" button on the top left
+corner of the screen and selecting the desired node type or by clicking on the
+available input/output handles on the corners of the nodes. The user can connect
+the nodes by dragging the output of one node to the input of another node. The
+nodes can be connected in any order, but the interface will check if the nodes
+are connected in a valid order before applying the connection or showing an
+error message.
 
 ![Workspace example pending state](/assets/workspace_example_pending.png)
-*Workspace example showing connected nodes and a node with a pending job.*
+_Workspace example showing connected nodes and a node with a pending job._
 
 ### Node side panel
 
 ![Node side panel](/assets/node_side_panel.png)
 
-Every node has a side panel that can be opened to the right side of the screen by clicking on the node. What is shown on the side panel depends on its state as shown below:
+Every node has a side panel that can be opened to the right side of the screen
+by clicking on the node. What is shown on the side panel depends on its state as
+shown below:
 
 - **active**: The side panel displays the node form and the submit button.
-- **busy**: The side panel displays the job id, status, informing the user when it was checked for the last time and the cancel button and a link for the gallery view with more details.
-- **success**: The side panel displays the job status, when it was checked for the last time, an overview of the form values submitted for that job and a link for the gallery view with more details.
-- **busy**: The side panel displays the job id, status, informing the user when it was checked for the last time and the cancel button and a link for the gallery view with more details.
-
+- **busy**: The side panel displays the job id, status, informing the user when
+  it was checked for the last time and the cancel button and a link for the
+  gallery view with more details.
+- **success**: The side panel displays the job status, when it was checked for
+  the last time, an overview of the form values submitted for that job and a
+  link for the gallery view with more details.
+- **busy**: The side panel displays the job id, status, informing the user when
+  it was checked for the last time and the cancel button and a link for the
+  gallery view with more details.
 
 ## Gallery View
 
-![Gallery View](/assets/gallery_view.png)
-*Gallery view of an augmentation node showing the preview images option.*
+![Gallery View](/assets/gallery_view.png) _Gallery view of an augmentation node
+showing the preview images option._
 
-The gallery view is another page where the user can see more details related to the job and remote files and processes. The gallery view is a page that can be accessed by clicking on the link on the side panel of the node and has the following possible visualizations:
+The gallery view is another page where the user can see more details related to
+the job and remote files and processes. The gallery view is a page that can be
+accessed by clicking on the link on the side panel of the node and has the
+following possible visualizations:
 
-- **Output Logs**: Renders the contents of the output log file associated with the job.
-- **Error Logs**: Renders the contents of the error log file associated with the job.
-- **Preview images**: *(Only available for the augmented dataset creation nodes)*. Renders the preview images generated by the `augmented_dataset` function in the ssc-deepsirius package cli. The preview images are generated to help the user to check if the transformations applied to the images are have the expected results.
-- **Tensorboard**: *(Only available for the network and finetune nodes)*. Calls a secondary process that starts a tensorboard view of the logs of the training process. The tensorboard view is a tool that helps the user to monitor the training process of the deep learning model. The tensorboard view is available for the training and finetuning nodes.
+- **Output Logs**: Renders the contents of the output log file associated with
+  the job.
+- **Error Logs**: Renders the contents of the error log file associated with the
+  job.
+- **Preview images**: _(Only available for the augmented dataset creation
+  nodes)_. Renders the preview images generated by the `augmented_dataset`
+  function in the ssc-deepsirius package cli. The preview images are generated
+  to help the user to check if the transformations applied to the images are
+  have the expected results.
+- **Tensorboard**: _(Only available for the network and finetune nodes)_. Calls
+  a secondary process that starts a tensorboard view of the logs of the training
+  process. The tensorboard view is a tool that helps the user to monitor the
+  training process of the deep learning model. The tensorboard view is available
+  for the training and finetuning nodes.
 
 ## What is Next?
 

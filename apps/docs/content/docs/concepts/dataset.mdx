@@ -2,46 +2,57 @@
 title: Dataset
 description: Dataset
 ---
-import Image from 'next/image'
-import { File, Folder, Files } from 'fumadocs-ui/components/files';
-import Node from '@/app/_components/node';
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import { File, Folder, Files } from "fumadocs-ui/components/files";
+import Node from "@/app/_components/node";
 import { Callout } from "fumadocs-ui/components/callout";
+import DatasetFormImage from "@/public/assets/node_form_dataset.png";
+import PatchesImage from "@/public/assets/patches.png";
+import RandomSamplitImage from "@/public/assets/random_sampling.png";
 
-The dataset component resembles the one below. It has four status, according
-to its job's progress: `Running`, `Completed`, and `Failed`. When created, 
-the dataset will be in an `Idle` state, waiting for the user to fill in the
-form and submit a creation job.
+The dataset component is a [node](/docs/concepts/workspace#nodes) responsible
+for creating a dataset for training the network. It creates a file containing a
+collection of images and labels stored in an apropriate format for deep learning
+data processing that will be used to train a network. When clicked, the dataset
+will open a panel with a form to be filled in with the necessary information to
+create a dataset. Let's go through the form fields:
 
-- Active: waiting for the user to fill in the form and submit a creation job.
-- Busy: the dataset is being created.
-- Success: the dataset was created successfully.
-- Error: the dataset creation failed.
+<ImageZoom
+  alt="Dataset Form"
+  src={DatasetFormImage}
+  className="!my-0 rounded-sm"
+  priority
+/>
+_Form fields of the the dataset node._
 
-The component will change its colors according to its status, like represented
-below:
+## Images
 
-<Node name={'dataset'}/>
+First, you’ll need a set with original (grayscale) and segmented (label) images
+with the same dimensions. Those images don’t need to have the same name, only to
+be in the same order in the list of images when creating a dataset. This
+organized data will be used to train with predefined parameters, allowing the
+computer to learn by itself by recognizing patterns in various processing
+layers.
 
-When clicked, the dataset will open a form to be filled in with the necessary
-information to create a dataset. Let's go through the form fields, following
-the order depicted in the image below:
+**Image**: You can add files in tiff or raw extensions. This is the grayscale
+image.
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/dataset_ui.png" alt="dataset form" style={{ height: '450px', width: 'auto' }} />
-</div>
+**Label**: the dataset must include n distinct classes, with labels assigned
+sequentially from 0 to n-1 .
 
+**Weight Map**: It is used when you want to make the classifier understand that
+it must focus on specific areas. The weight map is an image whose voxel
+intensities make the network training penalize the classification error
+proportionally to the value of the voxel. Higher values will force the network
+to improve classification for certain voxels. When certain materials/objects are
+small, for instance, it might be interesting to provide a weight image with
+higher values for those objects. If you do not provide a weight image, the
+network training will assume that the image has uniform weight equal to 1.0.
 
-## 1 - Images
-
-First, you’ll need a set with original (grayscale) and segmented (label) images with the same dimensions. Those images don’t need to have the same name, only to be in the same order in the list of images when creating a dataset. This organized data will be used to train with predefined parameters, allowing the computer to learn by itself by recognizing patterns in various processing layers.
-
-**Image**: You can add files in tiff or raw extensions. This is the grayscale image.
-
-**Label**: the dataset must include  n distinct classes, with labels assigned sequentially from 0 to n-1 .
-
-**Weight Map**: It is used when you want to make the classifier understand that it must focus on specific areas. The weight map is an image whose voxel intensities make the network training penalize the classification error proportionally to the value of the voxel. Higher values will force the network to improve classification for certain voxels. When certain materials/objects are small, for instance, it might be interesting to provide a weight image with higher values for those objects. If you do not provide a weight image, the network training will assume that the image has uniform weight equal to 1.0.
-
-**Note**: In case of raw images, it is important to point out that, in order to infer the image properties, the file must contain necessary information (size XxYxZ and bitdepth and data type), for example:
+**Note**: In case of raw images, it is important to point out that, in order to
+infer the image properties, the file must contain necessary information (size
+XxYxZ and bitdepth and data type), for example:
 
 <Files>
   <File name="this_is_my_float_file_200x200x100_16float.raw" />
@@ -50,100 +61,45 @@ First, you’ll need a set with original (grayscale) and segmented (label) image
 </Files>
 
 <Callout type="warn">
-Keep in mind that the label must have enough visual field in order to understand the shape and texture of your object.
+  Keep in mind that the label must have enough visual field in order to
+  understand the shape and texture of your object.
 </Callout>
 
-## 2 - Classes
+## Classes
 
 Number of classes in the label file.
 
-## 3 - Sample Size
-- **Sample size** – The number of random patches extracted from a strategy (uniform avaible only) used to create the train dataset, example below shows a blue cube patch extracted to a pink cube for training. The size of the dataset depends on the sample size. The larger the sample size, the heavier the file will become.
+## Sample Size
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px', textAlign: 'justify' }}>
-  <img src="/dive/assets/patches.png" alt="Unet image" style={{ width: '500px', height: 'auto' }} />
-</div>
+The number of random patches extracted from a strategy (uniform avaible only)
+used to create the train dataset, example below shows a blue cube patch
+extracted to a pink cube for training. The size of the dataset depends on the
+sample size. The larger the sample size, the heavier the file will become.
 
-## 4 - Strategy
+<ImageZoom
+  alt="Patches"
+  src={PatchesImage}
+  className="!my-0 rounded-sm"
+  priority
+/>
 
-- **Strategy** – Uniform only. It means equal probability of extraction/selection of patches for training. It randomly extracts patches over a uniform distribution, but that doesn't mean it's a perfect grid.
+## Strategy
 
-## 5 - Patch Size
+Uniform only. It means equal probability of extraction/selection of patches for
+training. It randomly extracts patches over a uniform distribution, but that
+doesn't mean it's a perfect grid.
 
-- **Patch size** – The network always works with a small crop of the image henceforth denoted patch, this parameter adjusts its size.
+## Patch Size
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px', textAlign: 'justify' }}>
-  <img src="/dive/assets/random_sampling.png" alt="Unet image" style={{ width: '500px', height: 'auto' }} />
-  <p style={{ marginTop: '10px', textAlign: 'justify', maxWidth: '500px' }}> The uniform window sampler first computes a set of all feasible spatial locations (so that the windows are always within the image) and randomly draws samples from the set.</p>
-</div>
+The network always works with a small crop of the image henceforth denoted
+patch, this parameter adjusts its size.
 
-# Augmentation
-
-Just like the dataset creation, the augmentation component has four status, 
-according to its job's progress: `Running`, `Completed`, and `Failed`. When 
-created, the augmentation will be in an `Idle` state, waiting for the user 
-to fill in the form and submit an augmentation job.
-
-<Node name='augmentation' />
-
-
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/augmentation_ui.png" style={{ height: '450px', width: 'auto' }} />
-</div>
-
-Data augmentation strategies are able to generate artificial data by applying small deformations on the original data. The main purpose is to generate slightly different data, increasing the number of labeled data when scarce, and creating more challenging problems for the classifier, leading to a more generalized network. The following parameters are directly related to shape and are applied to the original image.
-
-<Callout title="Watch out!" type="error">
-When saving the dataset, take into account that each increment of augmentation will increase the size of the dataset in proportion to the sample size. In a sample size of 100 if we add vertical and horizontal flip, It would be the same as considering a sample size of 300 (100 + 100 + 100).
-</Callout>
-
-
-**Vertical and Horizontal flip**: Enabling it allows the network to understand that different patterns of rotation exist.
-
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px', textAlign: 'justify' }}>
-  <img src="/dive/assets/vertical_flip.png" alt="Unet image" style={{ height: '200px', width: 'auto' }} />
-</div>
-
-**Rotation 90 and 270**: Rotates the image in 90 and 270 degrees while also resizing the image.
-
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px', textAlign: 'justify' }}>
-  <img src="/dive/assets/rot90270.png" alt="Unet image" style={{ height: '200px', width: 'auto' }} />
-</div>
-
-**Contrast**: If you need to segment images with different contrast patterns in relation to the dataset, it is better to enable this option. It will make the network learn not only one pattern of contrast, but a whole new range of possible contrast situations.
-
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px', textAlign: 'justify' }}>
-  <img src="/dive/assets/contrast.png" alt="Unet image" style={{ height: '200px', width: 'auto' }} />
-</div>
-
-**Gaussian Blur**: The higher the σ value, the higher the smoothing. In this parameter, you basically are destroying the texture in order to make a better classification of shape.
-
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px', textAlign: 'justify' }}>
-  <img src="/dive/assets/gaussian_blur.png" alt="Unet image" style={{ height: '200px', width: 'auto' }} />
-</div>
-
-**Elastic transformation**: It determines if in your training it will accept variations in shape (distortion) and texture.
-     
-**Alpha** stands for the deformation intensity.
-     
-**Sigma** stands for the quantity of random noise over deformation to change the pixel intensity value (randomness over deformation).
-
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px', textAlign: 'justify' }}>
-  <img src="/dive/assets/alpha.png" alt="Unet image" style={{ height: '250px', width: 'auto' }} />
-</div>
-
-
-**Dropout**: It determines the number the percentage of pixels randomly dropped.
-
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px', textAlign: 'justify' }}>
-  <img src="/dive/assets/dropout.png" alt="Unet image" style={{ height: '200px', width: 'auto' }} />
-</div>
-
-**Poisson Noise**: Add noise sampled from poisson distributions elementwise to images.
-
-Poisson noise is comparable to Gaussian noise. Poisson distributions produce only positive numbers, so the sign of the sampled values is randomly flipped. For uint8, a lambda of around 10.0 leads to visible noise, and a lambda of around 20.0 results in very visible noise. It is recommended to set per_channel to True, as this augmenter samples and adds noise elementwise, affecting neighboring pixels differently.
-
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '10px', textAlign: 'justify' }}>
-  <img src="/dive/assets/poisson.png" alt="Unet image" style={{ height: '200px', width: 'auto' }} />
-</div>
-
+<ImageZoom
+  alt="Random Sampling"
+  src={RandomSamplitImage}
+  className="!my-0 rounded-sm"
+  priority
+/>
+_The uniform window sampler first computes a set of all feasible spatial locations
+(so that the windows are always within the image) and randomly draws samples from
+the set._

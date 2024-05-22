@@ -1,4 +1,4 @@
 {
   "title": "Concepts",
-  "pages": ["workspace", "dataset", "network", "inference"]
+  "pages": ["workspace", "dataset", "augmentation", "network", "inference"]
 }

@@ -1,0 +1,149 @@
+---
+title: Augmentation
+description: Dataset augmentation
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+
+import AugmentationFormImage from "@/public/assets/node_form_augmentation.png";
+import TrVerticalFlip from "@/public/assets/vertical_flip.png";
+import TrRotations from "@/public/assets/rot90270.png";
+import TrContrast from "@/public/assets/contrast.png";
+import TrGaussianBlur from "@/public/assets/gaussian_blur.png";
+import TrElasticAlpha from "@/public/assets/alpha.png";
+import TrDropout from "@/public/assets/dropout.png";
+import TrPoisson from "@/public/assets/poisson.png";
+
+Just like the dataset, the augmentation node is a
+[node](/docs/concepts/workspace#nodes) responsible for creating an augmented
+version of an existing dataset. When clicked, the augmentation will open a panel
+with a form to be filled in with the necessary information to create an
+augmented dataset.
+
+Unlike the dataset node, the augmentation node requires a dataset to be
+connected to it before submitting a job, since the job needs an existing dataset
+to perform the augmentation transformations. A dataset in a `success` state can
+be connected to the augmentation node by clicking and dragging a connection line
+from the dataset node bottom side
+[handle](/docs/concepts/workspace#node-handles) to the augmentation node top
+handle, of you can create a connected augmentation node by clicking on the
+handle in the bottom side of the dataset node.
+
+<ImageZoom
+  alt="Augmentation Form"
+  src={AugmentationFormImage}
+  className="!my-0 rounded-sm"
+  priority
+/>
+_Form fields of the the augmentation node._
+
+Data augmentation strategies are able to generate artificial data by applying
+small deformations on the original data. The main purpose is to generate
+slightly different data, increasing the number of labeled data when scarce, and
+creating more challenging problems for the classifier, leading to a more
+generalized network. The following parameters are directly related to shape and
+are applied to the original image.
+
+<Callout title="Watch out!" type="error">
+  When saving the dataset, take into account that each increment of augmentation
+  will increase the size of the dataset in proportion to the sample size. In a
+  sample size of 100 if we add vertical and horizontal flip, It would be the
+  same as considering a sample size of 300 (100 + 100 + 100).
+</Callout>
+
+## Vertical and Horizontal flip
+
+Enabling it allows the network to understand that different patterns of rotation
+exist.
+
+<ImageZoom
+  alt="Vertical Flip"
+  src={TrVerticalFlip}
+  className="!my-0 rounded-sm"
+  priority
+/>
+
+## Rotations
+
+Rotates the image in 90 and 270 degrees while also resizing the image.
+
+<ImageZoom
+  alt="Rotations"
+  src={TrRotations}
+  className="!my-0 w-full rounded-sm"
+  priority
+/>
+
+## Contrast
+
+If you need to segment images with different contrast patterns in relation to
+the dataset, it is better to enable this option. It will make the network learn
+not only one pattern of contrast, but a whole new range of possible contrast
+situations.
+
+<ImageZoom
+  alt="Contrast"
+  src={TrContrast}
+  className="!my-0 rounded-sm"
+  priority
+/>
+
+## Gaussian Blur
+
+The higher the σ value, the higher the smoothing. In this parameter, you
+basically are destroying the texture in order to make a better classification of
+shape.
+
+<ImageZoom
+  alt="Gaussian Blur"
+  src={TrGaussianBlur}
+  className="!my-0 rounded-sm"
+  priority
+/>
+
+## Elastic transformations
+
+It determines if in your training it will accept variations in shape
+(distortion) and texture.
+
+- **Alpha**: stands for the deformation intensity.
+- **Sigma**: stands for the quantity of random noise over deformation to change
+  the pixel intensity value (randomness over deformation).
+
+<ImageZoom
+  alt="Elastic Alpha"
+  src={TrElasticAlpha}
+  className="!my-0 w-full rounded-sm"
+  priority
+/>
+
+## Dropout
+
+It determines the number the percentage of pixels randomly dropped.
+
+<ImageZoom
+  alt="Dropout"
+  src={TrDropout}
+  className="!my-0 w-full rounded-sm"
+  priority
+/>
+
+## Poisson Noise
+
+Add noise sampled from poisson distributions elementwise to images.
+
+Poisson noise is comparable to Gaussian noise. Poisson distributions produce
+only positive numbers, so the sign of the sampled values is randomly flipped.
+For uint8, a lambda of around 10.0 leads to visible noise, and a lambda of
+around 20.0 results in very visible noise. It is recommended to set per_channel
+to True, as this augmenter samples and adds noise elementwise, affecting
+neighboring pixels differently.
+
+<ImageZoom
+  alt="Poisson"
+  src={TrPoisson}
+  className="!my-0 rounded-sm"
+  priority
+/>

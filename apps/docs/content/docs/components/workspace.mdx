@@ -4,7 +4,18 @@ description: Workspace
 ---
 
 import { File, Folder, Files } from "fumadocs-ui/components/files";
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+
 import Node from "@/app/_components/node";
+
+import NewWorkspace from "@/public/assets/new_workspace.png";
+import RemoteNautilus from "@/public/assets/nautilus.png";
+import NewWorkspaceError from "@/public/assets/new_workspace_error.png";
+import NewWorkspaceJob from "@/public/assets/new_workspace_job.png";
+import NewWorkspaceDone from "@/public/assets/new_workspace_done.png";
+import NodeSidePanel from "@/public/assets/node_side_panel.png";
+import WorkspaceExamplePending from "@/public/assets/workspace_example_pending.png";
+import GalleryView from "@/public/assets/gallery_view.png";
 
 The workspace is the canvas where the user can create and connect the components
 that represent the steps of the analysis. The user can have multiple workspaces,
@@ -18,9 +29,15 @@ For creating a new workspace, the user needs to choose a name and a path for the
 files that will be created remotely in the Sirius storage server and will be
 changed as the user interacts with the interface.
 
-![New Workspace](/assets/new_workspace.png) _New workspace page and form, where
-the user can choose a name for the workspace dir and a base path for the files
-that will be created remotely in the Sirius storage server._
+<ImageZoom
+  alt="New Workspace"
+  src={NewWorkspace}
+  className="!my-0 rounded-sm bg-background"
+  priority
+/>
+_New workspace page and form, where the user can choose a name for the workspace
+dir and a base path for the files that will be created remotely in the Sirius storage
+server._
 
 <Files>
   <Folder name="workspace_name" defaultOpen>
@@ -126,8 +143,13 @@ base path. Before submitting the form, the user must choose the Slurm partition
 where the workspace creation job will be sumitted. By now the user must know
 which partitions are available and scheduled for the user's group.
 
-![Remote fs navigation](/assets/nautilus.png) _Remote file navigation for
-selecting the the workspace base path._
+<ImageZoom
+  alt="Remote fs navigation"
+  src={RemoteNautilus}
+  className="!my-0 rounded-sm bg-background"
+  priority
+/>
+_Remote file navigation for selecting the the workspace base path._
 
 ## Finishing filling the form and submitting the job
 
@@ -139,11 +161,22 @@ queue and many types of server errors. After the job is submitted, the form will
 be disabled and the interface will keep checking the job status until it is
 completed or show an error if the job fails.
 
-![New Workspace Error](/assets/new_workspace_error.png) _Error message when the
-user tries to create a workspace with an already existing name._
+<ImageZoom
+  alt="New Workspace Error"
+  src={NewWorkspaceError}
+  className="!my-0 rounded-sm bg-background"
+  priority
+/>
+_Error message when the user tries to create a workspace with an already existing
+name._
 
-![New Workspace Job](/assets/new_workspace_job.png) _Job submission message when
-the user tries to create a workspace._
+<ImageZoom
+  alt="New Workspace Job"
+  src={NewWorkspaceJob}
+  className="!my-0 rounded-sm bg-background"
+  priority
+/>
+_Job submission message when the user tries to create a workspace._
 
 ## The workspace page and its components
 
@@ -152,8 +185,13 @@ workspace components. Here we call them _nodes_, because we can connect them to
 create multiple paths for the flow of data and operations that represent the
 analysis steps.
 
-![Workspace Page](/assets/new_workspace_done.png) _Workspace page ready to start
-working._
+<ImageZoom
+  alt="New Workspace Done"
+  src={NewWorkspaceDone}
+  className="!my-0 rounded-sm bg-background"
+  priority
+/>
+_Workspace page ready to start working._
 
 ### Nodes
 
@@ -245,12 +283,24 @@ nodes can be connected in any order, but the interface will check if the nodes
 are connected in a valid order before applying the connection or showing an
 error message.
 
-![Workspace example pending state](/assets/workspace_example_pending.png)
+<ImageZoom
+  alt="Workspace example pending state"
+  src={WorkspaceExamplePending}
+  className="!my-0 rounded-sm bg-background"
+  priority
+/>
 _Workspace example showing connected nodes and a node with a pending job._
 
 ### Node side panel
 
-![Node side panel](/assets/node_side_panel.png)
+<ImageZoom
+  alt="Node Side Panel"
+  src={NodeSidePanel}
+  className="!my-0 rounded-sm bg-background"
+  priority
+/>
+_Node side panel showing the side panel of a augmentation node in the success state
+with information about the form data submitted for that job._
 
 Every node has a side panel that can be opened to the right side of the screen
 by clicking on the node. What is shown on the side panel depends on its state as
@@ -269,8 +319,15 @@ shown below:
 
 ## Gallery View
 
-![Gallery View](/assets/gallery_view.png) _Gallery view of an augmentation node
-showing the preview images option._
+<ImageZoom
+  alt="Gallery View"
+  src={GalleryView}
+  className="!my-0 rounded-sm bg-background"
+  priority
+/>
+_Gallery view of an augmentation node showing the preview images option. As some
+of the options are intervals with max and min values, two images are generated for
+these cases and identified as `Option_name_max` and `Option_name_min`._
 
 The gallery view is another page where the user can see more details related to
 the job and remote files and processes. The gallery view is a page that can be
@@ -284,8 +341,8 @@ following possible visualizations:
 - **Preview images**: _(Only available for the augmented dataset creation
   nodes)_. Renders the preview images generated by the `augmented_dataset`
   function in the ssc-deepsirius package cli. The preview images are generated
-  to help the user to check if the transformations applied to the images are
-  have the expected results.
+  to help the user to check if the transformations applied to the images have
+  the expected results.
 - **Tensorboard**: _(Only available for the network and finetune nodes)_. Calls
   a secondary process that starts a tensorboard view of the logs of the training
   process. The tensorboard view is a tool that helps the user to monitor the

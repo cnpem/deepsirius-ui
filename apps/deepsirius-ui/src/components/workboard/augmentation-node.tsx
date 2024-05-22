@@ -93,7 +93,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
         },
       });
       updateNodeInternals(nodeProps.id);
-    } else if (jobData.jobStatus === 'FAILED') {
+    } else if (jobData.jobStatus === 'FAILED' || jobData.jobStatus?.includes('CANCELLED')) {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       console.log('Job failed');
       toast.error('Job failed');

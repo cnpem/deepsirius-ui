@@ -162,7 +162,7 @@ function NodeInfo({
       setMessage(`Job ${
         nodeData.jobId ?? 'Err'
       } finished successfully in ${date}`);
-    } else if (jobData.jobStatus === 'FAILED') {
+    } else if (jobData.jobStatus === 'FAILED' || jobData.jobStatus?.includes('CANCELLED')) {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       setStatus('error');
       setMessage(`Job ${

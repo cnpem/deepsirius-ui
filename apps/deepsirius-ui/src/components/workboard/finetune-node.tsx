@@ -110,7 +110,7 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
         },
       });
       updateNodeInternals(nodeProps.id);
-    } else if (jobData.jobStatus === 'FAILED') {
+    } else if (jobData.jobStatus === 'FAILED' || jobData.jobStatus?.includes('CANCELLED')) {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       toast.error('Job failed');
       onUpdateNode({
@@ -127,6 +127,7 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
       updateNodeInternals(nodeProps.id);
     } else {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      console.log('jobData', jobData);
       onUpdateNode({
         id: nodeProps.id,
         data: {
@@ -281,7 +282,7 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
         <NodeCard
           title={'finetune'}
           subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
-            nodeProps.data.jobStatus || 'jobStatus'
+            nodeProps.data.jobStatus || 'UNDEFINED'
           }`}
           {...nodeProps}
         />

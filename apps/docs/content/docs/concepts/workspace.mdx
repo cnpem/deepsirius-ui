@@ -283,13 +283,31 @@ nodes can be connected in any order, but the interface will check if the nodes
 are connected in a valid order before applying the connection or showing an
 error message.
 
+### Node handles
+
+The nodes have input and output handles that can be used to connect the nodes.
+The position of the handles implies the order of the nodes in the workflow and
+the kind of connections. They are represented as small rectangles with rounded
+corners on the corners of the nodes, with its color changing according to the
+node state with more prominent colors than the node background.
+
 <ImageZoom
   alt="Workspace example pending state"
   src={WorkspaceExamplePending}
   className="!my-0 rounded-sm"
   priority
 />
-_Workspace example showing connected nodes and a node with a pending job._
+_Workspace example showing connected nodes and a node with a pending job. Note the
+connections between the handles and the variety of handle positions depending on
+the node types._
+
+By clicking on the handle, the user can create a new node associated with the
+handle side i.e.: By clicking on the bottom of a dataset node, the user will
+create a new augmentation node connected to the dataset. By clicking on the
+right handle of a dataset node, the user will create a new network node
+connected to the dataset. The user can also connect the nodes by dragging from
+the desired node handle to the desired handle of the target node. If the
+connection is not allowed, the interface will show an error message.
 
 ### Node side panel
 

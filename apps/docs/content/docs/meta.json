@@ -1,4 +1,4 @@
 {
   "title": "Welcome",
-  "pages": ["from-zero-to-label", "components", "development", "deploy"]
+  "pages": ["from-zero-to-label","controls", "concepts", "development", "deploy"]
 }

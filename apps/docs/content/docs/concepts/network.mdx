@@ -1,195 +1,288 @@
 ---
-title: Network
-description: Network
+title: Network and Fine tuning
+description:
+  Deep learning network and fine tuning concepts in deepsirius network and
+  finetune nodes.
 ---
-import { Heading } from 'fumadocs-ui/components/heading';
 
+import { Callout } from "fumadocs-ui/components/callout";
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import { ProsAndConsTable } from "@/app/_components/ui/pros-and-cons-table";
 
-## Training the network
+import NetworkFormImage from "@/public/assets/node_form_network.png";
+import ParamUnet2D from "@/public/assets/unet2d.png";
+import ParamVnet from "@/public/assets/vnet.png";
+import ParamUnet3D from "@/public/assets/unet3d.png";
+import ConstantError from "@/public/assets/constant_error.png";
+import DecreaseLR from "@/public/assets/decrease_lr.png";
+import Overfitting from "@/public/assets/overfitting.png";
+import FinetuneFormImage from "@/public/assets/node_form_finetune.png";
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/network_ui.png" alt="Unet image" style={{ height: '450px', width: 'auto' }} />
-</div>
+<ImageZoom
+  alt="Network Form"
+  src={NetworkFormImage}
+  className="!my-0 rounded-sm"
+  priority
+/>
+_Network node form from a network node connected to a dataset node._
 
-In this section, you will set parameters that will directly affect the GPU memory usage and the quality and velocity of training and select the deep learning architeture. You must imagine that basically the training is trying to determine a function that can predict labels based on a dataset. Ideally, this function must obtain the lowest possible error, also known as the optimum condition (global minimum). Optimization is carried out by a variation of the gradient descent method in order to find a minimum point of the error function.
+In this section, you will set parameters that will directly affect the GPU
+memory usage and the quality and velocity of training and select the deep
+learning architeture. You must imagine that basically the training is trying to
+determine a function that can predict labels based on a dataset. Ideally, this
+function must obtain the lowest possible error, also known as the optimum
+condition (global minimum). Optimization is carried out by a variation of the
+gradient descent method in order to find a minimum point of the error function.
 
-## 1 - Network Type
+## Network Type
 
 ### U-net – 2D
-It is the best option for 2D training and works faster for 3D training. The training strategy lies in the widespread use of augmentation data to use segmented samples more efficiently.
 
+It is the best option for 2D training and works faster for 3D training. The
+training strategy lies in the widespread use of augmentation data to use
+segmented samples more efficiently.
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/unet2d.png" alt="Unet image" style={{ width: '700px', height: 'auto' }} />
-  <p style={{ marginTop: '10px', textAlign: 'justify', maxWidth: '700px' }}> U-net architecture (example for 32x32 pixels in the lowest resolution). Each blue
+<ImageZoom
+  alt="U-net 2D"
+  src={ParamUnet2D}
+  className="!my-0 rounded-sm"
+  priority
+/>
+_U-net architecture (example for 32x32 pixels in the lowest resolution). Each blue
 box corresponds to a multi-channel feature map. The number of channels is denoted
 on top of the box. The x-y-size is provided at the lower left edge of the box. White
-boxes represent copied feature maps. The arrows denote the different operations.</p>
-</div>
-Reference: [U-net 2D](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28)
+boxes represent copied feature maps. The arrows denote the different operations.
+Reference: [U-net 2D](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28)._
 
 ### V-net – 3D
-It usually gives better results, but it demands more computationally. It is trained to predict the segmentation of the entire volume at once, with an optimized function to deal with the imbalance between background and foreground.
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/vnet.png" alt="Unet image" style={{ width: '700px', height: 'auto' }} />
-  <p style={{ marginTop: '10px', textAlign: 'justify', maxWidth: '700px' }}> Schematic representation of Vnet network architecture.</p>
-</div>
+It usually gives better results, but it demands more computationally. It is
+trained to predict the segmentation of the entire volume at once, with an
+optimized function to deal with the imbalance between background and foreground.
 
-Reference: [V-net 3D](https://ieeexplore.ieee.org/abstract/document/7785132/)
-
+<ImageZoom alt="V-net" src={ParamVnet} className="!my-0 rounded-sm" priority />
+_Schematic representation of Vnet network architecture. Reference: [V-net 3D](https://ieeexplore.ieee.org/abstract/document/7785132/)._
 
 ### U-net – 3D
-Similar to V-net 3D but with less convolutions and layers, therefore, faster for training and inference.
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/unet3d.png" alt="Unet image" style={{ width: '700px', height: 'auto' }} />
-  <p style={{ marginTop: '10px', textAlign: 'justify', maxWidth: '700px' }}> Schematic representation of Unet3D network architecture.</p>
-</div>
+Similar to V-net 3D but with less convolutions and layers, therefore, faster for
+training and inference.
 
-Reference: [U-net 3D](https://link.springer.com/chapter/10.1007/978-3-319-46723-8_49)
+<ImageZoom
+  alt="U-net 3D"
+  src={ParamUnet3D}
+  className="!my-0 rounded-sm"
+  priority
+/>
+_Schematic representation of Unet3D network architecture. Reference: [U-net 3D](https://link.springer.com/chapter/10.1007/978-3-319-46723-8_49)._
 
-## 2 - Iterations
+## Iterations
 
-This number defines how many times a batch is processed by all layers of the network and their weights are readjusted by an optimizer method.
-- **Tip**: Do a first training with few iterations (1000) just to see if the other parameters seem to make sense. Then, increase the iterations in order to give better results. An acceptable value is 10000 iterations. However, it must be kept in mind that each case is different.
+This number defines how many times a batch is processed by all layers of the
+network and their weights are readjusted by an optimizer method.
 
-## 3 - Learning rate
+<Callout type="info">
+  Do a first training with few iterations (1000) just to see if the other
+  parameters seem to make sense. Then, increase the iterations in order to give
+  better results. An acceptable value is 10000 iterations. However, it must be
+  kept in mind that each case is different.
+</Callout>
 
-It is a gradient descent parameter considered because the shape of the error function and its global minima are not known. Hence, it is necessary to determine a suitable learning rate to find the best approximation for it (i.e., trying to find a satisfactory local minimum that may or may not coincide with a global minimum).
+## Learning rate
+
+It is a gradient descent parameter considered because the shape of the error
+function and its global minima are not known. Hence, it is necessary to
+determine a suitable learning rate to find the best approximation for it (i.e.,
+trying to find a satisfactory local minimum that may or may not coincide with a
+global minimum).
 
 - The ↑ higher the learning rate,
 - ↑ the bigger the step taken at each point,
 - ↑ therefore, it is a faster training.
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/constant_error.png" alt="Unet image" style={{ width: '300px', height: 'auto' }} />
-  <p style={{ marginTop: '10px', textAlign: 'justify', maxWidth: '500px' }}> If you end your training with a relatively constant error, e.g., it’s taking a very long time to decrease the value, you probably should increase the learning rate (increase the step between points). On the other hand, when your loss is not so constant or varies a lot, it is probably better to decrease the learning rate.</p>
-</div>
+<ImageZoom
+  alt="Constant Error"
+  src={ConstantError}
+  className="!my-0 mx-auto rounded-sm"
+  priority
+/>
+_If you end your training with a relatively constant error, e.g., it’s taking a very
+long time to decrease the value, you probably should increase the learning rate (increase
+the step between points). On the other hand, when your loss is not so constant or
+varies a lot, it is probably better to decrease the learning rate._
 
-On the other hand, when your loss is not so constant or varies a lot, it is probably better to decrease the learning rate. The problem with very small steps might be that it will be trapped into a local minimum that is not the lowest point, because it stops on the first that it finds.
+On the other hand, when your loss is not so constant or varies a lot, it is
+probably better to decrease the learning rate. The problem with very small steps
+might be that it will be trapped into a local minimum that is not the lowest
+point, because it stops on the first that it finds.
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/decrease_lr.png" alt="Unet image" style={{ width: '300px', height: 'auto' }} />
-  <p style={{ marginTop: '10px', textAlign: 'justify', maxWidth: '500px' }}> Depending on whether the optimization is converging to the left or right minimum, decreasing the learning rate may cause it to get trapped in the left or right minimum.</p>
-</div>
+<ImageZoom
+  alt="Decrease LR"
+  src={DecreaseLR}
+  className="!my-0 mx-auto rounded-sm"
+  priority
+/>
+_Depending on whether the optimization is converging to the left or right minimum,
+decreasing the learning rate may cause it to get trapped in the left or right minimum._
 
+## Patch Size
 
-## 4 -  Patch Size
+The field of view for the network.
 
-The field of view for the network. 
+<Callout type="info" className="">
+  The patch size is the size of the image that the network will consider at each
+  iteration. The network will slide this patch over the entire image to learn
+  the features of the image. The patch size is the size of the image that the
+  network will consider at each iteration. The network will slide this patch
+  over the entire image to learn the features of the image.
+</Callout>
 
-<div style={{
-  border: '1px solid black',
-  padding: '16px',
-  borderRadius: '8px',
-  backgroundColor: '#f9f9f9',
-  margin: '16px 0',
-  textAlign: 'justify'
-}}>
-  - When the patch size differs from that network size, the image is contracted or expanded to fit that field of view.
-  - For this reason, it is recommended that the patch size from the dataset matches the network size.
-</div>
+## Batch Size
 
-## 5 -  Batch Size
+Defines how many image patches will be considered at the same time during
+network training. It is related to GPU performance.
 
-Defines how many image patches will be considered at the same time during network training. It is related to GPU performance.
-- The higher the Batch Size, the higher the smoothness of the error function since more image patches are considered during optimization, thereby reducing the likelihood of optimization falling into a local minimum.
-- When you have a lot of incorrect annotation, it might be better to increase the batch size.
+- The higher the Batch Size, the higher the smoothness of the error function
+  since more image patches are considered during optimization, thereby reducing
+  the likelihood of optimization falling into a local minimum.
+- When you have a lot of incorrect annotation, it might be better to increase
+  the batch size.
 
+<Callout type="info" title="Batch with multiple GPUs">
+  For a batch size of 4 if we use 4 GPUs, each GPU will use 4 patches, totaling
+  16 patches.
+</Callout>
 
-<div style={{
-  border: '1px solid black',
-  padding: '16px',
-  borderRadius: '8px',
-  backgroundColor: '#f9f9f9',
-  margin: '16px 0',
-  textAlign: 'center'
-}}>
-  <strong>Batch with multiple GPUs</strong><br />
-  For a batch size of 4 if we use 4 GPUs, each GPU will use 4 patches.<br />
-  Total: 16 patches
-</div>
+<Callout type="warn" className="font-semibold">
+  The batch size and patch size affect the total GPU memory usage and can
+  prevent the model from running if the memory limit is exceeded. Since the
+  batch size is distributed equally among GPUs, if the model doesn't run on a
+  single GPU, it won't run on multiple GPUs either.
+</Callout>
 
+## Optimizers
 
-<p style={{ fontWeight: 'bold', textAlign: 'justify', marginTop: '20px' }}>
-  <span style={{ color: 'lightcoral' }}>IMPORTANT</span>: The batch size and patch size affect the total GPU memory usage and can prevent the model from running if the memory limit is exceeded. Since the batch size is distributed equally among GPUs, if the model doesn't run on a single GPU, it won't run on multiple GPUs either.
-</p>
-
-
-## 6 -  Optimizers
-
-For optimization, it is recommended to use the Adam method, as it is well-suited for large datasets.
-
+For optimization, it is recommended to use the Adam method, as it is well-suited
+for large datasets.
 
 ### Gradient Descent
 
-Gradient Descent is an optimization algorithm used to minimize the loss function by iteratively moving towards the steepest descent direction. The goal is to find the local minimum of the loss function.
+Gradient Descent is an optimization algorithm used to minimize the loss function
+by iteratively moving towards the steepest descent direction. The goal is to
+find the local minimum of the loss function.
 
- **Pros**:
-- Simple and easy to implement.
-- Works well for convex functions.
-
- **Cons**:
-- Can get stuck in local minima.
-- Requires careful tuning of the learning rate.
-- Slow convergence for large-scale data.
+<ProsAndConsTable
+  pros={["Simple and easy to implement.", "Works well for convex functions."]}
+  cons={[
+    "Can get stuck in local minima.",
+    "Requires careful tuning of the learning rate.",
+    "Slow convergence for large-scale data.",
+  ]}
+/>
 
 ### Adagrad
 
-Adagrad (Adaptive Gradient Algorithm) adapts the learning rate for each parameter based on its historical gradient values. This allows for larger updates for infrequent parameters and smaller updates for frequent parameters.
+Adagrad (Adaptive Gradient Algorithm) adapts the learning rate for each
+parameter based on its historical gradient values. This allows for larger
+updates for infrequent parameters and smaller updates for frequent parameters.
 
- **Pros**:
-- Automatically adapts the learning rate for each parameter.
-- Good for sparse data.
-
- **Cons**:
-- Accumulated gradients can grow too large, leading to vanishing updates.
-- Learning rate keeps decreasing, which can slow down convergence.
+<ProsAndConsTable
+  pros={[
+    "Automatically adapts the learning rate for each parameter.",
+    "Good for sparse data.",
+  ]}
+  cons={[
+    "Accumulated gradients can grow too large.",
+    "Learning rate keeps decreasing.",
+  ]}
+/>
 
 ### Adam
 
-Adam (Adaptive Moment Estimation) combines the advantages of both Adagrad and RMSProp (Root Mean Square Propagation). It computes adaptive learning rates for each parameter using estimates of first and second moments of the gradients.
+Adam (Adaptive Moment Estimation) combines the advantages of both Adagrad and
+RMSProp (Root Mean Square Propagation). It computes adaptive learning rates for
+each parameter using estimates of first and second moments of the gradients.
 
- **Pros**:
-- Efficient and well-suited for large datasets and high-dimensional spaces.
-- Combines the benefits of both momentum and adaptive learning rates.
-- Handles sparse gradients well.
+<ProsAndConsTable
+  pros={[
+    "Efficient and well-suited for large datasets and high-dimensional spaces.",
+    "Combines the benefits of both momentum and adaptive learning rates.",
+    "Handles sparse gradients well.",
+  ]}
+  cons={[
+    "Requires tuning of additional hyperparameters.",
+    "Can be computationally intensive due to the additional moment estimates.",
+  ]}
+/>
 
- **Cons**:
-- Requires tuning of additional hyperparameters.
-- Can be computationally intensive due to the additional moment estimates.
+## Loss function
 
-## 4 -  Loss function
-The loss function is responsible for comparing the output provided by the network during training with your ground truth. It essentially measures the error that is obtained during optimization to model the classification function. Different loss functions may be more suitable to different data:
-- **Cross entropy** – It compares the dataset and the other images on a voxel to voxel basis. It gives more importance to texture.
-- **Dice** – It overlaps the dataset and the other images. It is a summarized comparison. It gives more importance to shape.
+The loss function is responsible for comparing the output provided by the
+network during training with your ground truth. It essentially measures the
+error that is obtained during optimization to model the classification function.
+Different loss functions may be more suitable to different data:
+
+- **Cross entropy** – It compares the dataset and the other images on a voxel to
+  voxel basis. It gives more importance to texture.
+- **Dice** – It overlaps the dataset and the other images. It is a summarized
+  comparison. It gives more importance to shape.
 - **Cross entropy + Dice** – Takes both into consideration.
 
 ## Overfitting
 
-It is a problem that can be originated from a limited dataset, in which there is a small amount of data with good annotation. Because there isn’t a lot of data for training, the network will be biased by the previous information. In other words, it becomes overly accurate for the input data (low error), but it is not capable of achieving a proper result if you apply it to another image. The major issue is that it learns a lot about the outliers in your data, being unable to segment another image with high quality. If you apply the network to your original data and it gets a good result, but it is a disaster on other images, it might be a sign of overfitting.
+It is a problem that can be originated from a limited dataset, in which there is
+a small amount of data with good annotation. Because there isn’t a lot of data
+for training, the network will be biased by the previous information. In other
+words, it becomes overly accurate for the input data (low error), but it is not
+capable of achieving a proper result if you apply it to another image. The major
+issue is that it learns a lot about the outliers in your data, being unable to
+segment another image with high quality. If you apply the network to your
+original data and it gets a good result, but it is a disaster on other images,
+it might be a sign of overfitting.
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/overfitting.png" alt="Unet image" style={{ width: '300px', height: 'auto' }} />
-  <p style={{ marginTop: '10px', textAlign: 'justify', maxWidth: '500px' }}> This is a diagram showing overfitting of a classifier. While the black line fits the data well, the green line is overfit.</p>
-</div>
+<ImageZoom
+  alt="Overfitting"
+  src={Overfitting}
+  className="!my-0 mx-auto rounded-sm"
+  priority
+/>
+_This is a diagram showing overfitting of a classifier. While the black line fits
+the data well, the green line is overfit. Source: [Overfitting](https://en.m.wikipedia.org/wiki/File:Overfitting.svg)._
 
 ## Fine tuning
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/finetune_ui.png" alt="Unet image" style={{ height: '450px', width: 'auto' }} />
-</div>
+<ImageZoom
+  alt="Fine-tuning Form"
+  src={FinetuneFormImage}
+  className="!my-0 rounded-sm"
+  priority
+/>
+_Fine-tuning form from a finetune node connected to a network node and an augmentation
+node._
 
-In deepsirius context, fine tuning is the process of retraining a trained network with a new set of datasets, if the dataset has different number of classes, the drop classifier options should be selected.
+In deepsirius context, fine tuning is the process of retraining a trained
+network with a new set of datasets, if the dataset has different number of
+classes, the drop classifier options should be selected.
 
 ### Drop-classifier
 
 **Behavior when `drop_classifier` is 'selected':**
 
-- **Fine-Tuning**: When `drop_classifier` is set to 'Yes', the restoration process ignores the last layers of certain networks (specifically `UNet2D` and `VNet`) and variables associated with the `Adam` optimizer. This allows you to fine-tune the pre-trained model by modifying the classifier layers while keeping the rest of the network intact. This is useful if you want to adapt the model to a new task with different classes or outputs.
-- **Flexibility**: By not restoring the classifier layers and optimizer variables, you can leverage the pre-trained feature extraction capabilities of the model and only retrain the final layers to suit the new task. This is particularly beneficial when you need to train the model for more classes than it was originally trained on.
+- **Fine-Tuning**: When `drop_classifier` is set to 'Yes', the restoration
+  process ignores the last layers of certain networks (specifically `UNet2D` and
+  `VNet`) and variables associated with the `Adam` optimizer. This allows you to
+  fine-tune the pre-trained model by modifying the classifier layers while
+  keeping the rest of the network intact. This is useful if you want to adapt
+  the model to a new task with different classes or outputs.
+- **Flexibility**: By not restoring the classifier layers and optimizer
+  variables, you can leverage the pre-trained feature extraction capabilities of
+  the model and only retrain the final layers to suit the new task. This is
+  particularly beneficial when you need to train the model for more classes than
+  it was originally trained on.
 
 **Behavior when `drop_classifier` is not 'selected':**
 
-- **Full Model Restoration**: If `drop_classifier` is not set to 'Yes', all variables, including those for the classifier and optimizer, are restored. This is the default behavior when you want to load the entire model as it was originally trained, without any modifications.
+- **Full Model Restoration**: If `drop_classifier` is not set to 'Yes', all
+  variables, including those for the classifier and optimizer, are restored.
+  This is the default behavior when you want to load the entire model as it was
+  originally trained, without any modifications.

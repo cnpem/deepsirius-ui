@@ -1,9 +1,5 @@
-import {
-  CoffeeIcon,
-  DatabaseIcon,
-  DumbbellIcon,
-  ExternalLinkIcon,
-} from 'lucide-react';
+import { ExternalLinkIcon } from 'lucide-react';
+import NodeIcon from './workboard/node-components/node-icon';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -24,7 +20,7 @@ function ExternalLinks() {
     <div className="flex flex-row items-start justify-between gap-1">
       <Link
         className={cn(buttonVariants({ variant: 'outline' }), '')}
-        href="https://github.com/cnpem/deepsirius-ui/blob/main/README.md"
+        href="https://deepsirius.lnls.br/dive"
         rel="noopener noreferrer"
         target="_blank"
         title="help"
@@ -68,16 +64,24 @@ function MinimapCaption() {
       <div className="flex flex-row items-center justify-between gap-1 rounded-md border border-input p-2">
         <div className="flex flex-col gap-1">
           <div className="flex flex-row items-center gap-1">
-            <DatabaseIcon className="h-4 w-4" />
+            <NodeIcon nodeType="dataset" className="h-4 w-4" />
             <p className="text-xs">Dataset</p>
           </div>
           <div className="flex flex-row items-center gap-1">
-            <DumbbellIcon className="h-4 w-4" />
+            <NodeIcon nodeType="augmentation" className="h-4 w-4" />
+            <p className="text-xs">Augmentation</p>
+          </div>
+          <div className="flex flex-row items-center gap-1">
+            <NodeIcon nodeType="network" className="h-4 w-4" />
             <p className="text-xs">Network</p>
           </div>
           <div className="flex flex-row items-center gap-1">
-            <CoffeeIcon className="h-4 w-4" />
+            <NodeIcon nodeType="inference" className="h-4 w-4" />
             <p className="text-xs">Inference</p>
+          </div>
+          <div className="flex flex-row items-center gap-1">
+            <NodeIcon nodeType="finetune" className="h-4 w-4" />
+            <p className="text-xs">Finetune</p>
           </div>
         </div>
         <div className="flex flex-col gap-1">

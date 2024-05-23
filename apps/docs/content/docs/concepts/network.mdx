@@ -18,6 +18,17 @@ import DecreaseLR from "@/public/assets/decrease_lr.png";
 import Overfitting from "@/public/assets/overfitting.png";
 import FinetuneFormImage from "@/public/assets/node_form_finetune.png";
 
+Networks are the core element of deep learning. They are responsible for
+learning the features of the input data. The network is a set of data that is
+updated during the training process to minimize the error between the predicted
+output and the reference output provided by the dataset.
+
+In the deepsirius platform, we have two nodes associated with the network
+creation and training: the network node and the finetune node. The network node
+is responsible for creating the network and training it with the dataset. The
+finetune node is responsible for retraining the network with the same or a
+different dataset (see [Fine tuning](#fine-tuning)).
+
 <ImageZoom
   alt="Network Form"
   src={NetworkFormImage}

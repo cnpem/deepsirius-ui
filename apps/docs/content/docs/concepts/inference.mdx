@@ -2,25 +2,48 @@
 title: Inference
 description: Inference
 ---
-import Image from 'next/image'
 
-<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', textAlign: 'justify' }}>
-  <img src="/dive/assets/inference_ui.png" alt="Unet image" style={{ height: '450px', width: 'auto' }} />
-</div>
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
 
-## 1 - Normalize images
+import InferenceFormImage from "@/public/assets/node_form_inference.png";
 
-If the images are not normalized, this option should be enabled. Normalizing images is a common practice because it improves optimization during training. By default, the network receives normalized images during training. Therefore, inference in non normalized images will produce bad results.
+Inference is the process of applying a trained model to new data to make
+predictions. In the context of the deepsirius platform, inference is the process
+of applying a trained model to a new image to segment it.
 
-## 2 - Probability map
+<ImageZoom
+  alt="Inference node and form."
+  src={InferenceFormImage}
+  className="!my-0 rounded-sm"
+  priority
+/>
+_Inference node connected to a network node with its form open on the side panel._
 
-The output is a probability map, where each channel "n" corresponds to the probability of that voxel corresponding to the label "n".
-If the probability map is not select will infer a label image where each voxel corresponds to the label with probability higher or equal to 0.5.
+Below are the parameters that can be set in the inference form:
 
-## 3 - Padding size
+## Normalize images
 
-Adds a 0-valued frame around the input image to ensure that boundary effects to classification being done patchwise are mitigated.
+If the images are not normalized, this option should be enabled. Normalizing
+images is a common practice because it improves optimization during training. By
+default, the network receives normalized images during training. Therefore,
+inference in non normalized images will produce bad results.
 
-## 4 - Patch size
+## Probability map
 
-Similar to Volume Padding, this parameter controls the amount of overlap between patches sampled over the target image for inference. Lower values increase classification speed at the cost of edge artifacts. In other words, it determines how much edge will be thrown away when making the inference. We throw it away because of an edge effect on each patch inside the image.
+The output is a probability map, where each channel "n" corresponds to the
+probability of that voxel corresponding to the label "n". If the probability map
+is not select will infer a label image where each voxel corresponds to the label
+with probability higher or equal to 0.5.
+
+## Padding size
+
+Adds a 0-valued frame around the input image to ensure that boundary effects to
+classification being done patchwise are mitigated.
+
+## Patch size
+
+Similar to Volume Padding, this parameter controls the amount of overlap between
+patches sampled over the target image for inference. Lower values increase
+classification speed at the cost of edge artifacts. In other words, it
+determines how much edge will be thrown away when making the inference. We throw
+it away because of an edge effect on each patch inside the image.

@@ -136,11 +136,11 @@ explorer window where the user can navigate through the remote storage file
 system and select the desired base path for the workspace files. The user can
 only view and explore the files in the remote storage server that are allowed by
 the user's credential permissions. By selecting a base path, the user will be
-propted back to the workspace creation form with the selected path filled in the
+prompted back to the workspace creation form with the selected path filled in the
 Workspace path input field and needs to fill in the Workspace name input field
 which will be the name of the new directory that will be created in the selected
 base path. Before submitting the form, the user must choose the Slurm partition
-where the workspace creation job will be sumitted. By now the user must know
+where the workspace creation job will be submitted. By now the user must know
 which partitions are available and scheduled for the user's group.
 
 <ImageZoom
@@ -156,7 +156,7 @@ _Remote file navigation for selecting the the workspace base path._
 If the submitted data is correct, the job will be submitted and when the job is
 completed, the user will be redirected to the workspace page. There are many
 reasons why the job could fail, even after the basic checks are done before
-sumitting the job. From network errors, to the selection of an unauthorized
+submitting the job. From network errors, to the selection of an unauthorized
 queue and many types of server errors. After the job is submitted, the form will
 be disabled and the interface will keep checking the job status until it is
 completed or show an error if the job fails.
@@ -227,21 +227,21 @@ three main independent concepts that can be subdivided in 5 independent steps:
    by the `run_inference` function in the ssc-deepsirius package cli.
 
 Any combination of these steps that starts from 1 and ends in 3 mean a complete
-processing workflow of the ssc-deepsirius package, with specific input and ouput
+processing workflow of the ssc-deepsirius package, with specific input and output
 parameters that results in the creation or transformation of data between them
 on the remote storage server. So the results of a step can be used as input for
-another processing step as an independent job without the user ocuppying the
+another processing step as an independent job without the user occupying the
 slurm queue and the cluster resources when preparing the data for the next step.
 
 As the results of the steps are saved in the remote storage server, the user can
-check the results of the steps or use it as it see fit, even if the interface is
+check the results of the steps or use it as it sees fit, even if the interface is
 not running - or start another variation of the analysis at any time during the
 life cycle of the files.
 
-These caracteristics of the ssc-deepsirius package are explored by the interface
+These characteristics of the ssc-deepsirius package are explored by the interface
 by describing the steps as nodes in a graph and the relations between them as
 edges. By saving the state of the nodes and the edges in the database, the user
-can load the workspace with the apropiate metadata telling a story of the
+can load the workspace with the appropriate metadata telling a story of the
 analysis and the state of the files in the remote storage server, thus being
 able to continue the analysis and compare with other possible steps or
 variations of the analysis at any time.
@@ -363,6 +363,6 @@ following possible visualizations:
   the expected results.
 - **Tensorboard**: _(Only available for the network and finetune nodes)_. Calls
   a secondary process that starts a tensorboard view of the logs of the training
-  process. The tensorboard view is a tool that helps the user to monitor the
+  process. The tensorboard view is a tool that helps the user monitor the
   training process of the deep learning model. The tensorboard view is available
   for the training and finetuning nodes.

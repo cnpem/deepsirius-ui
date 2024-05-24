@@ -9,11 +9,11 @@ import Node from "@/app/_components/node";
 import { Callout } from "fumadocs-ui/components/callout";
 import DatasetFormImage from "@/public/assets/node_form_dataset.png";
 import PatchesImage from "@/public/assets/patches.png";
-import RandomSamplitImage from "@/public/assets/random_sampling.png";
+import RandomSamplingImage from "@/public/assets/random_sampling.png";
 
 The dataset component is a [node](/docs/concepts/workspace#nodes) responsible
 for creating a dataset for training the network. It creates a file containing a
-collection of images and labels stored in an apropriate format for deep learning
+collection of images and labels stored in an appropriate format for deep learning
 data processing that will be used to train a network. When clicked, the dataset
 will open a panel with a form to be filled in with the necessary information to
 create a dataset. Let's go through the form fields:
@@ -71,7 +71,7 @@ Number of classes in the label file.
 
 ## Sample Size
 
-The number of random patches extracted from a strategy (uniform avaible only)
+The number of random patches extracted from a strategy (uniform available only)
 used to create the train dataset, example below shows a blue cube patch
 extracted to a pink cube for training. The size of the dataset depends on the
 sample size. The larger the sample size, the heavier the file will become.
@@ -96,7 +96,7 @@ patch, this parameter adjusts its size.
 
 <ImageZoom
   alt="Random Sampling"
-  src={RandomSamplitImage}
+  src={RandomSamplingImage}
   className="!my-0 w-full rounded-sm"
   priority
 />

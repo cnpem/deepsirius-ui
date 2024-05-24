@@ -39,7 +39,7 @@ _Network node form from a network node connected to a dataset node._
 
 In this section, you will set parameters that will directly affect the GPU
 memory usage and the quality and velocity of training and select the deep
-learning architeture. You must imagine that basically the training is trying to
+learning architecture. You must imagine that basically the training is trying to
 determine a function that can predict labels based on a dataset. Ideally, this
 function must obtain the lowest possible error, also known as the optimum
 condition (global minimum). Optimization is carried out by a variation of the
@@ -47,7 +47,7 @@ gradient descent method in order to find a minimum point of the error function.
 
 ## Network Type
 
-### U-net – 2D
+### U-net - 2D
 
 It is the best option for 2D training and works faster for 3D training. The
 training strategy lies in the widespread use of augmentation data to use
@@ -61,11 +61,11 @@ segmented samples more efficiently.
 />
 _U-net architecture (example for 32x32 pixels in the lowest resolution). Each blue
 box corresponds to a multi-channel feature map. The number of channels is denoted
-on top of the box. The x-y-size is provided at the lower left edge of the box. White
+on top of the box. The xy-size is provided at the lower left edge of the box. White
 boxes represent copied feature maps. The arrows denote the different operations.
 Reference: [U-net 2D](https://link.springer.com/chapter/10.1007/978-3-319-24574-4_28)._
 
-### V-net – 3D
+### V-net - 3D
 
 It usually gives better results, but it demands more computationally. It is
 trained to predict the segmentation of the entire volume at once, with an
@@ -74,7 +74,7 @@ optimized function to deal with the imbalance between background and foreground.
 <ImageZoom alt="V-net" src={ParamVnet} className="!my-0 rounded-sm" priority />
 _Schematic representation of Vnet network architecture. Reference: [V-net 3D](https://ieeexplore.ieee.org/abstract/document/7785132/)._
 
-### U-net – 3D
+### U-net - 3D
 
 Similar to V-net 3D but with less convolutions and layers, therefore, faster for
 training and inference.

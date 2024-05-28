@@ -6,10 +6,10 @@ description: From Zero to Label
 import { Step, Steps } from "fumadocs-ui/components/steps";
 import { Callout } from "fumadocs-ui/components/callout";
 
-This tutorial will guide you through the process of creating a new workspace and a 
-basic deep learning workflow using the DeepSirius UI app. By the end, you should
-be able to create a dataset, augment it, train a network, fine-tune it and run an
-inference. Start with nothing, and end with a fresh set of labels.
+This tutorial will guide you through the process of creating a new workspace and
+a basic deep learning workflow using the DeepSirius UI app. By the end, you
+should be able to create a dataset, augment it, train a network, fine-tune it
+and run an inference. Start with nothing, and end with a fresh set of labels.
 
 Have fun!
 
@@ -21,56 +21,181 @@ Have fun!
   You will need a CNPEM account to access the DeepSirius Web App and know the 
   SLURM queues you are allowed to use.
 
-  With that settled you can log into the [DeepSirius](https://deepsirius.lnls.br)
-  with your CNPEM email address and password.
+With that settled you can log into the [DeepSirius](https://deepsirius.lnls.br)
+with your CNPEM email address and password.
 
-  <video controls>
-    <source src="/dive/assets/signin.webm" type="video/webm" />
-    Sign in
-  </video>
+<video controls>
+  <source src="/dive/assets/signin.webm" type="video/webm" />
+  Sign in
+</video>
 
   </Step>
+
   <Step>
   ## Create a new workspace
   Access your workspaces by clicking on the `Workspaces` button on the center of 
   the homepage. This will redirect you to your workspaces page, where you can see
   all the workspaces you have already created or create a new one.
 
-  Click on the `New` button to create a new workspace. You'll be redirected to a 
-  new page where you can fill a form with the path in the storage to where the 
-  workspace will be created, the name of the workspace and a slurm partition to 
-  run this creation job.
+Click on the `New` button to create a new workspace. You'll be redirected to a
+new page where you can fill a form with the path in the storage to where the
+workspace will be created, the name of the workspace and a slurm partition to
+run this creation job.
 
-  On job completion, you will be redirected to the workspace workboard, where you 
-  can create and connect the components of your workflow. Each component represents
-  a job that will be run in the cluster and corresponds to a step in the deep
-  learning workflow.
+On job completion, you will be redirected to the workspace workboard, where you
+can create and connect the components of your workflow. Each component
+represents a job that will be run in the cluster and corresponds to a step in
+the deep learning workflow.
 
   <video controls>
     <source src="/dive/assets/create-workspace.webm" type="video/webm" />
     Create a new workspace
   </video>
   </Step>
+
   <Step>
-  ## Create a new dataset
-  <Callout title="Get in the workspace!" type="warn" >
+
+## Create a new dataset
+
+<Callout title="Get in the workspace!" type="warn">
   The next steps will be done in the workspace you just created. If, for some
   reason, you are not there, please go back to the workspaces page and click on
   the workspace you just created to open it.
-  </Callout>
+</Callout>
+
+On the workspace page, click on the button with the `+` sign to create on the
+top left corner of the page to open a menu containing the names of the nodes you
+can create. Click on the `Dataset` button to create a new dataset.
+
+This will create a new dataset node in the the middle of the workboard. Click on
+the node to open the dataset creation form on a panel that will appear on the
+right side of the page. Fill the form with the name of the new dataset, and
+click on the `Add Data` button to start selecting a group of image, label and
+(optinally) weight map files to construct your dataset. You can click on the
+`+ More!` button to add as many more groups of files to the dataset as you need.
+Any row of this part of the form needs at least one image and one label file to
+be valid. By clicking on each button of this row, a remote file navigator opens
+to help you search and select the path on the storage server where the files are
+located. The deepsirius app only works with files that are located in the
+storage server, so make sure to upload your files to the storage server before
+creating the dataset.
+
+<video controls>
+  <source src="/dive/assets/first-dataset.webm" type="video/webm" />
+  Create a new dataset
+</video>
 
   </Step>
+  
   <Step>
-  ## Make the dataset bigger
+
+## Make the dataset bigger
+
+After creating the dataset, you can augment it by clicking on the bottom
+`handle` of the dataset node or by clicking on the `+` button on the top right
+corner of the workspace workboard and selecting the `Augmentation` node. This
+will create a new augmentation node in the workboard. Click on the new node to
+open the side panel with the augmentation form. Fill the form with the name of
+the new augmented dataset, and select the augmentation techniques you want to
+apply to the dataset.
+
+After the job is completed, you can click on the `Details` link at the bottom of
+the side panel to go to the
+[gallery page](/docs/concepts/workspace#gallery-view) and see a list of preview
+images demonstrating the selected augmentation operations with the selected
+parameters applied to a slice of an image from the dataset. These images don't
+represent the dataset, since its made of patches, but serve as a method to
+verify if the chosen operations and parameters are producing the intended
+outcome.
+
+<video controls>
+  <source src="/dive/assets/first-augmentation.webm" type="video/webm" />
+  Augment the dataset
+</video>
+
   </Step>
+
   <Step>
-  ## Train a network
+
+## Train a network
+
+After augmenting the dataset, you can train a network by clicking on the right
+`handle` of a dataset or augmentation node or by clicking on the `+` button on
+the top right corner of the workspace workboard and selecting the `Network`
+node. This will create a new network node in the workboard. Click on the new
+node to open the side panel with the network form. Fill the form with the name
+of the new network, and select the network architecture, and other parameters
+related to the training process.
+
+After the job is submitted, you can click on the `Details` link at the bottom of
+the side panel to go the [gallery page](/docs/concepts/workspace#gallery-view)
+and see the training evolution by clicking on the `Tensorboard` button. This
+will trigger a tensorboard instance that will show the training evolution of the
+selected network.
+
+<video controls>
+  <source src="/dive/assets/first-network.webm" type="video/webm" />
+  Train the network
+</video>
+
   </Step>
+
   <Step>
-  ## Not enough? Fine-tune it!
+
+## Not enough? Fine-tune it!
+
+After training a network, you can fine-tune it by clicking on the bottom
+`handle` of a network node or by clicking on the `+` button on the top left
+corner of the workspace workboard and selecting the `Fine-tune` node. This will
+create a new fine-tune node in the workboard.
+
+The fine-tune node needs to be connected to a network and a dataset node to
+work. You can connect the fine-tune node to a dataset or a augmentation node by
+dragging its left `handle` to the right `handle` of the dataset or augmentation
+node. The same goes for the network node.
+
+The fine-tune node has a form similar to the network node, but you can't select
+the network architecture and have the option to
+[drop the classifier](/docs/concepts/network#drop-classifier) of the network.
+
+You can add as many finetune nodes as you want to a network node by connecting a
+new fine-tune node to the bottom handle of a network node or a fine-tune
+connected to a network node. This is simply to register the fine-tune jobs
+separately, since the fine-tune job is a continuation of the training job and
+only changes the files related to the same network on the storage server so you
+can't delete a fine-tune, but you can delete the network node to delete all the
+fine-tune nodes connected to it.
+
+<video controls>
+  <source src="/dive/assets/first-finetune.webm" type="video/webm" />
+  Fine-tune a network
+</video>
+
   </Step>
+
   <Step>
-  ## Time to label
+
+## Time to label
+
+Finally, with a trained network, you can run an inference on new data by
+clicking on the right `handle` of a network or by clicking on the `+` button on
+the top left corner of the workspace workboard and selecting the `Inference`
+node. This will create a new inference node in the workboard.
+
+The inference node needs to be connected to a network and a new set of images to
+make inference on. You need also set a remote path to where the inference
+results will be saved.
+
+After the job is completed, you need a volumetric image visualization tool to
+properly see the results, like the Annotat3D or Index plataforms provided
+internally by CNPEM or any other tool that can visualize volumetric labeled
+images.
+
+<video controls>
+  <source src="/dive/assets/first-inference.webm" type="video/webm" />
+  Run an inference on new data
+</video>
+
   </Step>
 
 </Steps>

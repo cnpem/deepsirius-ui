@@ -5,6 +5,7 @@ description: Workspace
 
 import { File, Folder, Files } from "fumadocs-ui/components/files";
 import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+import { Callout } from "fumadocs-ui/components/callout";
 
 import Node from "@/app/_components/node";
 
@@ -136,12 +137,12 @@ explorer window where the user can navigate through the remote storage file
 system and select the desired base path for the workspace files. The user can
 only view and explore the files in the remote storage server that are allowed by
 the user's credential permissions. By selecting a base path, the user will be
-prompted back to the workspace creation form with the selected path filled in the
-Workspace path input field and needs to fill in the Workspace name input field
-which will be the name of the new directory that will be created in the selected
-base path. Before submitting the form, the user must choose the Slurm partition
-where the workspace creation job will be submitted. By now the user must know
-which partitions are available and scheduled for the user's group.
+prompted back to the workspace creation form with the selected path filled in
+the Workspace path input field and needs to fill in the Workspace name input
+field which will be the name of the new directory that will be created in the
+selected base path. Before submitting the form, the user must choose the Slurm
+partition where the workspace creation job will be submitted. By now the user
+must know which partitions are available and scheduled for the user's group.
 
 <ImageZoom
   alt="Remote fs navigation"
@@ -227,22 +228,22 @@ three main independent concepts that can be subdivided in 5 independent steps:
    by the `run_inference` function in the ssc-deepsirius package cli.
 
 Any combination of these steps that starts from 1 and ends in 3 mean a complete
-processing workflow of the ssc-deepsirius package, with specific input and output
-parameters that results in the creation or transformation of data between them
-on the remote storage server. So the results of a step can be used as input for
-another processing step as an independent job without the user occupying the
+processing workflow of the ssc-deepsirius package, with specific input and
+output parameters that results in the creation or transformation of data between
+them on the remote storage server. So the results of a step can be used as input
+for another processing step as an independent job without the user occupying the
 slurm queue and the cluster resources when preparing the data for the next step.
 
 As the results of the steps are saved in the remote storage server, the user can
-check the results of the steps or use it as it sees fit, even if the interface is
-not running - or start another variation of the analysis at any time during the
-life cycle of the files.
+check the results of the steps or use it as it sees fit, even if the interface
+is not running - or start another variation of the analysis at any time during
+the life cycle of the files.
 
-These characteristics of the ssc-deepsirius package are explored by the interface
-by describing the steps as nodes in a graph and the relations between them as
-edges. By saving the state of the nodes and the edges in the database, the user
-can load the workspace with the appropriate metadata telling a story of the
-analysis and the state of the files in the remote storage server, thus being
+These characteristics of the ssc-deepsirius package are explored by the
+interface by describing the steps as nodes in a graph and the relations between
+them as edges. By saving the state of the nodes and the edges in the database,
+the user can load the workspace with the appropriate metadata telling a story of
+the analysis and the state of the files in the remote storage server, thus being
 able to continue the analysis and compare with other possible steps or
 variations of the analysis at any time.
 
@@ -335,10 +336,10 @@ shown below:
   it was checked for the last time and the cancel button and a link for the
   gallery view with more details.
 
-## Gallery View
+## Gallery Page
 
 <ImageZoom
-  alt="Gallery View"
+  alt="Gallery Page"
   src={GalleryView}
   className="!my-0 rounded-sm"
   priority
@@ -347,22 +348,46 @@ _Gallery view of an augmentation node showing the preview images option. As some
 of the options are intervals with max and min values, two images are generated for
 these cases and identified as `Option_name_max` and `Option_name_min`._
 
+
 The gallery view is another page where the user can see more details related to
 the job and remote files and processes. The gallery view is a page that can be
 accessed by clicking on the link on the side panel of the node and has the
 following possible visualizations:
 
+### Slurm Job Logs
+
+There are two options for visualization of the redirected ouput related to the
+slurm jobs. Slurm gives the option to redirect the stdout and stderr of the jobs
+to files that are saved in the remote storage in the logs directory of the
+workspace. The user can visualize the contents of these files by clicking on the
+respective buttons:
+
 - **Output Logs**: Renders the contents of the output log file associated with
-  the job.
+  the job stdout output.
 - **Error Logs**: Renders the contents of the error log file associated with the
-  job.
-- **Preview images**: _(Only available for the augmented dataset creation
-  nodes)_. Renders the preview images generated by the `augmented_dataset`
-  function in the ssc-deepsirius package cli. The preview images are generated
-  to help the user to check if the transformations applied to the images have
-  the expected results.
-- **Tensorboard**: _(Only available for the network and finetune nodes)_. Calls
-  a secondary process that starts a tensorboard view of the logs of the training
-  process. The tensorboard view is a tool that helps the user monitor the
-  training process of the deep learning model. The tensorboard view is available
-  for the training and finetuning nodes.
+  job stderr output.
+
+### Preview images
+
+<Callout type="info">
+  This feature is only available for the dataset augmentation nodes.
+</Callout>
+
+The preview images are generated by the `augmented_dataset` function in the
+ssc-deepsirius package cli. These images don't represent the dataset, since its
+made many smaller patches of different images, but serve as a method to verify
+if the chosen operations and parameters are producing the intended outcome.
+
+### Tensorboard
+
+<Callout type="info">
+  This feature is only available for the network and finetune nodes.
+</Callout>
+
+This feature triggers a secondary service that starts a tensorboard view of the
+logs of the training process of the deep learning model. The tensorboard view is
+a tool that helps the user monitor the training process of the deep learning
+model. While the tensorboard view is active, the user can see the training
+evolution of the selected network. If the user leaves the page, the service will
+be stopped and the user will need to start it again to see the training
+evolution.

@@ -7,13 +7,14 @@ description:
 
 import { ImageZoom } from "fumadocs-ui/components/image-zoom";
 
-import NewWorkspace from "@/public/assets/new_workspace.png";
-import NewWorkspaceEmpty from "@/public/assets/new_workspace_empty.png";
-import GalleryView from "@/public/assets/gallery_view.png";
-import HomePage from "@/public/assets/page_home.png";
-import LoginPage from "@/public/assets/page_login.png";
-import HomePageAvatar from "@/public/assets/page_home_avatar.png";
-import UserPage from "@/public/assets/page_user.png";
+import PageHomeLogged from "@/public/assets/screenshots/page-home-logged.png";
+import PageLogin from "@/public/assets/screenshots/page-login.png";
+import PageUserEmptyWithAvatar from "@/public/assets/screenshots/page-user-empty-with-avatar.png";
+import PageUserWorkspacesFavorite from "@/public/assets/screenshots/page-user-workspaces-favorite.png";
+import PageNewWorkspace from "@/public/assets/screenshots/page-new-workspace.png";
+import PageNewWorkspaceNavigator from "@/public/assets/screenshots/page-new-workspace-navigator.png";
+import PageWorkpaceBoardEmpty from "@/public/assets/screenshots/page-workspace-board-empty.png";
+import PageWorkspaceGalleryImages from "@/public/assets/screenshots/page-workspace-gallery-images.png";
 
 ## Home page
 
@@ -24,12 +25,13 @@ this documentation. After the login, the home page shows the link to the
 and session controls.
 
 <ImageZoom
-  alt="Home Page"
-  src={HomePage}
+  alt="Home Page Logged"
+  src={PageHomeLogged}
   className="!my-0 rounded-sm"
   priority
 />
-_Example of a home page with the login button and the link to the user page._
+_Example of a home page with the login button, the link to the user workspaces page
+and the avatar menu on the top right side of the screen._
 
 ## Login page
 
@@ -39,7 +41,7 @@ password to log in with their CNPEM credentials.
 
 <ImageZoom
   alt="Login Page"
-  src={LoginPage}
+  src={PageLogin}
   className="!my-0 rounded-sm"
   priority
 />
@@ -51,15 +53,6 @@ The avatar menu is a dropdown menu that appears on the top right corner of the
 screen if the user is logged in. It contains links to the user page, the home
 page, a switch for dark/light mode, and a logout button.
 
-<ImageZoom
-  alt="Home Page Avatar"
-  src={HomePageAvatar}
-  className="!my-0 rounded-sm"
-  priority
-/>
-_Example of a home page in light mode with the avatar menu opened on the top right
-corner of the screen._
-
 ## User page
 
 The user page is where the user can control their workspaces. It contains a list
@@ -70,12 +63,22 @@ redirects the user to the [new workspace page](#new-workspace-page) to create a
 new workspace.
 
 <ImageZoom
-  alt="User Page"
-  src={UserPage}
+  alt="User Page with avatar"
+  src={PageUserEmptyWithAvatar}
   className="!my-0 rounded-sm"
   priority
 />
-_Example of a user page with a list of workspaces and the search bar._
+_Example of a user page with an empty list of workspaces, a search bar, the `+ New`
+button and an opened [avatar menu](#avatar-menu)._
+
+<ImageZoom
+  alt="User Page with favorite workspaces"
+  src={PageUserWorkspacesFavorite}
+  className="!my-0 rounded-sm"
+  priority
+/>
+_Example of a user page with a list of workspaces and a favorited workspace on the
+top of the list._
 
 ## New Workspace page
 
@@ -84,7 +87,7 @@ The new workspace page is where the user finds a form for submitting a job to
 
 <ImageZoom
   alt="New Workspace"
-  src={NewWorkspace}
+  src={PageNewWorkspace}
   className="!my-0 rounded-sm"
   priority
 />
@@ -105,7 +108,7 @@ user can create and connect [nodes](/docs/concepts/workspace#nodes).
 
 <ImageZoom
   alt="New Workspace Empty"
-  src={NewWorkspaceEmpty}
+  src={PageWorkpaceBoardEmpty}
   className="!my-0 rounded-sm"
   priority
 />
@@ -140,7 +143,7 @@ the node type and the options available to that node.
 
 <ImageZoom
   alt="Gallery View"
-  src={GalleryView}
+  src={PageWorkspaceGalleryImages}
   className="!my-0 rounded-sm"
   priority
 />
@@ -150,4 +153,4 @@ these cases and identified as `Option_name_max` and `Option_name_min`. Since the
 augmentation node does not perform training, the option for the tensorboard view
 is not available for this node._
 
-Read more about the [gallery page components](/docs/concepts/workspace#gallery-page).
+Read more about the [gallery page](/docs/concepts/workspace#gallery-page).

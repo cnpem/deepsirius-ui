@@ -9,14 +9,15 @@ import { Callout } from "fumadocs-ui/components/callout";
 import { ImageZoom } from "fumadocs-ui/components/image-zoom";
 import { ProsAndConsTable } from "@/app/_components/ui/pros-and-cons-table";
 
-import NetworkFormImage from "@/public/assets/node_form_network.png";
+import NodeNetwork from "@/public/assets/screenshots/node-network.png";
+import NodeFinetune from "@/public/assets/screenshots/node-finetune.png";
+
 import ParamUnet2D from "@/public/assets/unet2d.png";
 import ParamVnet from "@/public/assets/vnet.png";
 import ParamUnet3D from "@/public/assets/unet3d.png";
 import ConstantError from "@/public/assets/constant_error.png";
 import DecreaseLR from "@/public/assets/decrease_lr.png";
 import Overfitting from "@/public/assets/overfitting.png";
-import FinetuneFormImage from "@/public/assets/node_form_finetune.png";
 
 Networks are the core element of deep learning. They are responsible for
 learning the features of the input data. The network is a set of data that is
@@ -31,7 +32,7 @@ different dataset (see [Fine tuning](#fine-tuning)).
 
 <ImageZoom
   alt="Network Form"
-  src={NetworkFormImage}
+  src={NodeNetwork}
   className="!my-0 rounded-sm"
   priority
 />
@@ -264,7 +265,7 @@ the data well, the green line is overfit. Source: [Overfitting](https://en.m.wik
 
 <ImageZoom
   alt="Fine-tuning Form"
-  src={FinetuneFormImage}
+  src={NodeFinetune}
   className="!my-0 rounded-sm"
   priority
 />

@@ -9,14 +9,15 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 import Node from "@/app/_components/node";
 
-import NewWorkspace from "@/public/assets/new_workspace.png";
-import RemoteNautilus from "@/public/assets/nautilus.png";
-import NewWorkspaceError from "@/public/assets/new_workspace_error.png";
-import NewWorkspaceJob from "@/public/assets/new_workspace_job.png";
-import NewWorkspaceEmpty from "@/public/assets/new_workspace_empty.png";
-import NodeSidePanel from "@/public/assets/node_side_panel.png";
-import WorkspaceExamplePending from "@/public/assets/workspace_example_pending.png";
-import GalleryView from "@/public/assets/gallery_view.png";
+import PageNewWorkspace from "@/public/assets/screenshots/page-new-workspace.png";
+import PageNewWorkspaceNavigator from "@/public/assets/screenshots/page-new-workspace-navigator.png";
+import PageNewWorkspaceError from "@/public/assets/screenshots/page-new-workspace-error.png";
+import PageNewWorkspaceRunning from "@/public/assets/screenshots/page-new-workspace-running.png";
+import PageWorkpaceBoardEmpty from "@/public/assets/screenshots/page-workspace-board-empty.png";
+import PageWorkspaceBoardBusy from "@/public/assets/screenshots/page-workspace-board-busy.png";
+import NodeDataset from "@/public/assets/screenshots/node-dataset.png";
+import PageWorkspaceGalleryImages from "@/public/assets/screenshots/page-workspace-gallery-images.png";
+import PageWorkspaceGalleryTensorboard from "@/public/assets/screenshots/page-workspace-gallery-tensorboard.png";
 
 The workspace is the canvas where the user can create and connect the components
 that represent the steps of the analysis. The user can have multiple workspaces,
@@ -32,7 +33,7 @@ changed as the user interacts with the interface.
 
 <ImageZoom
   alt="New Workspace"
-  src={NewWorkspace}
+  src={PageNewWorkspace}
   className="!my-0 rounded-sm"
   priority
 />
@@ -146,7 +147,7 @@ must know which partitions are available and scheduled for the user's group.
 
 <ImageZoom
   alt="Remote fs navigation"
-  src={RemoteNautilus}
+  src={PageNewWorkspaceNavigator}
   className="!my-0 rounded-sm"
   priority
 />
@@ -164,20 +165,20 @@ completed or show an error if the job fails.
 
 <ImageZoom
   alt="New Workspace Error"
-  src={NewWorkspaceError}
+  src={PageNewWorkspaceError}
   className="!my-0 rounded-sm"
   priority
 />
-_Error message when the user tries to create a workspace with an already existing
-name._
+_Error message when the user tries to create a workspace with a name of a directory
+that already exists in the selected base path._
 
 <ImageZoom
-  alt="New Workspace Job"
-  src={NewWorkspaceJob}
+  alt="New Workspace with a running Job"
+  src={PageNewWorkspaceRunning}
   className="!my-0 rounded-sm"
   priority
 />
-_Job submission message when the user tries to create a workspace._
+_New workspace form showing the status of the submitted job for creating a workspace._
 
 ## The workspace page and its components
 
@@ -188,7 +189,7 @@ analysis steps.
 
 <ImageZoom
   alt="New Workspace Done"
-  src={NewWorkspaceEmpty}
+  src={PageWorkpaceBoardEmpty}
   className="!my-0 rounded-sm"
   priority
 />
@@ -293,12 +294,12 @@ corners on the corners of the nodes, with its color changing according to the
 node state with more prominent colors than the node background.
 
 <ImageZoom
-  alt="Workspace example pending state"
-  src={WorkspaceExamplePending}
+  alt="Workspace example busy state"
+  src={PageWorkspaceBoardBusy}
   className="!my-0 rounded-sm"
   priority
 />
-_Workspace example showing connected nodes and a node with a pending job. Note the
+_Workspace example showing connected nodes and a node with a running job. Note the
 connections between the handles and the variety of handle positions depending on
 the node types._
 
@@ -314,7 +315,7 @@ connection is not allowed, the interface will show an error message.
 
 <ImageZoom
   alt="Node Side Panel"
-  src={NodeSidePanel}
+  src={NodeDataset}
   className="!my-0 rounded-sm"
   priority
 />
@@ -340,14 +341,13 @@ shown below:
 
 <ImageZoom
   alt="Gallery Page"
-  src={GalleryView}
+  src={PageWorkspaceGalleryImages}
   className="!my-0 rounded-sm"
   priority
 />
 _Gallery view of an augmentation node showing the preview images option. As some
 of the options are intervals with max and min values, two images are generated for
 these cases and identified as `Option_name_max` and `Option_name_min`._
-
 
 The gallery view is another page where the user can see more details related to
 the job and remote files and processes. The gallery view is a page that can be
@@ -379,6 +379,14 @@ made many smaller patches of different images, but serve as a method to verify
 if the chosen operations and parameters are producing the intended outcome.
 
 ### Tensorboard
+
+<ImageZoom
+  alt="Gallery Tensorboard"
+  src={PageWorkspaceGalleryTensorboard}
+  className="!my-0 rounded-sm"
+  priority
+/>
+_Gallery view of a network node showing the tensorboard option._
 
 <Callout type="info">
   This feature is only available for the network and finetune nodes.

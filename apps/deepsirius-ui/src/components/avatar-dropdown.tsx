@@ -57,10 +57,10 @@ export function AvatarDrop() {
 
   const { resetStore } = useStoreActions();
 
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
 
   useHotkeys('shift+alt+d', () =>
-    setTheme(theme === 'light' ? 'dark' : 'light'),
+    setTheme(resolvedTheme === 'light' ? 'dark' : 'light'),
   );
 
   const logOut = useCallback(async () => {
@@ -121,11 +121,11 @@ export function AvatarDrop() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          onClick={() => setTheme(resolvedTheme === 'light' ? 'dark' : 'light')}
         >
           <MoonIcon className="h-4 w-4 rotate-0 scale-100 transition-all hover:text-slate-900 dark:-rotate-90 dark:scale-0 dark:text-slate-400 dark:hover:text-slate-100" />
           <SunIcon className="absolute h-4 w-4 rotate-90 scale-0 transition-all hover:text-slate-900 dark:rotate-0 dark:scale-100 dark:text-slate-400 dark:hover:text-slate-100" />
-          <span className="ml-2">{theme === 'light' ? 'Dark' : 'Light'}</span>
+          <span className="ml-2">{resolvedTheme === 'light' ? 'Dark' : 'Light'}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

@@ -13,17 +13,12 @@ import RandomSamplingImage from "@/public/assets/random_sampling.png";
 
 The dataset component is a [node](/docs/concepts/workspace#nodes) responsible
 for creating a dataset for training the network. It creates a file containing a
-collection of images and labels stored in an appropriate format for deep learning
-data processing that will be used to train a network. When clicked, the dataset
-will open a panel with a form to be filled in with the necessary information to
-create a dataset. Let's go through the form fields:
+collection of images and labels stored in an appropriate format for deep
+learning data processing that will be used to train a network. When clicked, the
+dataset will open a panel with a form to be filled in with the necessary
+information to create a dataset. Let's go through the form fields:
 
-<ImageZoom
-  alt="Dataset Form"
-  src={NodeDataset}
-  className="!my-0 rounded-sm"
-  priority
-/>
+<ImageZoom alt="Dataset Form" src={NodeDataset} className="!my-0 rounded-sm" />
 _Form fields of the the dataset node._
 
 ## Images
@@ -76,12 +71,7 @@ used to create the train dataset, example below shows a blue cube patch
 extracted to a pink cube for training. The size of the dataset depends on the
 sample size. The larger the sample size, the heavier the file will become.
 
-<ImageZoom
-  alt="Patches"
-  src={PatchesImage}
-  className="!my-0 rounded-sm"
-  priority
-/>
+<ImageZoom alt="Patches" src={PatchesImage} className="!my-0 rounded-sm" />
 
 ## Strategy
 
@@ -98,7 +88,6 @@ patch, this parameter adjusts its size.
   alt="Random Sampling"
   src={RandomSamplingImage}
   className="!my-0 w-full rounded-sm"
-  priority
 />
 _The uniform window sampler first computes a set of all feasible spatial locations
 (so that the windows are always within the image) and randomly draws samples from

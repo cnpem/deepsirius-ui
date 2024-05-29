@@ -16,12 +16,7 @@ Brazil. The web app it available at the address
 [https://deepsirius.lnls.br](https://deepsirius.lnls.br) for registered users
 trough the CNPEM local network.
 
-<ImageZoom
-  alt="Home page"
-  src={PageHome}
-  className="!my-0 rounded-sm"
-  priority
-/>
+<ImageZoom alt="Home page" src={PageHome} className="!my-0 rounded-sm" />
 _Home page of the DeepSirius UI. Available at [https://deepsirius.lnls.br](https://deepsirius.lnls.br)._
 
 ## Overview
@@ -30,7 +25,6 @@ _Home page of the DeepSirius UI. Available at [https://deepsirius.lnls.br](https
   alt="Workspace board with busy components"
   src={PageWorkspaceBoardBusy}
   className="!my-0 rounded-sm"
-  priority
 />
 _Example of a workspace board with busy components._
 
@@ -75,11 +69,12 @@ Its logic divides the deep learning workflow in the following steps:
 These steps are meant to be run in sequence for a complete cycle of the deep
 learning process, but as the jobs associated with each step are independent and
 can take a long time to run, the user is able to run them separately, as long as
-the previous step was completed before without errors. This opens the possibility
-for the user to create more than one possible path of analysis, by creating
-multiple datasets, training multiple models with the same dataset of different
-training parameters, refining these models with new data and parameters, and
-then running inferences with more than one model for different sets of images.
+the previous step was completed before without errors. This opens the
+possibility for the user to create more than one possible path of analysis, by
+creating multiple datasets, training multiple models with the same dataset of
+different training parameters, refining these models with new data and
+parameters, and then running inferences with more than one model for different
+sets of images.
 
 To accomplish this, the interface is divided in the so called `workspaces`,
 which are simply workflows that allow the user to create and connect many

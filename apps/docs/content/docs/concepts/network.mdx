@@ -30,12 +30,7 @@ is responsible for creating the network and training it with the dataset. The
 finetune node is responsible for retraining the network with the same or a
 different dataset (see [Fine tuning](#fine-tuning)).
 
-<ImageZoom
-  alt="Network Form"
-  src={NodeNetwork}
-  className="!my-0 rounded-sm"
-  priority
-/>
+<ImageZoom alt="Network Form" src={NodeNetwork} className="!my-0 rounded-sm" />
 _Network node form from a network node connected to a dataset node._
 
 In this section, you will set parameters that will directly affect the GPU
@@ -54,12 +49,7 @@ It is the best option for 2D training and works faster for 3D training. The
 training strategy lies in the widespread use of augmentation data to use
 segmented samples more efficiently.
 
-<ImageZoom
-  alt="U-net 2D"
-  src={ParamUnet2D}
-  className="!my-0 rounded-sm"
-  priority
-/>
+<ImageZoom alt="U-net 2D" src={ParamUnet2D} className="!my-0 rounded-sm" />
 _U-net architecture (example for 32x32 pixels in the lowest resolution). Each blue
 box corresponds to a multi-channel feature map. The number of channels is denoted
 on top of the box. The xy-size is provided at the lower left edge of the box. White
@@ -72,7 +62,7 @@ It usually gives better results, but it demands more computationally. It is
 trained to predict the segmentation of the entire volume at once, with an
 optimized function to deal with the imbalance between background and foreground.
 
-<ImageZoom alt="V-net" src={ParamVnet} className="!my-0 rounded-sm" priority />
+<ImageZoom alt="V-net" src={ParamVnet} className="!my-0 rounded-sm" />
 _Schematic representation of Vnet network architecture. Reference: [V-net 3D](https://ieeexplore.ieee.org/abstract/document/7785132/)._
 
 ### U-net - 3D
@@ -80,12 +70,7 @@ _Schematic representation of Vnet network architecture. Reference: [V-net 3D](ht
 Similar to V-net 3D but with less convolutions and layers, therefore, faster for
 training and inference.
 
-<ImageZoom
-  alt="U-net 3D"
-  src={ParamUnet3D}
-  className="!my-0 rounded-sm"
-  priority
-/>
+<ImageZoom alt="U-net 3D" src={ParamUnet3D} className="!my-0 rounded-sm" />
 _Schematic representation of Unet3D network architecture. Reference: [U-net 3D](https://link.springer.com/chapter/10.1007/978-3-319-46723-8_49)._
 
 ## Iterations
@@ -116,7 +101,6 @@ global minimum).
   alt="Constant Error"
   src={ConstantError}
   className="!my-0 mx-auto rounded-sm"
-  priority
 />
 _If you end your training with a relatively constant error, e.g., it’s taking a very
 long time to decrease the value, you probably should increase the learning rate (increase
@@ -132,7 +116,6 @@ point, because it stops on the first that it finds.
   alt="Decrease LR"
   src={DecreaseLR}
   className="!my-0 mx-auto rounded-sm"
-  priority
 />
 _Depending on whether the optimization is converging to the left or right minimum,
 decreasing the learning rate may cause it to get trapped in the left or right minimum._
@@ -256,7 +239,6 @@ it might be a sign of overfitting.
   alt="Overfitting"
   src={Overfitting}
   className="!my-0 mx-auto rounded-sm"
-  priority
 />
 _This is a diagram showing overfitting of a classifier. While the black line fits
 the data well, the green line is overfit. Source: [Overfitting](https://en.m.wikipedia.org/wiki/File:Overfitting.svg)._
@@ -267,7 +249,6 @@ the data well, the green line is overfit. Source: [Overfitting](https://en.m.wik
   alt="Fine-tuning Form"
   src={NodeFinetune}
   className="!my-0 rounded-sm"
-  priority
 />
 _Fine-tuning form from a finetune node connected to a network node and an augmentation
 node._

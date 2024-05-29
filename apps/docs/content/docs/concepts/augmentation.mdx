@@ -35,7 +35,6 @@ handle in the bottom side of the dataset node.
   alt="Augmentation Form"
   src={NodeAugmentation}
   className="!my-0 rounded-sm"
-  priority
 />
 _Form fields of the the augmentation node._
 
@@ -62,7 +61,6 @@ exist.
   alt="Vertical Flip"
   src={TrVerticalFlip}
   className="!my-0 rounded-sm"
-  priority
 />
 
 ## Rotations
@@ -73,7 +71,6 @@ Rotates the image in 90 and 270 degrees while also resizing the image.
   alt="Rotations"
   src={TrRotations}
   className="!my-0 w-full rounded-sm"
-  priority
 />
 
 ## Contrast
@@ -83,12 +80,7 @@ the dataset, it is better to enable this option. It will make the network learn
 not only one pattern of contrast, but a whole new range of possible contrast
 situations.
 
-<ImageZoom
-  alt="Contrast"
-  src={TrContrast}
-  className="!my-0 rounded-sm"
-  priority
-/>
+<ImageZoom alt="Contrast" src={TrContrast} className="!my-0 rounded-sm" />
 
 ## Gaussian Blur
 
@@ -100,7 +92,6 @@ shape.
   alt="Gaussian Blur"
   src={TrGaussianBlur}
   className="!my-0 rounded-sm"
-  priority
 />
 
 ## Elastic transformations
@@ -116,19 +107,13 @@ It determines if in your training it will accept variations in shape
   alt="Elastic Alpha"
   src={TrElasticAlpha}
   className="!my-0 w-full rounded-sm"
-  priority
 />
 
 ## Dropout
 
 It determines the number the percentage of pixels randomly dropped.
 
-<ImageZoom
-  alt="Dropout"
-  src={TrDropout}
-  className="!my-0 w-full rounded-sm"
-  priority
-/>
+<ImageZoom alt="Dropout" src={TrDropout} className="!my-0 w-full rounded-sm" />
 
 ## Poisson Noise
 
@@ -141,9 +126,4 @@ around 20.0 results in very visible noise. It is recommended to set per_channel
 to True, as this augmenter samples and adds noise elementwise, affecting
 neighboring pixels differently.
 
-<ImageZoom
-  alt="Poisson"
-  src={TrPoisson}
-  className="!my-0 rounded-sm"
-  priority
-/>
+<ImageZoom alt="Poisson" src={TrPoisson} className="!my-0 rounded-sm" />

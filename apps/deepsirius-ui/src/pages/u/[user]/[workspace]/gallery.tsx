@@ -28,6 +28,8 @@ import {
   Tensorboard,
 } from '~/components/gallery-views';
 import { StatusBadge } from '~/components/workboard/status-badge';
+import { defaultSlurmLogPath } from '~/lib/utils';
+import { checkStatusRefetchInterval } from '~/lib/constants';
 
 function Gallery({ user, workspace }: { user: string; workspace: string }) {
   const [nodeId] = useQueryState('nodeId');
@@ -148,7 +150,7 @@ function NodeInfo({
     {
       refetchOnMount: false,
       enabled: status === 'busy' && !!nodeData.jobId,
-      refetchInterval: 5000,
+      refetchInterval: checkStatusRefetchInterval,
       refetchIntervalInBackground: true,
     },
   );
@@ -159,22 +161,20 @@ function NodeInfo({
     if (jobData.jobStatus === 'COMPLETED') {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       setStatus('success');
-      setMessage(`Job ${
-        nodeData.jobId ?? 'Err'
-      } finished successfully in ${date}`);
-    } else if (jobData.jobStatus === 'FAILED' || jobData.jobStatus?.includes('CANCELLED')) {
+      setMessage(
+        `Job ${nodeData.jobId ?? 'Err'} finished successfully in ${date}`,
+      );
+    } else if (
+      jobData.jobStatus === 'FAILED' ||
+      jobData.jobStatus?.includes('CANCELLED')
+    ) {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       setStatus('error');
-      setMessage(`Job ${
-        nodeData.jobId ?? 'Err'
-      } failed in ${date}`);
+      setMessage(`Job ${nodeData.jobId ?? 'Err'} failed in ${date}`);
     } else if (jobData.jobStatus === 'RUNNING') {
-      console.log('Job is running');
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       setStatus('busy');
-      setMessage(`Job ${
-        nodeData.jobId ?? 'Err'
-      } last checked at ${date}`);
+      setMessage(`Job ${nodeData.jobId ?? 'Err'} last checked at ${date}`);
     }
   }, [jobData, status, nodeData.jobId]);
 
@@ -213,35 +213,36 @@ function GalleryView({
   const workspacePath = node.data.workspacePath;
   const jobId = node.data.jobId;
   const jobName = node.type ? `deepsirius-${node.type}` : '';
-  const imagesPath =
-    node.type === 'augmentation'
-      ? node.data.augmentationData?.remotePreviewPath
-      : '';
   switch (view) {
     case 'log-output':
       if (!jobId) return <p>Job Id not found</p>;
       if (!node.type) return <p>Node type not found</p>;
-      return (
-        <ViewRemoteLog
-          path={`${workspacePath}/logs/log-${jobId}-${jobName}.out`}
-        />
-      );
+      const { out } = defaultSlurmLogPath({
+        workspacePath,
+        jobId,
+        jobName,
+      });
+      return <ViewRemoteLog path={out} />;
     case 'log-err':
       if (!jobId) return <p>Job Id not found</p>;
       if (!node.type) return <p>Node type not found</p>;
-      return (
-        <ViewRemoteLog
-          path={`${workspacePath}/logs/log-${jobId}-${jobName}.err`}
-        />
-      );
+      const { err } = defaultSlurmLogPath({
+        workspacePath,
+        jobId,
+        jobName,
+      });
+      return <ViewRemoteLog path={err} />;
     case 'preview-imgs':
-      if (!imagesPath) return <p>Images path not found</p>;
-      return <ViewRemoteImages path={imagesPath} />;
+      if (!node.data?.augmentationData) return <p>Augmentation data not found</p>;
+      return <ViewRemoteImages path={node.data.augmentationData.remotePreviewPath} />;
     case 'tensorboard':
+      if (!node.data?.networkData) return <p>Network data not found</p>;
+      const networkLabel = node.data.networkData.label;
+      const networkLogDir = `${node.data.networkData.remotePath}/logs`;
       return (
         <Tensorboard
-          logdir={`${node.data?.networkData?.remotePath ?? '/dummy'}/logs`}
-          name={node.data?.networkData?.form.networkUserLabel ?? 'network'}
+          logdir={networkLogDir}
+          name={networkLabel}
         />
       );
     default:

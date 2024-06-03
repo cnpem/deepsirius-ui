@@ -1,4 +1,5 @@
 import { TRPCError } from '@trpc/server';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { env } from '~/env.mjs';
 import {
@@ -229,19 +230,45 @@ export const sshRouter = createTRPCRouter({
 
       const { stderr } = await connection.execCommand(`rm -r ${path}`);
 
-      if (!!stderr) {
+      const pathNotFound = stderr.includes('No such file or directory');
+
+      if (!!stderr && !pathNotFound) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: stderr,
         });
       }
 
-      const workspace = await prisma.workspaceState.delete({
-        where: {
-          path: path,
-        },
-      });
-      return { workspace: workspace };
+      await prisma.workspaceState
+        .delete({
+          where: {
+            path: path,
+          },
+        })
+        .catch((err) => {
+          if (err instanceof Prisma.PrismaClientKnownRequestError) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message:
+                'Workspace deleted from storage but not deleted from database. ' +
+                err.message,
+            });
+          }
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message:
+              'Workspace deleted from storage but not deleted from db. Failed to delete workspace state from database.',
+          });
+        });
+
+      if (pathNotFound) {
+        return {
+          message: 'Workspace path not found. State removed from database.',
+          type: 'warning',
+        };
+      }
+
+      return { message: 'Workspace deleted from server and database.', type: 'success' };
     }),
   rmFile: protectedSSHProcedure
     .input(

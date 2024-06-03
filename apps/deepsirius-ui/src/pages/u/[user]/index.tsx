@@ -163,12 +163,21 @@ function WorkspaceList({ userRoute, search }: WorkspaceListProps) {
   );
 
   const { mutate: deleteWorkspace } = api.ssh.rmWorkspace.useMutation({
-    onSuccess: async () => {
+    onSuccess: async ({ message, type }) => {
       await utils.db.getUserWorkspaces.invalidate();
-      toast.success('Workspace deleted');
+      if (type === 'warning') {
+        toast.warning(message);
+        return;
+      }
+      if (type === 'success') {
+        toast.success(message);
+        return;
+      }
+      toast.info(message);
     },
-    onError: () => {
+    onError: ({ message }) => {
       toast.error('Error deleting workspace');
+      console.error(message);
     },
   });
 

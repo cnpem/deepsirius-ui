@@ -22,6 +22,7 @@ import {
   SuccessSheet,
 } from './node-components/node-sheet';
 import { useUser } from '~/hooks/use-user';
+import { checkStatusRefetchInterval } from '~/lib/constants';
 
 export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   const user = useUser();
@@ -45,7 +46,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     { jobId: nodeProps.data.jobId as string },
     {
       enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
-      refetchInterval: 5000,
+      refetchInterval: checkStatusRefetchInterval,
       refetchIntervalInBackground: true,
       refetchOnWindowFocus: true,
     },

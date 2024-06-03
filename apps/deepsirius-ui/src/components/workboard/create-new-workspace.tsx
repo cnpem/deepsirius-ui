@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { Button } from '~/components/ui/button';
 import { env } from '~/env.mjs';
 import { useStoreActions } from '~/hooks/use-store';
-import { slurmPartitionOptions } from '~/lib/constants';
+import { checkStatusRefetchInterval, slurmPartitionOptions } from '~/lib/constants';
 import { api } from '~/utils/api';
 
 import { NautilusDialog } from '../nautilus';
@@ -87,7 +87,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
     {
       refetchOnMount: false,
       enabled: !!newWorkspaceState.jobIsPending && !!newWorkspaceState.jobId,
-      refetchInterval: 5000,
+      refetchInterval: checkStatusRefetchInterval,
       refetchIntervalInBackground: true,
     },
   );

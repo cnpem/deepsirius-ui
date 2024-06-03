@@ -18,6 +18,7 @@ import {
 } from './node-components/node-sheet';
 import { type DataSchema } from './node-component-forms/dataset-form';
 import { useUser } from '~/hooks/use-user';
+import { checkStatusRefetchInterval } from '~/lib/constants';
 
 export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
   const user = useUser();
@@ -68,7 +69,7 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
     {
       refetchOnMount: false,
       enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
-      refetchInterval: 5000,
+      refetchInterval: checkStatusRefetchInterval,
       refetchIntervalInBackground: true,
     },
   );

@@ -17,6 +17,7 @@ import {
 } from './node-components/node-sheet';
 import { ScrollArea } from '../ui/scroll-area';
 import { useUser } from '~/hooks/use-user';
+import { checkStatusRefetchInterval } from '~/lib/constants';
 
 export function InferenceNode(nodeProps: NodeProps<NodeData>) {
   const user = useUser();
@@ -47,7 +48,7 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
     {
       refetchOnMount: false,
       enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
-      refetchInterval: 5000,
+      refetchInterval: checkStatusRefetchInterval,
       refetchIntervalInBackground: true,
     },
   );

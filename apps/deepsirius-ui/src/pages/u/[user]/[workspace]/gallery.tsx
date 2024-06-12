@@ -17,6 +17,12 @@ import { toast } from 'sonner';
 import { type Node, type Edge } from 'reactflow';
 import { Layout } from '~/components/layout';
 import { Button } from '~/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '~/components/ui/tooltip';
 import NodeIcon from '~/components/workboard/node-components/node-icon';
 import { AvatarDrop } from '~/components/avatar-dropdown';
 import Link from 'next/link';
@@ -60,11 +66,11 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
         <BoardLink user={user} workspace={workspace} />
         <AvatarDrop />
       </div>
-      <div className="flex h-[92%] gap-4 p-2">
-        <div className="h-fit rounded-lg border p-2 shadow-lg">
+      <div className="flex h-[92%] w-full gap-4 p-2">
+        <div className="h-fit w-1/5 rounded-lg border p-2 shadow-lg">
           <SidePanelContent node={selectedNode} />
         </div>
-        <div className="h-full w-full">
+        <div className="h-full w-4/5">
           <GalleryView view={view} node={selectedNode} />
         </div>
       </div>
@@ -75,76 +81,131 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
 function SidePanelContent({ node }: { node: Node<NodeData> }) {
   const [status, setStatus] = useState<NodeStatus>(node.data.status);
   const [view, setView] = useQueryState('view');
-  const nodeName = useMemo(() => {
-    if (!node.type) return undefined;
-    switch (node.type) {
-      case 'dataset':
-        return node.data?.datasetData?.name;
-      case 'augmentation':
-        return node.data?.augmentationData?.name;
-      case 'network':
-        return node.data?.networkData?.label;
-      case 'finetune':
-        const sourceLabel =
-          node.data?.finetuneData?.sourceNetworkLabel ?? undefined;
-        return sourceLabel
-          ? `${sourceLabel} finetune_id: ${node.id}`
-          : undefined;
-      case 'inference':
-        const outputPath = node.data?.inferenceData?.outputPath ?? undefined;
-        return outputPath ? `inference ${outputPath}` : undefined;
-      default:
-        return undefined;
-    }
-  }, [node]);
 
   if (!node.data) return null;
   if (!node.type) return null;
 
   return (
-    <div className="flex flex-col space-y-4 p-4">
-      <NodeInfo name={nodeName} type={node.type} nodeData={node.data} />
-      <Button
-        onClick={() => void setView('log-output')}
-        variant={(view === 'log-output' && 'default') || 'outline'}
-      >
-        Output Logs
-      </Button>
-      <Button
-        onClick={() => void setView('log-err')}
-        variant={(view === 'log-err' && 'default') || 'outline'}
-      >
-        Error Logs
-      </Button>
-      <Button
-        onClick={() => void setView('preview-imgs')}
-        variant={(view === 'preview-imgs' && 'default') || 'outline'}
-        disabled={!['augmentation'].includes(node.type)}
-      >
-        Preview Images
-      </Button>
-      <Button
-        onClick={() => void setView('tensorboard')}
-        variant={(view === 'tensorboard' && 'default') || 'outline'}
-        disabled={!['network', 'finetune'].includes(node.type)}
-      >
-        Tensorboard
-      </Button>
-    </div>
+    <TooltipProvider>
+      <div className="flex flex-col space-y-2 p-4">
+        <NodeInfo
+          type={node.type}
+          nodeData={node.data}
+          status={status}
+          setStatus={setStatus}
+        />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={() => void setView('log-output')}
+              variant={(view === 'log-output' && 'default') || 'outline'}
+            >
+              Output Logs
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="text-muted-foreground">
+              View the logs of the job execution.
+            </p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={() => void setView('log-err')}
+              variant={(view === 'log-err' && 'default') || 'outline'}
+            >
+              Error Logs
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="text-muted-foreground">
+              View the error logs of the job execution.
+            </p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span tabIndex={0}>
+              <Button
+                onClick={() => void setView('preview-imgs')}
+                variant={(view === 'preview-imgs' && 'default') || 'outline'}
+                disabled={!['augmentation'].includes(node.type)}
+                className="!w-full"
+              >
+                Preview Images
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="text-muted-foreground">
+              Preview the images generated by the augmentation process.
+              {node.type !== 'augmentation' &&
+                ' Only available for augmentation nodes.'}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span tabIndex={0}>
+              <Button
+                onClick={() => void setView('tensorboard')}
+                variant={(view === 'tensorboard' && 'default') || 'outline'}
+                disabled={
+                  !['network', 'finetune'].includes(node.type) ||
+                  status !== 'busy'
+                }
+                className="!w-full"
+              >
+                Tensorboard
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="text-muted-foreground">
+              View the tensorboard of the training.
+              Only available for busy network or finetune nodes.
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
   );
 }
 
 function NodeInfo({
-  name,
   type,
   nodeData,
+  status,
+  setStatus,
 }: {
-  name: string | undefined;
   type: string;
   nodeData: NodeData;
+  status: NodeStatus;
+  setStatus: (status: NodeStatus) => void;
 }) {
-  const [status, setStatus] = useState<NodeStatus>(nodeData.status);
   const [message, setMessage] = useState<string | undefined>(nodeData.message);
+  const nodeName = useMemo(() => {
+    if (!type) return undefined;
+    switch (type) {
+      case 'dataset':
+        return nodeData.datasetData?.name;
+      case 'augmentation':
+        return nodeData.augmentationData?.name;
+      case 'network':
+        return nodeData.networkData?.label;
+      case 'finetune':
+        const sourceLabel =
+          nodeData.finetuneData?.sourceNetworkLabel ?? undefined;
+        return sourceLabel ? `${sourceLabel} finetune` : 'finetune';
+      case 'inference':
+        const outputPath = nodeData.inferenceData?.outputPath ?? '';
+
+        return outputPath;
+      default:
+        return undefined;
+    }
+  }, [type, nodeData]);
 
   const { data: jobData } = api.job.checkStatus.useQuery(
     { jobId: nodeData.jobId ?? '' },
@@ -177,17 +238,20 @@ function NodeInfo({
       setStatus('busy');
       setMessage(`Job ${nodeData.jobId ?? 'Err'} last checked at ${date}`);
     }
-  }, [jobData, status, nodeData.jobId]);
+  }, [jobData, status, nodeData.jobId, setStatus]);
 
   return (
-    <>
-      <div className="flex items-center">
-        <NodeIcon nodeType={type} />
-        <p className="ml-2 text-lg font-semibold">{name ?? 'node'}</p>
+    <div className="flex flex-col space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-row gap-2">
+          <NodeIcon nodeType={type} />
+          <p className='text-md font-semibold'>{type}</p>
+        </div>
         <StatusBadge status={status} />
       </div>
+      <p className="text-wrap text-md">{nodeName ?? 'node'}</p>
       <p className="text-muted-foreground">{message}</p>
-    </>
+    </div>
   );
 }
 

@@ -1,7 +1,6 @@
 import { api } from '~/utils/api';
 import { Textarea } from './ui/textarea';
 import { ImageGallery } from './image-gallery';
-import { useDelayedMount } from '~/hooks/use-delayed-mount';
 
 export function ViewRemoteLog({ path }: { path: string }) {
   const { data, error, isLoading, isError } = api.ssh.catTxt.useQuery({
@@ -60,48 +59,35 @@ export function ViewRemoteImages({ path }: { path: string }) {
 
 export function Tensorboard({
   logdir,
-  name,
 }: {
   logdir: string;
-  name: string;
 }) {
-  const { data, error, isLoading, isError } = api.tbConsumer.start.useQuery(
-    {
-      logdir,
-      name,
-    },
-    {
-      refetchInterval: 1000 * 3,
-    },
-  );
+  const tensorboardUrl = api.ssh.getTensorboardUrlFromPath.useQuery({
+    path: logdir,
+    lines: 15,
+  });
 
-  // Delayed mount to prevent Bad Gateway error
-  const isMounted = useDelayedMount(2000);
-
-  if (isLoading) {
+  if (tensorboardUrl.isLoading) {
     return <Loading />;
   }
 
-  if (isError) {
-    console.error('Error starting tensorboard', error);
-    return <p>Error: {error.message}</p>;
+  if (tensorboardUrl.isError) {
+    console.error('Error starting tensorboard', tensorboardUrl.error);
+    return <p>Error: {tensorboardUrl.error.message}</p>;
   }
 
   return (
-    <>
-      {isMounted ? (
-        <iframe src={data.url} className="h-full w-full rounded-lg" />
-      ) : (
-        <Loading />
-      )}
-    </>
+    <iframe
+      src={tensorboardUrl.data.url}
+      className="h-full w-full rounded-lg"
+    />
   );
 }
 
 function Loading() {
   return (
     <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
-      <p className="h-1/2 text-center text-muted-foreground">Loading..</p>
+      <p className="h-1/2 text-center text-muted-foreground">Waiting for the tensorboard Url...</p>
     </div>
   );
 }

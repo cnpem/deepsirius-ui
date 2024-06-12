@@ -268,7 +268,10 @@ export const sshRouter = createTRPCRouter({
         };
       }
 
-      return { message: 'Workspace deleted from server and database.', type: 'success' };
+      return {
+        message: 'Workspace deleted from server and database.',
+        type: 'success',
+      };
     }),
   rmFile: protectedSSHProcedure
     .input(
@@ -309,5 +312,59 @@ export const sshRouter = createTRPCRouter({
         });
       }
       return { path: path };
+    }),
+  head: protectedSSHProcedure
+    .input(
+      z.object({
+        path: z.string(),
+        lines: z.number().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const connection = ctx.connection;
+
+      const command = `head ${input.lines ? `-n ${input.lines} ` : ''}${
+        input.path
+      }`;
+      const { stdout, stderr } = await connection.execCommand(command);
+
+      if (!!stderr) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: stderr,
+        });
+      }
+
+      return { content: stdout };
+    }),
+  getTensorboardUrlFromPath: protectedSSHProcedure
+    .input(
+      z.object({
+        path: z.string(),
+        lines: z.number().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const connection = ctx.connection;
+
+      const command = `head ${input.lines ? `-n ${input.lines} ` : ''}${input.path}`;
+      const { stdout, stderr } = await connection.execCommand(command);
+
+      if (!!stderr) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: stderr,
+        });
+      }
+      // search for the line containing the tensorboard url
+      const urlKey = 'Tensorboard:';
+      const url = stdout.match(new RegExp(`${urlKey}(.*)`))?.[1]?.trim();
+      if (!url) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'No tensorboard url found in the file',
+        });
+      }
+      return { url };
     }),
 });

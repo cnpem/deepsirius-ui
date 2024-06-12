@@ -73,6 +73,7 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
 }
 
 function SidePanelContent({ node }: { node: Node<NodeData> }) {
+  const [status, setStatus] = useState<NodeStatus>(node.data.status);
   const [view, setView] = useQueryState('view');
   const nodeName = useMemo(() => {
     if (!node.type) return undefined;
@@ -213,15 +214,15 @@ function GalleryView({
   const workspacePath = node.data.workspacePath;
   const jobId = node.data.jobId;
   const jobName = node.type ? `deepsirius-${node.type}` : '';
+  const { out } = defaultSlurmLogPath({
+    workspacePath,
+    jobId,
+    jobName,
+  });
   switch (view) {
     case 'log-output':
       if (!jobId) return <p>Job Id not found</p>;
       if (!node.type) return <p>Node type not found</p>;
-      const { out } = defaultSlurmLogPath({
-        workspacePath,
-        jobId,
-        jobName,
-      });
       return <ViewRemoteLog path={out} />;
     case 'log-err':
       if (!jobId) return <p>Job Id not found</p>;
@@ -233,18 +234,13 @@ function GalleryView({
       });
       return <ViewRemoteLog path={err} />;
     case 'preview-imgs':
-      if (!node.data?.augmentationData) return <p>Augmentation data not found</p>;
-      return <ViewRemoteImages path={node.data.augmentationData.remotePreviewPath} />;
-    case 'tensorboard':
-      if (!node.data?.networkData) return <p>Network data not found</p>;
-      const networkLabel = node.data.networkData.label;
-      const networkLogDir = `${node.data.networkData.remotePath}/logs`;
+      if (!node.data?.augmentationData)
+        return <p>Augmentation data not found</p>;
       return (
-        <Tensorboard
-          logdir={networkLogDir}
-          name={networkLabel}
-        />
+        <ViewRemoteImages path={node.data.augmentationData.remotePreviewPath} />
       );
+    case 'tensorboard':
+      return <Tensorboard logdir={out} />;
     default:
       return (
         <div className="flex h-full w-3/4 items-center justify-center rounded-lg border border-dashed">

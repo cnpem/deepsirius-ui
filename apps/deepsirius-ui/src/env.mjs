@@ -27,8 +27,6 @@ const server = z.object({
   PROCESSING_CONTAINER_PATH: z.string(),
   STORAGE_API_URL: z.string().url(),
   STORAGE_API_KEY: z.string(),
-  TENSORBOARD_API_URL: z.string().url(),
-  TENSORBOARD_API_KEY: z.string(),
 });
 
 /**
@@ -61,8 +59,6 @@ const processEnv = {
   PROCESSING_CONTAINER_PATH: process.env.PROCESSING_CONTAINER_PATH,
   STORAGE_API_URL: process.env.STORAGE_API_URL,
   STORAGE_API_KEY: process.env.STORAGE_API_KEY,
-  TENSORBOARD_API_URL: process.env.TENSORBOARD_API_URL,
-  TENSORBOARD_API_KEY: process.env.TENSORBOARD_API_KEY,
 };
 
 // Don't touch the part below

@@ -8,7 +8,7 @@ export function ViewRemoteLog({ path }: { path: string }) {
   });
 
   if (isLoading) {
-    return <Loading />;
+    return <Loading message="Loading logs..." />;
   }
 
   if (isError) {
@@ -38,7 +38,7 @@ export function ViewRemoteImages({ path }: { path: string }) {
     );
 
   if (isLoading) {
-    return <Loading />;
+    return <Loading message="Loading images..." />;
   }
 
   if (isError) {
@@ -57,37 +57,64 @@ export function ViewRemoteImages({ path }: { path: string }) {
   );
 }
 
-export function Tensorboard({
-  logdir,
-}: {
-  logdir: string;
-}) {
+export function Tensorboard({ logdir }: { logdir: string }) {
   const tensorboardUrl = api.ssh.getTensorboardUrlFromPath.useQuery({
     path: logdir,
     lines: 15,
   });
 
   if (tensorboardUrl.isLoading) {
-    return <Loading />;
+    return <Loading message="Starting Tensorboard..." />;
   }
 
   if (tensorboardUrl.isError) {
     console.error('Error starting tensorboard', tensorboardUrl.error);
-    return <p>Error: {tensorboardUrl.error.message}</p>;
+    return (
+      <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
+        <p className="text-center text-muted-foreground">
+          Error: {tensorboardUrl.error.message}
+        </p>
+      </div>
+    );
+  }
+
+  if (tensorboardUrl.data.url === '') {
+    return (
+      <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
+        <p className="text-center text-muted-foreground">
+          Error: Tensorboard Url is empty
+        </p>
+      </div>
+    );
+  }
+
+  if (!tensorboardUrl.data.url.startsWith('http')) {
+    return (
+      <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
+        <p className="text-center text-muted-foreground">
+          Error: unexpected tensorboard Url
+        </p>
+      </div>
+    );
   }
 
   return (
     <iframe
       src={tensorboardUrl.data.url}
       className="h-full w-full rounded-lg"
+      onError={(e) => {
+        console.error('Error loading tensorboard', e);
+      }}
     />
   );
 }
 
-function Loading() {
+function Loading({ message }: { message?: string }) {
   return (
     <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
-      <p className="h-1/2 text-center text-muted-foreground">Waiting for the tensorboard Url...</p>
+      <p className="h-1/2 text-center text-muted-foreground">
+        {message || 'Loading...'}
+      </p>
     </div>
   );
 }

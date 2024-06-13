@@ -90,7 +90,6 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
       updateNodeInternals(nodeProps.id);
     } else {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      console.log('checkJob.onSuccess', jobData.jobStatus);
       onUpdateNode({
         id: nodeProps.id,
         data: {
@@ -130,7 +129,6 @@ export function InferenceNode(nodeProps: NodeProps<NodeData>) {
       workspacePath: nodeProps.data.workspacePath,
     })
       .then(({ jobId }) => {
-        console.log('handleSubmitJob then?', 'jobId', jobId);
         if (!jobId) {
           console.error('handleSubmitJob then?', 'no jobId');
           toast.error('Error submitting job');

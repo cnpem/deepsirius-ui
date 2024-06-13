@@ -128,7 +128,6 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
       updateNodeInternals(nodeProps.id);
     } else {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      console.log('jobData', jobData);
       onUpdateNode({
         id: nodeProps.id,
         data: {
@@ -158,7 +157,6 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
     api.deepsiriusJob.submitFinetune.useMutation();
 
   const handleSubmit = (formData: FormType) => {
-    console.log('handleSubmitJob');
     const { sourceDatasetName, sourceNetworkLabel, sourceNetworkType } =
       getSourceData(nodeProps.id);
     if (!sourceDatasetName) {

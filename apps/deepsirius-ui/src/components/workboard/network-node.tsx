@@ -149,14 +149,12 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
       formData,
     })
       .then(({ jobId }) => {
-        console.log('handleSubmitJob then?', 'jobId', jobId);
         if (!jobId) {
           console.error('handleSubmitJob then?', 'no jobId');
           toast.error('Error submitting job');
           return;
         }
         setFormData(formData);
-        console.log();
         onUpdateNode({
           id: nodeProps.id,
           data: {

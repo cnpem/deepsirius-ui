@@ -194,10 +194,6 @@ export const useStore = create<RFStore>()(
           );
           // return if nodes are not found
           if (!sourceNode || !targetNode) {
-            console.log('Store.OnConnect: Source or target node not found.', {
-              source: params.source,
-              target: params.target,
-            });
             return false;
           }
           // checking if there is already a source connected to the target:
@@ -213,9 +209,6 @@ export const useStore = create<RFStore>()(
                 );
               // looking for the size of the sourceNodes array
               if (existingSourceNodes.length === 2) {
-                console.log(
-                  'Store.isValidConnection: Finetune node already has two sources',
-                );
                 return false;
               }
               // looking at the types of the sourceNodes
@@ -224,24 +217,14 @@ export const useStore = create<RFStore>()(
                   (node) => node?.type === sourceNode?.type,
                 )
               ) {
-                console.log(
-                  'Store.isValidConnection: Finetune node already has a source of the same type',
-                );
                 return false;
               }
             } else {
-              console.log(
-                'Store.isValidConnection: Target node already has a source',
-              );
               return false;
             }
           }
           // check source status
           if (sourceNode.data.status !== 'success') {
-            console.log(
-              'Store.OnConnect: Source node is not ready. Source status:',
-              sourceNode.data.status,
-            );
             return false;
           }
           // check connection pairs and connect if valid
@@ -254,11 +237,6 @@ export const useStore = create<RFStore>()(
           ) {
             return true;
           } else {
-            console.log(
-              'Store.OnConnect: Invalid connection pair',
-              sourceNode?.type,
-              targetNode?.type,
-            );
             return false;
           }
         },
@@ -266,7 +244,6 @@ export const useStore = create<RFStore>()(
           if (!get().workspaceInfo || !params.source || !params.target) {
             return;
           }
-          console.log('Store.OnConnect: Trying to connect', params);
           if (get().actions.isValidConnection(params)) {
             toast.success('Connected');
             const targetType = get().nodes.find(
@@ -298,7 +275,6 @@ export const useStore = create<RFStore>()(
         checkSourceIsConnected: (targetId: string) => {
           const edge = get().edges.find((edge) => edge.target === targetId);
           if (!edge) {
-            console.log('Store.checkSourceIsConnected: No connection found');
             return false;
           }
           const sourceNode = get().nodes.find(
@@ -307,18 +283,8 @@ export const useStore = create<RFStore>()(
           if (sourceNode && sourceNode?.data.status === 'success') {
             return true;
           } else if (sourceNode && sourceNode?.data.status !== 'success') {
-            // this shoudn't be allowed
-            console.log(
-              'Store.checkSourceIsConnected: sourceNode in other status',
-              sourceNode,
-            );
             return false;
           } else {
-            // this shoudn't be allowed either
-            console.log(
-              'Store.checkSourceIsConnected: No source found but the edge exsists',
-              edge,
-            );
             return false;
           }
         },

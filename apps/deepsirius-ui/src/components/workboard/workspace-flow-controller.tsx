@@ -74,7 +74,8 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
   const { nodes, edges, stateSnapshot } = useStore();
   const { mutate: updateDbState } = api.db.updateWorkspace.useMutation({
     onError: (error) => {
-      console.log('dbstate update error', error);
+      console.error('dbstate update error', error);
+      toast.error('Error updating workspace state');
     },
   });
   const { mutate: rmFile } = api.ssh.rmFile.useMutation({

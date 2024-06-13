@@ -120,7 +120,6 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
       workspacePath: nodeProps.data.workspacePath,
     })
       .then(({ jobId }) => {
-        console.log('handleSubmitJob then?', 'jobId', jobId);
         if (!jobId) {
           console.error('handleSubmitJob then?', 'no jobId');
           toast.error('Error submitting job');

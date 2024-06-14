@@ -1,0 +1,54 @@
+---
+title: Tensorboard
+description:
+  Use of tensorboard.
+---
+import { Callout } from "fumadocs-ui/components/callout";
+import { ImageZoom } from "fumadocs-ui/components/image-zoom";
+
+
+import TensorImages from "@/public/assets/tensoboard_images.png";
+import TensorLoss from "@/public/assets/tensorboard_loss.png";
+
+## Using the Scalars Dashboard
+
+### Navigate to Scalars:
+In the TensorBoard interface, you will see a sidebar on the left. Click on "Scalars" to access the Scalars dashboard.
+
+<Callout type="info" className="">
+  The loss will be shown each 20 iterations steps once the network starts training. The history of the training will be saved
+  and in subsequent fine-tuning process the tensorboard will initialize with previous loss. This means if you want to access history
+  you can just open a fine-tune of 1 iteration to open a tensorboard (that won't train, see finetune section).
+</Callout>
+
+### Viewing Scalars:
+The Scalars dashboard displays graphs of scalar values that are logged during training. Those values for DeepSirius are loss and validation loss.
+
+<ImageZoom alt="Loss tensorboard" src={TensorLoss} className="!my-0 rounded-sm" />
+_Tensorboard scalar visualiation with 13k loss._
+
+
+### Customizing Display:
+- **Tags:** Tags correspond to the different scalar values logged (e.g., loss, accuracy). You can select or deselect tags to customize the displayed graphs.
+- **Smoothing:** Use the smoothing slider above the graphs to adjust the level of smoothing applied to the scalar graphs. This helps to reduce noise and better visualize trends.
+
+### Refreshing Data:
+- **Automatic Refresh:** You can adjust the refresh rate by clicking on the settings icon (gear icon) in the top right corner and setting the "Reload data every" option. However, once the job is finished the refresh will show its disconnected.
+- **Manual Refresh:** If you need to manually refresh the data, click the refresh button located near the top right of the Scalars dashboard. This is useful if automatic refresh is too slow or if you suspect new data has been logged but not yet displayed.
+
+### Detailed View:
+- **Hover for Details:** Hover over any point on the graph to see the exact value at that step.
+- **Zoom:** Click and drag on the graph to zoom into a specific range. Double-click to reset the zoom.
+
+### Exporting Data:
+- **Download CSV:** You can export the scalar data by clicking on "show dowload options" at the top left, and pressing the download button at the bottom right of the graph for SVG file or downlonad the CSV/JSON at the bottom right.
+
+
+## Using the Images Dashboard
+
+Each class will otuput a probability map, once the tensorboard and the job is running, you can see the output of each patch in the image section. 
+Above each image will contain information if its a ground truth image, an inference image or the original image and the step of inference.
+To acess other available steps, slide the bar right above each image.
+
+<ImageZoom alt="Loss tensorboard" src={TensorImages} className="!my-0 rounded-sm" />
+_Tensorboard Image Visualization: Only training inference is selected. For the 13,000th step, the images are displayed in the following order: the original label (ground truth), the original image, and the output probability map of the class._

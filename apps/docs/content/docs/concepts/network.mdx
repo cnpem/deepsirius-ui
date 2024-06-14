@@ -257,6 +257,14 @@ In deepsirius context, fine tuning is the process of retraining a trained
 network with a new set of datasets, if the dataset has different number of
 classes, the drop classifier options should be selected.
 
+<Callout type="info" className="">
+  To perform fine-tuning iterations, you need to add the desired number of new iterations 
+  to the total iterations previously completed. For instance, if you previously performed 1000 iterations 
+  and want to add 100 more, the input should be 1100 iterations.
+  This means the network retains the history of iterations and loss.
+</Callout>
+
+
 ### Drop-classifier
 
 **Behavior when `drop_classifier` is 'selected':**

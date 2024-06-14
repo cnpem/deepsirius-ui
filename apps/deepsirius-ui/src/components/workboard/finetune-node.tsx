@@ -111,7 +111,10 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
         },
       });
       updateNodeInternals(nodeProps.id);
-    } else if (jobData.jobStatus === 'FAILED' || jobData.jobStatus?.includes('CANCELLED')) {
+    } else if (
+      jobData.jobStatus === 'FAILED' ||
+      jobData.jobStatus?.includes('CANCELLED')
+    ) {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       toast.error('Job failed');
       onUpdateNode({
@@ -312,64 +315,38 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
         <SuccessSheet
           selected={nodeProps.selected}
           message={nodeProps.data.message}
-          title="Finetune"
+          title="Overview"
           hrefToGallery={galleryUrl}
         >
-          <FinetuneForm
-            onSubmitHandler={(formData) => handleSubmit(formData)}
-          />
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="item-1">
-              <AccordionTrigger>
-                <h2 className="text-md font-semibold text-foreground">
-                  Job Details
-                </h2>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="flex flex-col gap-1 rounded-md border border-input p-2 font-mono">
-                  <div
-                    key={'previous-iterations'}
-                    className="flex flex-row items-center justify-between gap-1"
-                  >
-                    <p className="font-medium">total iterations trained</p>
-                    <p className="text-end">
-                      {nodeProps.data.finetuneData?.form.iterations ?? 0}
-                    </p>
-                  </div>
-
-                  {formData &&
-                    Object.entries(formData)
-                      .filter(
-                        ([_, value]) =>
-                          typeof value === 'string' ||
-                          typeof value === 'number' ||
-                          typeof value === 'boolean',
-                      )
-                      .map(([key, value], index) => {
-                        const isEven = index % 2 === 0;
-                        return (
-                          <div
-                            key={key}
-                            className="flex flex-row items-center justify-between gap-1"
-                          >
-                            <p className="font-medium">
-                              {key
-                                .replace(/([a-z])([A-Z])/g, '$1 $2')
-                                .toLowerCase()}
-                            </p>
-                            <p
-                              data-even={isEven}
-                              className="text-end data-[even=true]:text-violet-600 "
-                            >
-                              {value.toString()}
-                            </p>
-                          </div>
-                        );
-                      })}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <div className="flex flex-col gap-1 rounded-md border border-input p-2 font-mono">
+            {formData &&
+              Object.entries(formData)
+                .filter(
+                  ([_, value]) =>
+                    typeof value === 'string' ||
+                    typeof value === 'number' ||
+                    typeof value === 'boolean',
+                )
+                .map(([key, value], index) => {
+                  const isEven = index % 2 === 0;
+                  return (
+                    <div
+                      key={key}
+                      className="flex flex-row items-center justify-between gap-1"
+                    >
+                      <p className="font-medium">
+                        {key.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()}
+                      </p>
+                      <p
+                        data-even={isEven}
+                        className="text-end data-[even=true]:text-violet-600 "
+                      >
+                        {value.toString()}
+                      </p>
+                    </div>
+                  );
+                })}
+          </div>
         </SuccessSheet>
       </>
     );

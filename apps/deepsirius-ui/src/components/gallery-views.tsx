@@ -1,6 +1,9 @@
 import { api } from '~/utils/api';
 import { Textarea } from './ui/textarea';
 import { ImageGallery } from './image-gallery';
+import Link from 'next/link';
+import { cn } from '~/lib/utils';
+import { buttonVariants } from './ui/button';
 
 export function ViewRemoteLog({ path }: { path: string }) {
   const { data, error, isLoading, isError } = api.ssh.catTxt.useQuery({
@@ -99,13 +102,19 @@ export function Tensorboard({ logdir }: { logdir: string }) {
   }
 
   return (
-    <iframe
-      src={tensorboardUrl.data.url}
-      className="h-full w-full rounded-lg"
-      onError={(e) => {
-        console.error('Error loading tensorboard', e);
-      }}
-    />
+    <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
+      <p className="text-center text-muted-foreground">
+        {`Tensorboard should open in a new tab. If it doesn't, click: `}
+        <a
+          href={tensorboardUrl.data.url}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="text-blue-600"
+        >
+          {tensorboardUrl.data.url}
+        </a>
+      </p>
+    </div>
   );
 }
 
@@ -116,5 +125,48 @@ function Loading({ message }: { message?: string }) {
         {message || 'Loading...'}
       </p>
     </div>
+  );
+}
+
+export function TensorboardLink({
+  logdir,
+  disabled,
+  onClick,
+}: {
+  logdir: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const tensorboardUrl = api.ssh.getTensorboardUrlFromPath.useQuery(
+    {
+      path: logdir,
+      lines: 15,
+    },
+    {
+      enabled: !disabled,
+    },
+  );
+
+  return (
+    <Link
+      href={tensorboardUrl.data?.url ?? ''}
+      rel="noreferrer noopener"
+      target="_blank"
+      data-disabled={
+        disabled ||
+        !tensorboardUrl.data?.url.startsWith('http') ||
+        tensorboardUrl.isLoading ||
+        tensorboardUrl.isError
+      }
+      className={cn(
+        buttonVariants({ variant: 'outline' }),
+        '!w-full',
+        'data-[disabled=true]:pointer-events-none data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-50',
+      )}
+      prefetch={false}
+      onClick={onClick}
+    >
+      Open Tensorboard
+    </Link>
   );
 }

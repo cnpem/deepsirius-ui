@@ -32,6 +32,7 @@ import {
   ViewRemoteLog,
   ViewRemoteImages,
   Tensorboard,
+  TensorboardLink,
 } from '~/components/gallery-views';
 import { StatusBadge } from '~/components/workboard/status-badge';
 import { defaultSlurmLogPath } from '~/lib/utils';
@@ -76,6 +77,17 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
       </div>
     </div>
   );
+}
+
+function getLogPath(node: Node<NodeData>) {
+  const workspacePath = node.data.workspacePath;
+  const jobId = node.data.jobId;
+  const jobName = node.type ? `deepsirius-${node.type}` : '';
+  return defaultSlurmLogPath({
+    workspacePath,
+    jobId,
+    jobName,
+  });
 }
 
 function SidePanelContent({ node }: { node: Node<NodeData> }) {
@@ -148,23 +160,20 @@ function SidePanelContent({ node }: { node: Node<NodeData> }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <span tabIndex={0}>
-              <Button
-                onClick={() => void setView('tensorboard')}
-                variant={(view === 'tensorboard' && 'default') || 'outline'}
+              <TensorboardLink
+                logdir={getLogPath(node).out}
                 disabled={
-                  !['network', 'finetune'].includes(node.type) ||
+                  !(node.type === 'network' || node.type === 'finetune') || 
                   status !== 'busy'
                 }
-                className="!w-full"
-              >
-                Tensorboard
-              </Button>
+                onClick={() => void setView('tensorboard')}
+              />
             </span>
           </TooltipTrigger>
           <TooltipContent>
             <p className="text-muted-foreground">
-              View the tensorboard of the training.
-              Only available for busy network or finetune nodes.
+              View the tensorboard of the training. Only available for busy
+              network or finetune nodes.
             </p>
           </TooltipContent>
         </Tooltip>
@@ -245,11 +254,11 @@ function NodeInfo({
       <div className="flex items-center justify-between">
         <div className="flex flex-row gap-2">
           <NodeIcon nodeType={type} />
-          <p className='text-md font-semibold'>{type}</p>
+          <p className="text-md font-semibold">{type}</p>
         </div>
         <StatusBadge status={status} />
       </div>
-      <p className="text-wrap text-md">{nodeName ?? 'node'}</p>
+      <p className="text-md text-wrap">{nodeName ?? 'node'}</p>
       <p className="text-muted-foreground">{message}</p>
     </div>
   );
@@ -275,14 +284,8 @@ function GalleryView({
   view: string | null;
   node: Node<NodeData>;
 }) {
-  const workspacePath = node.data.workspacePath;
   const jobId = node.data.jobId;
-  const jobName = node.type ? `deepsirius-${node.type}` : '';
-  const { out } = defaultSlurmLogPath({
-    workspacePath,
-    jobId,
-    jobName,
-  });
+  const { out, err } = getLogPath(node);
   switch (view) {
     case 'log-output':
       if (!jobId) return <p>Job Id not found</p>;
@@ -291,11 +294,6 @@ function GalleryView({
     case 'log-err':
       if (!jobId) return <p>Job Id not found</p>;
       if (!node.type) return <p>Node type not found</p>;
-      const { err } = defaultSlurmLogPath({
-        workspacePath,
-        jobId,
-        jobName,
-      });
       return <ViewRemoteLog path={err} />;
     case 'preview-imgs':
       if (!node.data?.augmentationData)

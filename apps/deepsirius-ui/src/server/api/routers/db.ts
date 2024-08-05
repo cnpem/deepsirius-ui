@@ -75,7 +75,6 @@ export const dbRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      console.log('searching workspace by name. input: ', input);
       const workspace = await ctx.prisma.workspaceState.findFirst({
         where: {
           name: input.name,

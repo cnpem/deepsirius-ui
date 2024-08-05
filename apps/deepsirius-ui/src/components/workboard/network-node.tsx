@@ -16,6 +16,7 @@ import {
   SuccessSheet,
 } from './node-components/node-sheet';
 import { useUser } from '~/hooks/use-user';
+import { checkStatusRefetchInterval } from '~/lib/constants';
 
 export function NetworkNode(nodeProps: NodeProps<NodeData>) {
   const user = useUser();
@@ -59,7 +60,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     {
       refetchOnMount: false,
       enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
-      refetchInterval: 5000,
+      refetchInterval: checkStatusRefetchInterval,
       refetchIntervalInBackground: true,
     },
   );
@@ -148,14 +149,12 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
       formData,
     })
       .then(({ jobId }) => {
-        console.log('handleSubmitJob then?', 'jobId', jobId);
         if (!jobId) {
           console.error('handleSubmitJob then?', 'no jobId');
           toast.error('Error submitting job');
           return;
         }
         setFormData(formData);
-        console.log();
         onUpdateNode({
           id: nodeProps.id,
           data: {

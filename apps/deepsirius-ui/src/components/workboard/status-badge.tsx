@@ -14,20 +14,16 @@ const nodeStatusBadgeVariants = cva('', {
   },
 });
 
-export function StatusBadge({ status }: { status: NodeStatus | undefined }) {
-  if (!status) return (
-    <Badge className="ml-auto rounded-full text-xs bg-gray-500">
-      unknown
-    </Badge>
-  );
-  
+export function StatusBadge({ status, className }: { status: NodeStatus | undefined, className?: string}) {
+  if (!status) return null;  
   return (
     <Badge
       className={cn(
-        'ml-auto rounded-full text-xs',
+        'mx-1 rounded-full text-xs font-semibold',
         nodeStatusBadgeVariants({
           status,
         }),
+        className,
       )}
     >
       {status}

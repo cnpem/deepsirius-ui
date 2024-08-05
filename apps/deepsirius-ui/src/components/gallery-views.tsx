@@ -1,7 +1,9 @@
 import { api } from '~/utils/api';
 import { Textarea } from './ui/textarea';
 import { ImageGallery } from './image-gallery';
-import { useDelayedMount } from '~/hooks/use-delayed-mount';
+import Link from 'next/link';
+import { cn } from '~/lib/utils';
+import { buttonVariants } from './ui/button';
 
 export function ViewRemoteLog({ path }: { path: string }) {
   const { data, error, isLoading, isError } = api.ssh.catTxt.useQuery({
@@ -9,7 +11,7 @@ export function ViewRemoteLog({ path }: { path: string }) {
   });
 
   if (isLoading) {
-    return <Loading />;
+    return <Loading message="Loading logs..." />;
   }
 
   if (isError) {
@@ -39,7 +41,7 @@ export function ViewRemoteImages({ path }: { path: string }) {
     );
 
   if (isLoading) {
-    return <Loading />;
+    return <Loading message="Loading images..." />;
   }
 
   if (isError) {
@@ -58,50 +60,113 @@ export function ViewRemoteImages({ path }: { path: string }) {
   );
 }
 
-export function Tensorboard({
-  logdir,
-  name,
-}: {
-  logdir: string;
-  name: string;
-}) {
-  const { data, error, isLoading, isError } = api.tbConsumer.start.useQuery(
-    {
-      logdir,
-      name,
-    },
-    {
-      refetchInterval: 1000 * 3,
-    },
-  );
+export function Tensorboard({ logdir }: { logdir: string }) {
+  const tensorboardUrl = api.ssh.getTensorboardUrlFromPath.useQuery({
+    path: logdir,
+    lines: 15,
+  });
 
-  // Delayed mount to prevent Bad Gateway error
-  const isMounted = useDelayedMount(2000);
-
-  if (isLoading) {
-    return <Loading />;
+  if (tensorboardUrl.isLoading) {
+    return <Loading message="Starting Tensorboard..." />;
   }
 
-  if (isError) {
-    console.error('Error starting tensorboard', error);
-    return <p>Error: {error.message}</p>;
+  if (tensorboardUrl.isError) {
+    console.error('Error starting tensorboard', tensorboardUrl.error);
+    return (
+      <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
+        <p className="text-center text-muted-foreground">
+          Error: {tensorboardUrl.error.message}
+        </p>
+      </div>
+    );
+  }
+
+  if (tensorboardUrl.data.url === '') {
+    return (
+      <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
+        <p className="text-center text-muted-foreground">
+          Error: Tensorboard Url is empty
+        </p>
+      </div>
+    );
+  }
+
+  if (!tensorboardUrl.data.url.startsWith('http')) {
+    return (
+      <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
+        <p className="text-center text-muted-foreground">
+          Error: unexpected tensorboard Url
+        </p>
+      </div>
+    );
   }
 
   return (
-    <>
-      {isMounted ? (
-        <iframe src={data.url} className="h-full w-full rounded-lg" />
-      ) : (
-        <Loading />
-      )}
-    </>
+    <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
+      <p className="text-center text-muted-foreground">
+        {`Tensorboard should open in a new tab. If it doesn't, click: `}
+        <a
+          href={tensorboardUrl.data.url}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="text-blue-600"
+        >
+          {tensorboardUrl.data.url}
+        </a>
+      </p>
+    </div>
   );
 }
 
-function Loading() {
+function Loading({ message }: { message?: string }) {
   return (
     <div className="flex h-full w-full items-center justify-center rounded-lg border border-dashed">
-      <p className="h-1/2 text-center text-muted-foreground">Loading..</p>
+      <p className="h-1/2 text-center text-muted-foreground">
+        {message || 'Loading...'}
+      </p>
     </div>
+  );
+}
+
+export function TensorboardLink({
+  logdir,
+  disabled,
+  onClick,
+}: {
+  logdir: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const tensorboardUrl = api.ssh.getTensorboardUrlFromPath.useQuery(
+    {
+      path: logdir,
+      lines: 15,
+    },
+    {
+      enabled: !disabled,
+    },
+  );
+
+  return (
+    <Link
+      href={tensorboardUrl.data?.url ?? ''}
+      rel="noreferrer noopener"
+      target="_blank"
+      data-disabled={
+        disabled ||
+        !tensorboardUrl.data?.url.startsWith('http') ||
+        tensorboardUrl.isLoading ||
+        tensorboardUrl.isError
+      }
+      className={cn(
+        buttonVariants({ variant: 'outline' }),
+        '!w-full',
+        'data-[disabled=true]:pointer-events-none data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-50',
+      )}
+      prefetch={false}
+      onClick={onClick}
+    >
+      Open Tensorboard
+    </Link>
   );
 }

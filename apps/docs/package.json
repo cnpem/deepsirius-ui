@@ -6,7 +6,6 @@
     "build": "next build",
     "clean": "rm -rf .next .turbo node_modules",
     "dev": "next dev -p 4321",
-    "type-check": "tsc --noEmit",
     "start": "next start"
   },
   "dependencies": {

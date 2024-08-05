@@ -26,7 +26,7 @@ In a workspace, the user can create any number of components of each type, and c
 
 When a component is created and focused by the user it displays a form with the parameters of the component, which the user can fill and submit to the server. The server will then create a slurm job in the Sirius cluster with the parameters of the component, and update the state of the component in the interface as the job runs. The user can check the status of the job as the component changes itself. All of these changes are reflected in the database, so that the user can logoff and close the browser, and the jobs will continue to run in the cluster.
 
-When the user logs in again and opens its workspace, the previous state of the 
+When the user logs in again and opens its workspace, the previous state of the
 components will be loaded from the database, compared to the current state of the jobs in the cluster, and then updated in the interface.
 
 > Note: In order to use the app the user must be registered in the CNPEM LDAP server and have access to the Sirius cluster, with permissions to run slurm jobs in the appropriate queue.
@@ -82,7 +82,8 @@ Requirements satisfied, you can start the development environment with:
 Then, open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ### Documentation
-The documentation for the app can be found in the [docs](./apps/docs) folder. 
+
+The documentation for the app can be found in the [docs](./apps/docs) folder.
 Start the documentation server with:
 
 ```shell

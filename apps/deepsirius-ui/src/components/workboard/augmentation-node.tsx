@@ -94,7 +94,10 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
         },
       });
       updateNodeInternals(nodeProps.id);
-    } else if (jobData.jobStatus === 'FAILED' || jobData.jobStatus?.includes('CANCELLED')) {
+    } else if (
+      jobData.jobStatus === 'FAILED' ||
+      jobData.jobStatus?.includes('CANCELLED')
+    ) {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       toast.error('Job failed');
       onUpdateNode({
@@ -278,59 +281,94 @@ export function AugmentationNode(nodeProps: NodeProps<NodeData>) {
         >
           <div className="flex flex-col gap-2 rounded-md border border-input p-2 font-mono text-sm">
             <FormatFormDataItem
-              content={formData?.augmentationArgs.rot90 ? 'Selected' : 'Not Selected'}
+              content={
+                formData?.augmentationArgs.rot90 ? 'Selected' : 'Not Selected'
+              }
               title="Rotation 90°"
             />
             <FormatFormDataItem
-              content={formData?.augmentationArgs.rot270 ? 'Selected' : 'Not Selected'}
+              content={
+                formData?.augmentationArgs.rot270 ? 'Selected' : 'Not Selected'
+              }
               title="Rotation 270°"
               variant="even"
             />
             <FormatFormDataItem
               content={
-                formData?.augmentationArgs.flipHorizontal ? 'Selected' : 'Not Selected'
+                formData?.augmentationArgs.flipHorizontal
+                  ? 'Selected'
+                  : 'Not Selected'
               }
               title="Flip Horizontal"
             />
             <FormatFormDataItem
               content={
-                formData?.augmentationArgs.flipVertical ? 'Selected' : 'Not Selected'
+                formData?.augmentationArgs.flipVertical
+                  ? 'Selected'
+                  : 'Not Selected'
               }
               title="Flip Vertical"
               variant="even"
             />
             <FormatFormDataItem
-              content={formData?.augmentationArgs.elastic.select ? `alpha: (${(formData?.augmentationArgs.elastic.alpha ?? '').toString()}), sigma: (${(formData?.augmentationArgs.elastic.sigma ?? '').toString()})` : 'Not Selected'}
+              content={
+                formData?.augmentationArgs.elastic.select
+                  ? `alpha: (${(formData?.augmentationArgs.elastic.alpha ?? '').toString()}), sigma: (${(formData?.augmentationArgs.elastic.sigma ?? '').toString()})`
+                  : 'Not Selected'
+              }
               title="Elastic"
             />
             <FormatFormDataItem
-              content={formData?.augmentationArgs.gaussianBlur.select ? `sigma: (${(formData?.augmentationArgs.gaussianBlur.sigma ?? '').toString()})` : 'Not Selected'}
+              content={
+                formData?.augmentationArgs.gaussianBlur.select
+                  ? `sigma: (${(formData?.augmentationArgs.gaussianBlur.sigma ?? '').toString()})`
+                  : 'Not Selected'
+              }
               title="Gaussian Blur"
               variant="even"
             />
             <FormatFormDataItem
-              content={formData?.augmentationArgs.contrast.select ? `factor: (${(formData?.augmentationArgs.contrast.factor ?? '').toString()})` : 'Not Selected'}
+              content={
+                formData?.augmentationArgs.contrast.select
+                  ? `factor: (${(formData?.augmentationArgs.contrast.factor ?? '').toString()})`
+                  : 'Not Selected'
+              }
               title="Contrast"
             />
             <FormatFormDataItem
-              content={formData?.augmentationArgs.averageBlur.select ? `kernel size: (${(formData?.augmentationArgs.averageBlur.kernelSize ?? '').toString()})` : 'Not Selected'}
+              content={
+                formData?.augmentationArgs.averageBlur.select
+                  ? `kernel size: (${(formData?.augmentationArgs.averageBlur.kernelSize ?? '').toString()})`
+                  : 'Not Selected'
+              }
               title="Average Blur"
               variant="even"
             />
             <FormatFormDataItem
-              content={formData?.augmentationArgs.linearContrast.select ? `factor: (${(formData?.augmentationArgs.linearContrast.factor ?? '').toString()})` : 'Not Selected'}
+              content={
+                formData?.augmentationArgs.linearContrast.select
+                  ? `factor: (${(formData?.augmentationArgs.linearContrast.factor ?? '').toString()})`
+                  : 'Not Selected'
+              }
               title="Linear Contrast"
             />
             <FormatFormDataItem
-              content={formData?.augmentationArgs.dropout.select ? `factor: (${(formData?.augmentationArgs.dropout.factor ?? '').toString()})` : 'Not Selected'}
+              content={
+                formData?.augmentationArgs.dropout.select
+                  ? `factor: (${(formData?.augmentationArgs.dropout.factor ?? '').toString()})`
+                  : 'Not Selected'
+              }
               title="Dropout"
               variant="even"
             />
             <FormatFormDataItem
-              content={formData?.augmentationArgs.poissonNoise.select ? `scale: (${(formData?.augmentationArgs.poissonNoise.scale ?? '').toString()})` : 'Not Selected'}
+              content={
+                formData?.augmentationArgs.poissonNoise.select
+                  ? `scale: (${(formData?.augmentationArgs.poissonNoise.scale ?? '').toString()})`
+                  : 'Not Selected'
+              }
               title="Poisson Noise"
             />
-
           </div>
         </SuccessSheet>
       </>

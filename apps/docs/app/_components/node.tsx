@@ -166,7 +166,7 @@ const NodeCard = ({ name, status, selected, onSelect }: NodeCardProps) => {
                 status === "active" && "text-green-800 dark:text-green-400",
                 status === "busy" && "text-yellow-800 dark:text-yellow-400",
                 status === "error" && "text-red-800 dark:text-red-400",
-                status === "success" && "text-blue-800 dark:text-blue-400"
+                status === "success" && "text-blue-800 dark:text-blue-400",
               )}
             >
               {name}
@@ -177,7 +177,7 @@ const NodeCard = ({ name, status, selected, onSelect }: NodeCardProps) => {
                 status === "active" && "text-green-600 dark:text-green-500",
                 status === "busy" && "text-yellow-600 dark:text-yellow-500",
                 status === "error" && "text-red-600 dark:text-red-500",
-                status === "success" && "text-blue-600 dark:text-blue-500"
+                status === "success" && "text-blue-600 dark:text-blue-500",
               )}
             >
               {"message"}
@@ -226,7 +226,7 @@ const Node = ({ name }: { name: string }) => {
       <div className="flex flex-wrap gap-2 absolute left-4 top-4">
         {!name && (
           <>
-            {'Type: '}
+            {"Type: "}
             {names.map((name) => (
               <button
                 key={name}
@@ -239,7 +239,7 @@ const Node = ({ name }: { name: string }) => {
                 <Icon name={name} />
               </button>
             ))}
-            {'Status: '}
+            {"Status: "}
           </>
         )}
         {statuses.map((status) => (
@@ -255,7 +255,7 @@ const Node = ({ name }: { name: string }) => {
               status === "error" &&
                 "border-red-800 text-red-600 bg-red-100 hover:bg-red-200 dark:bg-muted dark:text-red-400 dark:hover:bg-red-800",
               status === "success" &&
-                "border-blue-800 text-blue-600 bg-blue-100 hover:bg-blue-200 dark:bg-muted dark:text-blue-400 dark:hover:bg-blue-800"
+                "border-blue-800 text-blue-600 bg-blue-100 hover:bg-blue-200 dark:bg-muted dark:text-blue-400 dark:hover:bg-blue-800",
             )}
           >
             {status}

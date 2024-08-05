@@ -115,17 +115,22 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
       }
       // delete the remote files
       if (selectedNode.type === 'dataset') {
-        const remotePath = selectedNode.data.datasetData?.remotePath || selectedNode.data.remotePath;
+        const remotePath =
+          selectedNode.data.datasetData?.remotePath ||
+          selectedNode.data.remotePath;
         if (remotePath) {
           rmFile({ path: remotePath });
         }
       }
       if (selectedNode.type === 'augmentation') {
-        const remotePath = selectedNode.data.augmentationData?.remotePath || selectedNode.data.remotePath;
-      if (remotePath) {
-        rmFile({ path: remotePath });
-      }
-        const remotePreviewPath = selectedNode.data.augmentationData?.remotePreviewPath;
+        const remotePath =
+          selectedNode.data.augmentationData?.remotePath ||
+          selectedNode.data.remotePath;
+        if (remotePath) {
+          rmFile({ path: remotePath });
+        }
+        const remotePreviewPath =
+          selectedNode.data.augmentationData?.remotePreviewPath;
         if (remotePreviewPath) {
           rmDir({ path: remotePreviewPath });
         }
@@ -352,65 +357,65 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
         <AvatarDrop />
       </div>
       <div className="h-screen">
-      <TooltipProvider>
-        <AlertDelete
-          open={alertOpen}
-          onOpenChange={setAlertOpen}
-          onConfirm={handleNodesDelete}
-        />
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onNodeDragStop={onNodeDragStop}
-          deleteKeyCode={[]} // disable delete key
-          connectionLineComponent={CustomConnectionLine}
-          nodeTypes={nodeTypes}
-          fitView
-        >
-          <Panel position="top-left" className="flex flex-col gap-2">
-            <PlusOneMenu />
-          </Panel>
-          <Panel position="bottom-center">
-            <span className="flex w-fit rounded-sm border bg-muted p-2 text-sm font-semibold text-slate-500 dark:text-slate-400 ">
-              <span className="mr-2 text-purple-500 dark:text-purple-400">
-                Workspace:
-              </span>
-              {`"${workspaceInfo.name}"`}
-            </span>
-          </Panel>
-          {nodes.length === 0 && (
-            <Panel position="top-center">
-              <AlertDemo />
-            </Panel>
-          )}
-          <Panel position="top-right">
-            <div id="node-props-panel"></div>
-          </Panel>
-          <Controls
-            showZoom={false}
-            showInteractive={false}
-            className="bg-transparent px-1 dark:fill-slate-400 [&>button:hover]:dark:bg-slate-700 [&>button:hover]:dark:fill-slate-100 [&>button]:my-2 [&>button]:h-6 [&>button]:w-6 [&>button]:rounded-sm [&>button]:border-none [&>button]:dark:bg-muted"
+        <TooltipProvider>
+          <AlertDelete
+            open={alertOpen}
+            onOpenChange={setAlertOpen}
+            onConfirm={handleNodesDelete}
+          />
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onNodeDragStop={onNodeDragStop}
+            deleteKeyCode={[]} // disable delete key
+            connectionLineComponent={CustomConnectionLine}
+            nodeTypes={nodeTypes}
+            fitView
           >
-            <ControlHelpButton />
-          </Controls>
-          <MiniMap
-            nodeColor={nodeColor}
-            nodeComponent={MiniMapNode}
-            maskColor="rgba(0,0,0,0.2)"
-            className="scale-90 rounded-sm dark:bg-muted/70"
-            pannable
-            zoomable
-          />
-          <Background
-            className="bg-light-ocean dark:bg-dark-ocean"
-            variant={variant}
-            gap={24}
-          />
-        </ReactFlow>
-      </TooltipProvider>
+            <Panel position="top-left" className="flex flex-col gap-2">
+              <PlusOneMenu />
+            </Panel>
+            <Panel position="bottom-center">
+              <span className="flex w-fit rounded-sm border bg-muted p-2 text-sm font-semibold text-slate-500 dark:text-slate-400 ">
+                <span className="mr-2 text-purple-500 dark:text-purple-400">
+                  Workspace:
+                </span>
+                {`"${workspaceInfo.name}"`}
+              </span>
+            </Panel>
+            {nodes.length === 0 && (
+              <Panel position="top-center">
+                <AlertDemo />
+              </Panel>
+            )}
+            <Panel position="top-right">
+              <div id="node-props-panel"></div>
+            </Panel>
+            <Controls
+              showZoom={false}
+              showInteractive={false}
+              className="bg-transparent px-1 dark:fill-slate-400 [&>button:hover]:dark:bg-slate-700 [&>button:hover]:dark:fill-slate-100 [&>button]:my-2 [&>button]:h-6 [&>button]:w-6 [&>button]:rounded-sm [&>button]:border-none [&>button]:dark:bg-muted"
+            >
+              <ControlHelpButton />
+            </Controls>
+            <MiniMap
+              nodeColor={nodeColor}
+              nodeComponent={MiniMapNode}
+              maskColor="rgba(0,0,0,0.2)"
+              className="scale-90 rounded-sm dark:bg-muted/70"
+              pannable
+              zoomable
+            />
+            <Background
+              className="bg-light-ocean dark:bg-dark-ocean"
+              variant={variant}
+              gap={24}
+            />
+          </ReactFlow>
+        </TooltipProvider>
       </div>
     </>
   );

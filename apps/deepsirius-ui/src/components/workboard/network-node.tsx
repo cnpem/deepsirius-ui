@@ -85,7 +85,10 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
         },
       });
       updateNodeInternals(nodeProps.id);
-    } else if (jobData.jobStatus === 'FAILED' || jobData.jobStatus?.includes('CANCELLED')) {
+    } else if (
+      jobData.jobStatus === 'FAILED' ||
+      jobData.jobStatus?.includes('CANCELLED')
+    ) {
       const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
       toast.error('Job failed');
       const networkData = nodeProps.data.networkData;

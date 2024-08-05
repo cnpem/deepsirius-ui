@@ -14,8 +14,14 @@ const nodeStatusBadgeVariants = cva('', {
   },
 });
 
-export function StatusBadge({ status, className }: { status: NodeStatus | undefined, className?: string}) {
-  if (!status) return null;  
+export function StatusBadge({
+  status,
+  className,
+}: {
+  status: NodeStatus | undefined;
+  className?: string;
+}) {
+  if (!status) return null;
   return (
     <Badge
       className={cn(

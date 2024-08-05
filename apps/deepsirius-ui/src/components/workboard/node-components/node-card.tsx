@@ -182,9 +182,7 @@ export default function NodeCard({
         id={`node-card-${nodeType}-${nodeId}`}
         data-selected={selected}
         data-status={nodeStatus}
-        className={cn(
-          nodeCardVariants({ status: nodeStatus }),
-        )}
+        className={cn(nodeCardVariants({ status: nodeStatus }))}
       >
         <CardContent className="flex h-full flex-row items-center gap-4 p-4">
           <NodeIcon nodeType={nodeType} />

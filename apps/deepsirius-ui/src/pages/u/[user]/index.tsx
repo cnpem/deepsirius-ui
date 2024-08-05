@@ -196,9 +196,9 @@ function WorkspaceList({ userRoute, search }: WorkspaceListProps) {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-2">
-        <Skeleton className="flex flex-row h-36 w-full justify-center"/>
-        <Skeleton className="flex flex-row h-36 w-full justify-center"/>
-        <Skeleton className="flex flex-row h-36 w-full justify-center"/>
+        <Skeleton className="flex h-36 w-full flex-row justify-center" />
+        <Skeleton className="flex h-36 w-full flex-row justify-center" />
+        <Skeleton className="flex h-36 w-full flex-row justify-center" />
       </div>
     );
   }
@@ -206,8 +206,8 @@ function WorkspaceList({ userRoute, search }: WorkspaceListProps) {
   if (!workspaces || workspaces.length === 0) {
     return (
       <div className="flex flex-col">
-        <Skeleton className="flex flex-row h-36 w-full justify-center">
-          <p className='my-auto'>No workspaces found</p>
+        <Skeleton className="flex h-36 w-full flex-row justify-center">
+          <p className="my-auto">No workspaces found</p>
         </Skeleton>
       </div>
     );

@@ -163,7 +163,7 @@ function SidePanelContent({ node }: { node: Node<NodeData> }) {
               <TensorboardLink
                 logdir={getLogPath(node).out}
                 disabled={
-                  !(node.type === 'network' || node.type === 'finetune') || 
+                  !(node.type === 'network' || node.type === 'finetune') ||
                   status !== 'busy'
                 }
                 onClick={() => void setView('tensorboard')}

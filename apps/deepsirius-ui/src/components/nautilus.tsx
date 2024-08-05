@@ -59,7 +59,7 @@ const Skeleton = () => {
     <div className="grid grid-cols-5 gap-x-1 gap-y-2 p-2">
       {Array.from({ length: 7 }).map((_, i) => (
         <div key={i}>
-          <div className="h-8 rounded-sm bg-muted animate-pulse" />
+          <div className="h-8 animate-pulse rounded-sm bg-muted" />
         </div>
       ))}
     </div>
@@ -149,8 +149,8 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-row gap-1 items-center justify-between">
-        <ScrollArea className="max-w-sm border rounded-sm p-2">
+      <div className="flex flex-row items-center justify-between gap-1">
+        <ScrollArea className="max-w-sm rounded-sm border p-2">
           <p className="flex flex-row gap-1 text-xs text-muted-foreground">
             <span className="text-purple-500 dark:text-purple-400">
               selected:{' '}
@@ -169,7 +169,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
           Select
         </Button>
       </div>
-      <div className="relative flex flex-row gap-0.5 items-center">
+      <div className="relative flex flex-row items-center gap-0.5">
         <Button
           className="h-8"
           title="Go back"
@@ -184,7 +184,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
             setPath(path);
           }}
         >
-          <ArrowLeftIcon className="w-4 h-4" />
+          <ArrowLeftIcon className="h-4 w-4" />
         </Button>
         <span className="text-input">|</span>
         {shortcuts.map((shortcut) => (
@@ -211,7 +211,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
               <FormItem>
                 <FormLabel className="sr-only">Path</FormLabel>
                 <FormControl>
-                  <div className="flex flex-row gap-0.5 items-center">
+                  <div className="flex flex-row items-center gap-0.5">
                     <Input className="text-ellipsis" {...field} />
                     <Button
                       type="submit"
@@ -219,7 +219,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
                       variant="outline"
                       disabled={form.formState.isSubmitting}
                     >
-                      <ArrowRightIcon className="w-4 h-4" />
+                      <ArrowRightIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 </FormControl>
@@ -246,9 +246,9 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
           onClick={() => setDisplay(display === 'grid' ? 'list' : 'grid')}
         >
           {display === 'grid' ? (
-            <LayoutGridIcon className="w-4 h-4" />
+            <LayoutGridIcon className="h-4 w-4" />
           ) : (
-            <LayoutListIcon className="w-4 h-4" />
+            <LayoutListIcon className="h-4 w-4" />
           )}
         </Button>
       </div>
@@ -275,17 +275,17 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
                 }}
                 key={item.name}
                 className={cn(
-                  'flex items-center rounded-lg px-2 py-1 h-fit hover:bg-violet-100 data-[selected=true]:hover:bg-violet-100 data-[selected=true]:bg-violet-200 hover:cursor-pointer dark:hover:bg-violet-800 dark:data-[selected=true]:hover:bg-violet-800 dark:data-[selected=true]:bg-violet-900',
+                  'flex h-fit items-center rounded-lg px-2 py-1 hover:cursor-pointer hover:bg-violet-100 data-[selected=true]:bg-violet-200 data-[selected=true]:hover:bg-violet-100 dark:hover:bg-violet-800 dark:data-[selected=true]:bg-violet-900 dark:data-[selected=true]:hover:bg-violet-800',
                   display === 'grid' ? 'flex-col' : 'flex-row gap-2',
                 )}
               >
                 {item.type === 'directory' && (
-                  <FolderIcon className="w-10 h-10 fill-muted stroke-1 dark:stroke-background" />
+                  <FolderIcon className="h-10 w-10 fill-muted stroke-1 dark:stroke-background" />
                 )}
                 {item.type === 'file' && (
-                  <FileIcon className="w-10 h-10 fill-muted stroke-1 dark:stroke-background" />
+                  <FileIcon className="h-10 w-10 fill-muted stroke-1 dark:stroke-background" />
                 )}
-                <span className="select-none text-xs text-muted-foreground text-center text-balance break-all">
+                <span className="select-none text-balance break-all text-center text-xs text-muted-foreground">
                   {item.name}
                 </span>
               </div>

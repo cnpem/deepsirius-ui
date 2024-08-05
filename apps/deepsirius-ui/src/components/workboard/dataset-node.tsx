@@ -72,7 +72,10 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
         },
       });
       updateNodeInternals(nodeProps.id);
-    } else if (jobData.jobStatus === 'FAILED' || jobData.jobStatus?.includes('CANCELLED')) {
+    } else if (
+      jobData.jobStatus === 'FAILED' ||
+      jobData.jobStatus?.includes('CANCELLED')
+    ) {
       toast.error('Job failed');
       onUpdateNode({
         id: nodeProps.id,

@@ -119,7 +119,7 @@ export const sshRouter = createTRPCRouter({
         });
       }
       return { content: data };
-    }), 
+    }),
   catImage: protectedProcedure
     .input(
       z

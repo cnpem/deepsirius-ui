@@ -29,14 +29,18 @@ const SessionOptions: React.FC = () => {
         <StyledLink href={'/'} onClick={() => void signIn(undefined)}>
           Sign in
         </StyledLink>
-        <StyledLink href={'https://deepsirius.lnls.br/dive'}>Documentation</StyledLink>
+        <StyledLink href={'https://deepsirius.lnls.br/dive'}>
+          Documentation
+        </StyledLink>
       </>
     );
 
   return (
     <>
       <StyledLink href={user.route}>Workspaces</StyledLink>
-      <StyledLink href={'https://deepsirius.lnls.br/dive'}>Documentation</StyledLink>
+      <StyledLink href={'https://deepsirius.lnls.br/dive'}>
+        Documentation
+      </StyledLink>
     </>
   );
 };

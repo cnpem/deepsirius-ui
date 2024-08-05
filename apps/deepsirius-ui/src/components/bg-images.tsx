@@ -1,7 +1,7 @@
 import Image, { type StaticImageData } from 'next/image';
-import topImg from '../../public/top.svg';
-import bottomImg from '../../public/bottom.svg';
-import fullImg from '../../public/full.svg';
+import topImg from '@public/top.svg';
+import bottomImg from '@public/bottom.svg';
+import fullImg from '@public/full.svg';
 
 const TopBgImage = () => (
   <Image

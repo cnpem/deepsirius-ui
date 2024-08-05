@@ -12,6 +12,10 @@
       "cache": false,
       "persistent": true
     },
+    "db:generate": {
+      "cache": false,
+      "outputs": ["node_modules/@prisma/client"]
+    },
     "clean": { "cache": false }
   },
   "globalPassThroughEnv": ["NODE_ENV", "SKIP_ENV_VALIDATION"]

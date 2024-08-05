@@ -9,6 +9,8 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "start": "next start",
+    "db:generate": "prisma generate",
+    "postinstall": "prisma generate",
     "start:migrate:prod": "prisma migrate deploy && node server.js"
   },
   "dependencies": {

@@ -13,5 +13,6 @@
       "persistent": true
     },
     "clean": { "cache": false }
-  }
+  },
+  "globalPassThroughEnv": ["NODE_ENV", "SKIP_ENV_VALIDATION"]
 }

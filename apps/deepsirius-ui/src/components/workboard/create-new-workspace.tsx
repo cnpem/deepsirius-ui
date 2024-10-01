@@ -8,10 +8,7 @@ import { z } from 'zod';
 import { Button } from '~/components/ui/button';
 import { env } from '~/env.mjs';
 import { useStoreActions } from '~/hooks/use-store';
-import {
-  checkStatusRefetchInterval,
-  slurmPartitionOptions,
-} from '~/lib/constants';
+import { checkStatusRefetchInterval } from '~/lib/constants';
 import { api } from '~/utils/api';
 
 import { NautilusDialog } from '../nautilus';
@@ -41,6 +38,7 @@ interface NewWorkspaceState {
 }
 
 export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
+  const userPartitions = api.job.userPartitions.useQuery();
   const router = useRouter();
   const { resetStore, setWorkspaceInfo } = useStoreActions();
   const [basePath, setBasePath] = useState(env.NEXT_PUBLIC_STORAGE_PATH);
@@ -149,7 +147,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
     .object({
       workspaceBasePath: z.string().endsWith('/'),
       workspaceName: z.string().min(1),
-      slurmPartition: z.enum(slurmPartitionOptions),
+      slurmPartition: z.string(),
     })
     .superRefine(({ workspaceName }, ctx) => {
       if (basePathLsQuery.error) {
@@ -284,25 +282,50 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Slurm Partition</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select
+                    onValueChange={field.onChange}
+                    disabled={
+                      userPartitions.isError || userPartitions.isLoading
+                    }
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Slurm Partition" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {slurmPartitionOptions.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
+                      {userPartitions.data?.partitions.map((option) => (
+                        <SelectItem
+                          key={option.partition}
+                          value={option.partition}
+                          className="!text-justify"
+                        >
+                          <span className="mr-2 font-bold">
+                            {option.partition}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            <span className="text-sm text-green-500">
+                              {option.cpus.free}
+                            </span>
+                            /{option.cpus.max} cpus,{' '}
+                            <span className="text-sm text-green-500">
+                              {option.gpus.free}
+                            </span>
+                            /{option.gpus.max} gpus
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    This is the slurm partition to use for the workspace
-                    creation job.
+                  <FormDescription className="hidden">
+                    Please select a slurm partition assigned for your user for
+                    submitting this job.
                   </FormDescription>
-                  <FormMessage />
+                  <FormMessage className="max-w-60 text-wrap">
+                    {userPartitions.isError &&
+                      `Error loading partitions: ${userPartitions.error.message}`}
+                    {userPartitions.isLoading && `Searching user partitions...`}
+                  </FormMessage>
                 </FormItem>
               )}
             />

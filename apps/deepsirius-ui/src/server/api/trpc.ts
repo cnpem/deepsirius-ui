@@ -156,7 +156,8 @@ const ensureSSHConnection = t.middleware(async ({ ctx, next }) => {
   }
 
   let connection = sshCache.get(ctx.session.user.name);
-  if (!connection) {
+  if (!connection?.isConnected()) {
+    sshCache.delete(ctx.session.user.name);
     connection = await ctx.ssh.connect({
       username: ctx.session.user.name,
       privateKey: ctx.privateKey,

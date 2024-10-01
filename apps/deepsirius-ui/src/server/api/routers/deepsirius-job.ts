@@ -2,7 +2,7 @@ import { env } from '~/env.mjs';
 import { createTRPCRouter, protectedSSHProcedure } from '~/server/api/trpc';
 import { createTempScript } from '~/server/remote-job';
 import { TRPCError } from '@trpc/server';
-import fs from 'fs';
+import fs from 'fs/promises';
 import { z } from 'zod';
 import {
   datasetSchema,
@@ -79,7 +79,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const scriptName = 'deepsirius-workspace.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
-      fs.rmdirSync(tempDir, { recursive: true });
+      await fs.rm(tempDir, { recursive: true });
 
       const { stdout, stderr } = await connection.execCommand(
         `sbatch --parsable ${scriptName}`,
@@ -144,7 +144,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const scriptName = 'deepsirius-dataset.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
-      fs.rmdirSync(tempDir, { recursive: true });
+      await fs.rm(tempDir, { recursive: true });
 
       const { stdout, stderr } = await connection.execCommand(
         `sbatch --parsable ${scriptName}`,
@@ -275,7 +275,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const scriptName = 'deepsirius-augmentation.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
-      fs.rmdirSync(tempDir, { recursive: true });
+      await fs.rm(tempDir, { recursive: true });
 
       const { stdout, stderr } = await connection.execCommand(
         `sbatch --parsable ${scriptName}`,
@@ -340,7 +340,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const scriptName = 'deepsirius-network.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
-      fs.rmdirSync(tempDir, { recursive: true });
+      await fs.rm(tempDir, { recursive: true });
 
       const { stdout, stderr } = await connection.execCommand(
         `sbatch --parsable ${scriptName}`,
@@ -404,7 +404,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const scriptName = 'deepsirius-network.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
-      fs.rmdirSync(tempDir, { recursive: true });
+      await fs.rm(tempDir, { recursive: true });
 
       const { stdout, stderr } = await connection.execCommand(
         `sbatch --parsable ${scriptName}`,
@@ -472,7 +472,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const scriptName = 'deepsirius-inference.sbatch';
 
       await connection.putFile(scriptPath, scriptName);
-      fs.rmdirSync(tempDir, { recursive: true });
+      await fs.rm(tempDir, { recursive: true });
 
       const { stdout, stderr } = await connection.execCommand(
         `sbatch --parsable ${scriptName}`,

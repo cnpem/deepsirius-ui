@@ -1,5 +1,11 @@
 # @deepsirius-ui/app
 
+## 0.2.2
+
+### Patch Changes
+
+- Fix ssh session sharing by instatiating new SSH clients for each user
+
 ## 0.2.1
 
 ### Patch Changes

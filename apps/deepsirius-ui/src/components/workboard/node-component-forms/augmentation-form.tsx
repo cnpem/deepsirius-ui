@@ -1,7 +1,7 @@
 'use client';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { slurmGPUOptions, slurmPartitionOptions } from '~/lib/constants';
+import { slurmGPUOptions } from '~/lib/constants';
 import { useForm } from 'react-hook-form';
 import {
   Form,
@@ -23,9 +23,10 @@ import { Input } from '~/components/ui/input';
 import { Button } from '~/components/ui/button';
 import { Switch } from '~/components/ui/switch';
 import { ScrollArea } from '~/components/ui/scroll-area';
+import { api } from '~/utils/api';
 
 const slurmOptions = z.object({
-  partition: z.enum(slurmPartitionOptions),
+  partition: z.string(),
   nGPU: z.enum(slurmGPUOptions),
 });
 
@@ -162,6 +163,7 @@ function useAugmentationForm(name: FormProps['name'] = '') {
 }
 
 export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
+  const userPartitions = api.job.userPartitions.useQuery();
   const form = useAugmentationForm(name);
   const onSubmit = () => {
     onSubmitHandler(form.getValues());
@@ -796,16 +798,35 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
             render={({ field }) => (
               <FormItem className="w-1/2">
                 <FormLabel className="sr-only">Slurm Partition</FormLabel>
-                <Select onValueChange={field.onChange}>
+                <Select
+                  onValueChange={field.onChange}
+                  disabled={userPartitions.isError || userPartitions.isLoading}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Slurm Partition" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {slurmPartitionOptions.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item}
+                    {userPartitions.data?.partitions.map((option) => (
+                      <SelectItem
+                        key={option.partition}
+                        value={option.partition}
+                        className="!text-justify"
+                      >
+                        <span className="mr-2 font-bold">
+                          {option.partition}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          <span className="text-sm text-green-500">
+                            {option.cpus.free}
+                          </span>
+                          /{option.cpus.max} cpus,{' '}
+                          <span className="text-sm text-green-500">
+                            {option.gpus.free}
+                          </span>
+                          /{option.gpus.max} gpus
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -814,7 +835,11 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
                   Please select a slurm partition assigned for your user for
                   submitting this job.
                 </FormDescription>
-                <FormMessage />
+                <FormMessage className="max-w-60 text-wrap">
+                  {userPartitions.isError &&
+                    `Error loading partitions: ${userPartitions.error.message}`}
+                  {userPartitions.isLoading && `Searching user partitions...`}
+                </FormMessage>
               </FormItem>
             )}
           />

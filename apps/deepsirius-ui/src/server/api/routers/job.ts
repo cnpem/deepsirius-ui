@@ -19,7 +19,6 @@ const reportSacctFormatSchema = z.object({
   exitCode: z.string().optional(),
 });
 
-
 export const jobRouter = createTRPCRouter({
   checkStatus: protectedSSHProcedure
     .input(
@@ -98,7 +97,7 @@ export const jobRouter = createTRPCRouter({
 
       if (stderr) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
+          code: 'INTERNAL_SERVER_ERROR',
           message: stderr,
         });
       }
@@ -106,15 +105,15 @@ export const jobRouter = createTRPCRouter({
       const data = stdout.trim();
       if (data.length === 0) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Job data not found",
+          code: 'NOT_FOUND',
+          message: 'Job data not found',
         });
       }
 
-      const firstline = data.split("\n")[0];
+      const firstline = data.split('\n')[0];
       if (!firstline) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
+          code: 'INTERNAL_SERVER_ERROR',
           message: `Error parsing job data for jobId ${jobId}`,
         });
       }
@@ -131,10 +130,10 @@ export const jobRouter = createTRPCRouter({
         nCPUS,
         reason,
         exitCode,
-      ] = data.split("|");
+      ] = data.split('|');
 
       const report = reportSacctFormatSchema.safeParse({
-        state: state?.split(" ")[0] ?? state, // the state comes with a suffix that we don't need, so we split it and get the first part
+        state: state?.split(' ')[0] ?? state, // the state comes with a suffix that we don't need, so we split it and get the first part
         submit,
         start,
         end,
@@ -149,25 +148,22 @@ export const jobRouter = createTRPCRouter({
 
       if (report.error) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Error parsing job data:" + report.error.message,
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Error parsing job data:' + report.error.message,
         });
       }
 
       return {
-        ...report.data
+        ...report.data,
       };
     }),
   userPartitions: protectedSSHProcedure.query(async ({ ctx }) => {
     const connection = ctx.connection;
 
-    const templatePath = "public/templates/user-partitions.sh";
-    const scriptTemplate = await fs.readFile(templatePath, "utf-8");
+    const templatePath = 'public/templates/user-partitions.sh';
+    const scriptTemplate = await fs.readFile(templatePath, 'utf-8');
 
-    const content = scriptTemplate.replace(
-      "${INPUT_USERNAME}",
-      ctx.username,
-    );
+    const content = scriptTemplate.replace('${INPUT_USERNAME}', ctx.username);
 
     const { stdout, stderr } = await connection.execCommand(content);
 
@@ -176,7 +172,7 @@ export const jobRouter = createTRPCRouter({
     }
 
     if (stdout.trim().length === 0) {
-      throw new Error("Empty response from user partitions script.");
+      throw new Error('Empty response from user partitions script.');
     }
 
     const parsed = userPartitionsResponseSchema.safeParse(
@@ -190,7 +186,7 @@ export const jobRouter = createTRPCRouter({
       if (value === null || value === undefined) {
         return undefined;
       }
-      if (value === "null") {
+      if (value === 'null') {
         return undefined;
       }
       const parsed = parseInt(value, 10);
@@ -231,6 +227,5 @@ export const jobRouter = createTRPCRouter({
     });
 
     return { partitions };
-  })
+  }),
 });
-

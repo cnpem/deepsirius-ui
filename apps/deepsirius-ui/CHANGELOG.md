@@ -1,5 +1,12 @@
 # @deepsirius-ui/app
 
+## 0.2.1
+
+### Patch Changes
+
+- eebedd1: Added check if the cached ssh connection is still connected before using in routes
+- 56ed093: Hiding secrets when parsing filestash errors.
+
 ## 0.2.0
 
 ### Minor Changes

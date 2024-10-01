@@ -32,6 +32,7 @@ import { env } from '~/env.mjs';
 import { getServerAuthSession } from '~/server/auth';
 import { prisma } from '~/server/db';
 import { ssh } from '~/server/ssh';
+import { cache as sshCache } from '../ssh-cache';
 
 type CreateContextOptions = {
   session: Session | null;
@@ -154,13 +155,21 @@ const ensureSSHConnection = t.middleware(async ({ ctx, next }) => {
     throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
 
-  const connection = await ctx.ssh.connect({
-    username: ctx.session.user.name,
-    privateKey: ctx.privateKey,
-    host: env.SSH_HOST,
-    port: 22,
-    passphrase: env.PRIVATE_KEY_PASSPHRASE,
-  });
+  let connection = sshCache.get(ctx.session.user.name);
+  if (!connection) {
+    connection = await ctx.ssh.connect({
+      username: ctx.session.user.name,
+      privateKey: ctx.privateKey,
+      host: env.SSH_HOST,
+      port: 22,
+      passphrase: env.PRIVATE_KEY_PASSPHRASE,
+    });
+    if (!connection) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+    }
+
+    sshCache.set(ctx.session.user.name, connection, 1000 * 60 * 6);
+  }
 
   const res = await next({
     ctx: {
@@ -169,8 +178,6 @@ const ensureSSHConnection = t.middleware(async ({ ctx, next }) => {
       connection,
     },
   });
-
-  connection.dispose();
 
   return res;
 });

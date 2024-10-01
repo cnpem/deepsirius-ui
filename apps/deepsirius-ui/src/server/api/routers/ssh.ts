@@ -14,6 +14,18 @@ const unzippedImage = z.object({
   src: z.string(),
 });
 
+const apiErrorSchema = z
+  .object({
+    status: z.string(),
+    message: z.string(),
+  })
+  .transform((data) => {
+    return {
+      status: data.status,
+      message: data.message.replace(env.STORAGE_API_KEY, '***'),
+    };
+  });
+
 export const sshRouter = createTRPCRouter({
   ls: protectedProcedure
     .input(
@@ -48,12 +60,7 @@ export const sshRouter = createTRPCRouter({
       const data: unknown = await res.json();
 
       if (!res.ok) {
-        const error = z
-          .object({
-            status: z.string(),
-            message: z.string(),
-          })
-          .parse(data);
+        const error = apiErrorSchema.parse(data);
 
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -110,14 +117,16 @@ export const sshRouter = createTRPCRouter({
           Cookie: cookie,
         },
       });
-
-      const data = await res.text();
       if (!res.ok) {
+        const data: unknown = await res.json();
+        const error = apiErrorSchema.parse(data);
+
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: data,
+          message: error.message,
         });
       }
+      const data = await res.text();
       return { content: data };
     }),
   catImage: protectedProcedure
@@ -147,6 +156,15 @@ export const sshRouter = createTRPCRouter({
           Cookie: cookie,
         },
       });
+      if (!res.ok) {
+        const data: unknown = await res.json();
+        const error = apiErrorSchema.parse(data);
+
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error.message,
+        });
+      }
       const data = await res.arrayBuffer();
       const base64data = Buffer.from(data).toString('base64');
       return { src: `data:image/png;base64,${base64data}` };
@@ -179,11 +197,15 @@ export const sshRouter = createTRPCRouter({
         },
       });
       if (!res.ok) {
-        throw new Error(`Failed to fetch: ${res.statusText}`);
+        const data: unknown = await res.json();
+        const error = apiErrorSchema.parse(data);
+
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error.message,
+        });
       }
-      const buffer = await res.arrayBuffer().catch((err: Error) => {
-        throw new Error(`Failed to fetch buffer file: ${err.message}`);
-      });
+      const buffer = await res.arrayBuffer();
       const zip = await JSZip.loadAsync(buffer).catch((err: Error) => {
         throw new Error(`Failed to load ZIP file: ${err.message}`);
       });
@@ -347,7 +369,9 @@ export const sshRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const connection = ctx.connection;
 
-      const command = `head ${input.lines ? `-n ${input.lines} ` : ''}${input.path}`;
+      const command = `head ${input.lines ? `-n ${input.lines} ` : ''}${
+        input.path
+      }`;
       const { stdout, stderr } = await connection.execCommand(command);
 
       if (!!stderr) {

@@ -31,7 +31,7 @@ import { ZodError } from 'zod';
 import { env } from '~/env.mjs';
 import { getServerAuthSession } from '~/server/auth';
 import { prisma } from '~/server/db';
-import { ssh } from '~/server/ssh';
+import { NodeSSH } from 'node-ssh';
 import { cache as sshCache } from '../ssh-cache';
 
 type CreateContextOptions = {
@@ -56,7 +56,6 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
     privateKey: opts.privateKey,
     storageApiCookie: opts.storageApiCookie,
     prisma,
-    ssh,
   };
 };
 
@@ -157,8 +156,9 @@ const ensureSSHConnection = t.middleware(async ({ ctx, next }) => {
 
   let connection = sshCache.get(ctx.session.user.name);
   if (!connection?.isConnected()) {
+    const ssh = new NodeSSH();
     sshCache.delete(ctx.session.user.name);
-    connection = await ctx.ssh.connect({
+    connection = await ssh.connect({
       username: ctx.session.user.name,
       privateKey: ctx.privateKey,
       host: env.SSH_HOST,

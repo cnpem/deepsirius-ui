@@ -16,7 +16,7 @@ import { env } from '~/env.mjs';
 
 import { prisma } from './db';
 import type { ErrnoException } from './remote-job';
-import { ssh } from './ssh';
+import { NodeSSH } from 'node-ssh';
 
 // TODO: Auth is breaking when the user's credentials are ok but the service can't ssh into SSH_HOST.
 // This will happen when the user doesn't have a scheduled proposal for the day, so its group is not allowed to ssh into SSH_HOST.
@@ -168,6 +168,7 @@ export const authOptions: NextAuthOptions = {
         //ssh setup
         const comment = `${user.name}@deepsirius`;
         const { name: username, password } = user;
+        const ssh = new NodeSSH();
         // clean up old public key
         const connection = await ssh.connect({
           username: username,

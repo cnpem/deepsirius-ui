@@ -127,12 +127,6 @@ export const sshRouter = createTRPCRouter({
         });
       }
       const data = await res.text();
-      if (!res.ok) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: data.replace(env.STORAGE_API_KEY, '***'),
-        });
-      }
       return { content: data };
     }),
   catImage: protectedProcedure
@@ -211,9 +205,7 @@ export const sshRouter = createTRPCRouter({
           message: error.message,
         });
       }
-      const buffer = await res.arrayBuffer().catch((err: Error) => {
-        throw new Error(`Failed to fetch buffer file: ${err.message.replace(env.STORAGE_API_KEY, '***')}`);
-      });
+      const buffer = await res.arrayBuffer();
       const zip = await JSZip.loadAsync(buffer).catch((err: Error) => {
         throw new Error(`Failed to load ZIP file: ${err.message}`);
       });

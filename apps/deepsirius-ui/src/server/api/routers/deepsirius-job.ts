@@ -317,7 +317,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
         .map(([key, value]) => `--${key} ${value as string}`)
         .join(' ');
       // full strings for the cli scripts
-      const trainingScript = `ssc-deepsirius train_model ${kwArgsString} ${argsString}`;
+      const trainingScript = `ssc-deepsirius train_model ${argsString} ${kwArgsString}`;
       // defining the container script
       const containerScript = `singularity exec --nv --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
       const command = `${containerScript} ${trainingScript}`;

@@ -107,7 +107,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const samplingKwargs = {
         'n-classes': input.formData.classes,
         'n-samples': input.formData.sampleSize,
-        'sampling-size': `${input.formData.patchSize} `.repeat(3),
+        'sampling-size': Array(3).fill(input.formData.patchSize).join(' '),
       };
       const samplingKwargsString = Object.entries(samplingKwargs)
         .map(([key, value]) => `--${key} ${value as string}`)
@@ -311,7 +311,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
         // so we need to pass this value as a boolean to the cli.
         'drop-classifier': false,
         // this is a silly way to get around the fact that the cli expects 3 values for patch size
-        'net-patch-size': (input.formData.patchSize + ' ').repeat(3),
+        'net-patch-size': Array(3).fill(input.formData.patchSize).join(' '),
       };
       const kwArgsString = Object.entries(kwArgs)
         .map(([key, value]) => `--${key} ${value as string}`)
@@ -374,7 +374,7 @@ export const deepsiriusJobRouter = createTRPCRouter({
         optimiser: input.formData.optimizer,
         'drop-classifier': input.formData.dropClassifier,
         // this is a silly way to get around the fact that the cli expects 3 values for patch size
-        'net-patch-size': (input.formData.patchSize + ' ').repeat(3),
+        'net-patch-size': Array(3).fill(input.formData.patchSize).join(' '),
       };
       const kwArgsString =
         Object.entries(kwArgs)
@@ -430,8 +430,6 @@ export const deepsiriusJobRouter = createTRPCRouter({
       const gpus = input.formData.slurmOptions.nGPU;
       // defining the container script
       const containerScript = `singularity run --nv --no-home --bind ${env.PROCESSING_CONTAINER_STORAGE_BIND} ${env.PROCESSING_CONTAINER_PATH}`;
-      // defining output directory for the inference results
-      // const outputDir = `${input.workspacePath}/inference/${input.networkName}`;
       // parsing args ssc-deepsirius package cli args
       const argsString = `${input.workspacePath} ${input.sourceNetworkLabel} ${input.formData.outputDir}`;
       // parsing input images list as cli kwargs string
@@ -440,8 +438,8 @@ export const deepsiriusJobRouter = createTRPCRouter({
         .join(' ');
       // parsing form data as cli kwargs string
       const kwArgs = {
-        padding: (input.formData.paddingSize + ' ').repeat(3),
-        border: (input.formData.patchSize + ' ').repeat(3),
+        padding: Array(3).fill(input.formData.paddingSize).join(' '),
+        border: Array(3).fill(input.formData.patchSize).join(' '),
         'out-net-op': input.formData.saveProbMap
           ? 'save_prob_map'
           : 'save_label',

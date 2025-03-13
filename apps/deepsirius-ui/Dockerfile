@@ -1,22 +1,20 @@
 # ----
 #syntax=docker/dockerfile:1.4
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+RUN npm install -g corepack@latest
 RUN corepack enable
-
 
 # ----
 # Install dependencies only when needed
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat 
 WORKDIR /app
 RUN pnpm add --global turbo
 COPY . .
 RUN turbo prune @deepsirius-ui/app --docker
-
-
 
 # ----
 # Rebuild the source code only when needed
@@ -52,7 +50,7 @@ RUN SKIP_ENV_VALIDATION=1 turbo build --filter=@deepsirius-ui/app...
 # ----
 # Production image, copy all the files and run next
 FROM base AS runner
-RUN apk add --update --no-cache tzdata
+RUN apk add --update --no-cache tzdata openssl
 ENV TZ=America/Sao_Paulo
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1

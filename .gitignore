@@ -54,7 +54,6 @@ src/server/certs
 *.cer
 
 dist
-.vscode
 node_modules
 .turbo
 *.tsbuildinfo

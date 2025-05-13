@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { HoverCardTrigger } from '@radix-ui/react-hover-card';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { HoverCardTrigger } from "@radix-ui/react-hover-card";
 import {
   BookmarkIcon,
   BookmarkPlusIcon,
@@ -11,11 +11,11 @@ import {
   ImagePlusIcon,
   PlusIcon,
   XIcon,
-} from 'lucide-react';
-import { useFieldArray, useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { NautilusDialog } from '~/components/nautilus';
-import { Button } from '~/components/ui/button';
+} from "lucide-react";
+import { useFieldArray, useForm } from "react-hook-form";
+import * as z from "zod";
+import { NautilusDialog } from "~/components/nautilus";
+import { Button } from "~/components/ui/button";
 import {
   Form,
   FormControl,
@@ -24,30 +24,29 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '~/components/ui/form';
-import { HoverCard, HoverCardContent } from '~/components/ui/hover-card';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
+} from "~/components/ui/form";
+import { HoverCard, HoverCardContent } from "~/components/ui/hover-card";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select';
-
-import { api } from '~/utils/api';
+} from "~/components/ui/select";
+import { api } from "~/utils/api";
 
 const slurmOptions = z.object({
   partition: z.string(),
 });
-const powerSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
-const strategies = ['uniform'] as const;
+const powerSizes = ["16", "32", "64", "128", "256", "512", "1024"] as const;
+const strategies = ["uniform"] as const;
 export const imageSchema = z
   .string()
-  .min(2, { message: 'Must be a valid image name!' })
+  .min(2, { message: "Must be a valid image name!" })
   .regex(/^.*\.(tif|tiff|TIFF|hdf5|h5|raw|b)$/, {
-    message: 'Must be a valid image extension!',
+    message: "Must be a valid image extension!",
   });
 
 const dataSchema = z.object({
@@ -61,11 +60,11 @@ export const datasetSchema = z.object({
   slurmOptions,
   datasetName: z
     .string()
-    .min(1, { message: 'Must have a name!' })
-    .refine((s) => !s.includes(' '), 'No Spaces!'),
+    .min(1, { message: "Must have a name!" })
+    .refine((s) => !s.includes(" "), "No Spaces!"),
   data: dataSchema
     .array()
-    .nonempty({ message: 'Must have at least one image!' }),
+    .nonempty({ message: "Must have at least one image!" }),
   patchSize: z.enum(powerSizes),
   sampleSize: z.coerce.number().min(1),
   strategy: z.enum(strategies),
@@ -77,22 +76,22 @@ export type FormCallback = (data: FormType) => void;
 
 export type FormProps = {
   onSubmitHandler: FormCallback;
-  name?: FormType['datasetName'];
+  name?: FormType["datasetName"];
   data?: z.infer<typeof dataSchema>[];
 };
 
 function useDatasetForm(
-  name: FormProps['name'] = '',
-  data: FormProps['data'] = [],
+  name: FormProps["name"] = "",
+  data: FormProps["data"] = [],
 ) {
   const form = useForm<FormType>({
     resolver: zodResolver(datasetSchema),
     defaultValues: {
       datasetName: name,
       data: data,
-      patchSize: '64',
+      patchSize: "64",
       sampleSize: 2,
-      strategy: 'uniform',
+      strategy: "uniform",
       classes: 2,
     },
   });
@@ -104,7 +103,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
   const userPartitions = api.job.userPartitions.useQuery();
   const form = useDatasetForm(name, data);
   const { fields, append, remove } = useFieldArray({
-    name: 'data',
+    name: "data",
     control: form.control,
   });
 
@@ -163,7 +162,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                             <Button
                               className="w-fill gap-1 data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
                               data-img={!!field.value}
-                              variant={'outline'}
+                              variant={"outline"}
                               // size={'icon'}
                             >
                               {!!field.value ? (
@@ -181,7 +180,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                         <div className="flex flex-col gap-2">
                           <h4 className="text-sm font-semibold">@image</h4>
                           <p className="text-xs font-medium text-violet-600 dark:text-violet-400">
-                            {field.value.split('/').slice(-1)[0]}
+                            {field.value.split("/").slice(-1)[0]}
                           </p>
                           <span className="text-xs text-muted-foreground">
                             {field.value}
@@ -206,7 +205,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                             <Button
                               className="w-fill gap-1 data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
                               data-img={!!field.value}
-                              variant={'outline'}
+                              variant={"outline"}
                               // size={'icon'}
                             >
                               {!!field.value ? (
@@ -224,7 +223,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                         <div className="flex flex-col gap-2">
                           <h4 className="text-sm font-semibold">@label</h4>
                           <p className="text-xs font-medium text-violet-600 dark:text-violet-400">
-                            {field.value.split('/').slice(-1)[0]}
+                            {field.value.split("/").slice(-1)[0]}
                           </p>
                           <span className="text-xs text-muted-foreground">
                             {field.value}
@@ -250,7 +249,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                             <Button
                               className="w-fill gap-1 data-[img=true]:border-violet-600 data-[img=true]:dark:border-violet-400"
                               data-img={!!field.value}
-                              variant={'outline'}
+                              variant={"outline"}
                               // size={'icon'}
                             >
                               {!!field.value ? (
@@ -268,7 +267,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                         <div className="flex flex-col gap-2">
                           <h4 className="text-sm font-semibold">@weights</h4>
                           <p className="text-xs font-medium text-violet-600 dark:text-violet-400">
-                            {field.value?.split('/').slice(-1)[0] || ''}
+                            {field.value?.split("/").slice(-1)[0] || ""}
                           </p>
                           <span className="text-xs text-muted-foreground">
                             {field.value}
@@ -282,9 +281,9 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
               />
               <Button
                 className="h-5 w-5 rounded-full"
-                variant={'destructive'}
+                variant={"destructive"}
                 onClick={() => remove(index)}
-                size={'icon'}
+                size={"icon"}
               >
                 <XIcon className="h-4 w-4" />
               </Button>
@@ -293,18 +292,18 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
           <div className="flex items-center justify-center gap-2">
             <Button
               id="add-data"
-              variant={'outline'}
+              variant={"outline"}
               className="w-full gap-1"
               type="button"
               onClick={() =>
                 append({
-                  image: '',
-                  label: '',
+                  image: "",
+                  label: "",
                 })
               }
             >
               <PlusIcon className="h-4 w-4" />
-              {fields.length === 0 ? 'Add Data' : 'More!'}
+              {fields.length === 0 ? "Add Data" : "More!"}
             </Button>
             <Label
               htmlFor="add-data"
@@ -314,7 +313,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
             </Label>
           </div>
         </div>
-        <div className={'rounded-md border border-dashed p-2 text-xs'}>
+        <div className={"rounded-md border border-dashed p-2 text-xs"}>
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -429,7 +428,7 @@ export function DatasetForm({ onSubmitHandler, name, data }: FormProps) {
                           <span className="text-sm text-green-500">
                             {option.cpus.free}
                           </span>
-                          /{option.cpus.max} cpus,{' '}
+                          /{option.cpus.max} cpus,{" "}
                           <span className="text-sm text-green-500">
                             {option.gpus.free}
                           </span>

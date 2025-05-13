@@ -1,3 +1,7 @@
+import { useCallback } from "react";
+import * as React from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import {
   ArrowLeftIcon,
   LogOutIcon,
@@ -5,16 +9,12 @@ import {
   SquareStackIcon,
   SunIcon,
   UserIcon,
-} from 'lucide-react';
-import { signIn, signOut } from 'next-auth/react';
-import { useTheme } from 'next-themes';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useCallback } from 'react';
-import * as React from 'react';
-import { useHotkeys } from 'react-hotkeys-hook';
-import { toast } from 'sonner';
-import { Button, buttonVariants } from '~/components/ui/button';
+} from "lucide-react";
+import { signIn, signOut } from "next-auth/react";
+import { useTheme } from "next-themes";
+import { useHotkeys } from "react-hotkeys-hook";
+import { toast } from "sonner";
+import { Button, buttonVariants } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +22,11 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu';
-import { useStoreActions } from '~/hooks/use-store';
-import { useUser } from '~/hooks/use-user';
-
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { cn } from '~/lib/utils';
+} from "~/components/ui/dropdown-menu";
+import { useStoreActions } from "~/hooks/use-store";
+import { useUser } from "~/hooks/use-user";
+import { cn } from "~/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 const AvatarButton = React.forwardRef<HTMLButtonElement>((props, ref) => (
   <Button
@@ -49,7 +48,7 @@ const AvatarButton = React.forwardRef<HTMLButtonElement>((props, ref) => (
     <span className="sr-only">User info</span>
   </Button>
 ));
-AvatarButton.displayName = 'AvatarButton';
+AvatarButton.displayName = "AvatarButton";
 
 export function AvatarDrop() {
   const user = useUser();
@@ -59,29 +58,29 @@ export function AvatarDrop() {
 
   const { resolvedTheme, setTheme } = useTheme();
 
-  useHotkeys('shift+alt+d', () =>
-    setTheme(resolvedTheme === 'light' ? 'dark' : 'light'),
+  useHotkeys("shift+alt+d", () =>
+    setTheme(resolvedTheme === "light" ? "dark" : "light"),
   );
 
   const logOut = useCallback(async () => {
-    await router.push('/');
+    await router.push("/");
     resetStore();
     await signOut({ redirect: false });
-    toast.success('Logged out');
+    toast.success("Logged out");
   }, [resetStore, router]);
 
-  useHotkeys('shift+alt+l', () =>
+  useHotkeys("shift+alt+l", () =>
     user
       ? void logOut()
       : void signIn(undefined, {
-          callbackUrl: '/',
+          callbackUrl: "/",
         }),
   );
 
   if (!user) {
-    if (router.pathname === '/') return null;
+    if (router.pathname === "/") return null;
     return (
-      <Link href="/" className={cn(buttonVariants({ variant: 'link' }))}>
+      <Link href="/" className={cn(buttonVariants({ variant: "link" }))}>
         <ArrowLeftIcon className="mr-2 h-4 w-4" />
         Home
       </Link>
@@ -105,13 +104,13 @@ export function AvatarDrop() {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href="/" hidden={router.pathname === '/'}>
+          <Link href="/" hidden={router.pathname === "/"}>
             <DropdownMenuItem className="cursor-pointer">
               <ArrowLeftIcon className="mr-2 h-4 w-4" />
               <span>Home</span>
             </DropdownMenuItem>
           </Link>
-          <Link href={user.route} hidden={router.pathname === '/u/[user]'}>
+          <Link href={user.route} hidden={router.pathname === "/u/[user]"}>
             <DropdownMenuItem className="cursor-pointer">
               <SquareStackIcon className="mr-2 h-4 w-4" />
               <span>My Workspaces</span>
@@ -121,12 +120,12 @@ export function AvatarDrop() {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => setTheme(resolvedTheme === 'light' ? 'dark' : 'light')}
+          onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
         >
           <MoonIcon className="h-4 w-4 rotate-0 scale-100 transition-all hover:text-slate-900 dark:-rotate-90 dark:scale-0 dark:text-slate-400 dark:hover:text-slate-100" />
           <SunIcon className="absolute h-4 w-4 rotate-90 scale-0 transition-all hover:text-slate-900 dark:rotate-0 dark:scale-100 dark:text-slate-400 dark:hover:text-slate-100" />
           <span className="ml-2">
-            {resolvedTheme === 'light' ? 'Dark' : 'Light'}
+            {resolvedTheme === "light" ? "Dark" : "Light"}
           </span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

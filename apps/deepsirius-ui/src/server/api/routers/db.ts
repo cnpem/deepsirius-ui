@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
+import { z } from "zod";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const dbRouter = createTRPCRouter({
   createWorkspace: protectedProcedure
@@ -18,7 +18,7 @@ export const dbRouter = createTRPCRouter({
           path: input.path,
           name: input.name,
           favorite: false,
-          state: '',
+          state: "",
           user: {
             connect: {
               id: uid,
@@ -83,7 +83,7 @@ export const dbRouter = createTRPCRouter({
       });
 
       if (!workspace) {
-        throw new Error('Workspace not found');
+        throw new Error("Workspace not found");
       }
       return workspace;
     }),

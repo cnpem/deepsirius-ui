@@ -1,17 +1,17 @@
-import { TRPCError } from '@trpc/server';
-import fs from 'fs';
-import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure } from '~/server/api/trpc';
-import type { ErrnoException } from '~/server/remote-job';
+import fs from "fs";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import type { ErrnoException } from "~/server/remote-job";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 type DirentMethods =
-  | 'isBlockDevice'
-  | 'isCharacterDevice'
-  | 'isDirectory'
-  | 'isFIFO'
-  | 'isFile'
-  | 'isSocket'
-  | 'isSymbolicLink';
+  | "isBlockDevice"
+  | "isCharacterDevice"
+  | "isDirectory"
+  | "isFIFO"
+  | "isFile"
+  | "isSocket"
+  | "isSymbolicLink";
 
 export const filesystemRouter = createTRPCRouter({
   ls: protectedProcedure
@@ -29,42 +29,42 @@ export const filesystemRouter = createTRPCRouter({
         });
       } catch (e) {
         const error = e as ErrnoException;
-        if (error.code === 'ENOENT') {
+        if (error.code === "ENOENT") {
           throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'No such file or directory',
+            code: "BAD_REQUEST",
+            message: "No such file or directory",
           });
         }
-        if (error.code === 'EACCES') {
+        if (error.code === "EACCES") {
           throw new TRPCError({
-            code: 'UNAUTHORIZED',
-            message: 'Permission denied',
+            code: "UNAUTHORIZED",
+            message: "Permission denied",
           });
         }
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Internal server error',
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Internal server error",
         });
       }
 
-      const visibleFiles = files.filter((file) => !file.name.startsWith('.'));
-      const fileWithTypes: { name: string; type: 'directory' | 'file' }[] = [];
+      const visibleFiles = files.filter((file) => !file.name.startsWith("."));
+      const fileWithTypes: { name: string; type: "directory" | "file" }[] = [];
       // get file types
       for (const file of visibleFiles) {
         const methods = [
-          'isBlockDevice',
-          'isCharacterDevice',
-          'isDirectory',
-          'isFIFO',
-          'isFile',
-          'isSocket',
-          'isSymbolicLink',
+          "isBlockDevice",
+          "isCharacterDevice",
+          "isDirectory",
+          "isFIFO",
+          "isFile",
+          "isSocket",
+          "isSymbolicLink",
         ] as DirentMethods[];
         for (const method of methods) {
           if (file[method]()) {
             fileWithTypes.push({
               name: file.name,
-              type: method === 'isDirectory' ? 'directory' : 'file',
+              type: method === "isDirectory" ? "directory" : "file",
             });
             break;
           }

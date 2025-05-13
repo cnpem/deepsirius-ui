@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { Button } from '~/components/ui/button';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "~/components/ui/button";
 import {
   Form,
   FormControl,
@@ -12,43 +12,43 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '~/components/ui/form';
-import { Input } from '~/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '~/components/ui/radio-group';
+} from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select';
-import { slurmGPUOptions } from '~/lib/constants';
-import { api } from '~/utils/api';
+} from "~/components/ui/select";
+import { slurmGPUOptions } from "~/lib/constants";
+import { api } from "~/utils/api";
 
 const slurmOptions = z.object({
   partition: z.string(),
   nGPU: z.enum(slurmGPUOptions),
 });
 
-const patchSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
-const batchSizes = ['2', '4', '8', '16', '32'] as const;
+const patchSizes = ["16", "32", "64", "128", "256", "512", "1024"] as const;
+const batchSizes = ["2", "4", "8", "16", "32"] as const;
 export const networkSchema = z.object({
   slurmOptions,
   networkUserLabel: z
     .string()
     .min(2, {
-      message: 'Network label name must be at least 2 characters.',
+      message: "Network label name must be at least 2 characters.",
     })
     .regex(/^[a-zA-Z0-9_]*$/, {
       message:
-        'Network label name must contain only letters, numbers underscores and no spaces.',
+        "Network label name must contain only letters, numbers underscores and no spaces.",
     }),
-  jobGPUs: z.enum(['1', '2', '4']),
-  iterations: z.coerce.number().gte(1, { message: 'Must be >= 1' }),
-  learningRate: z.coerce.number().gt(0, { message: 'Must be greater than 0' }),
-  optimizer: z.enum(['adam', 'adagrad', 'gradientdescent']),
-  lossFunction: z.enum(['CrossEntropy', 'dice', 'xent_dice']),
-  networkTypeName: z.enum(['unet2d', 'unet3d', 'vnet']),
+  jobGPUs: z.enum(["1", "2", "4"]),
+  iterations: z.coerce.number().gte(1, { message: "Must be >= 1" }),
+  learningRate: z.coerce.number().gt(0, { message: "Must be greater than 0" }),
+  optimizer: z.enum(["adam", "adagrad", "gradientdescent"]),
+  lossFunction: z.enum(["CrossEntropy", "dice", "xent_dice"]),
+  networkTypeName: z.enum(["unet2d", "unet3d", "vnet"]),
   patchSize: z.enum(patchSizes),
   batchSize: z.enum(batchSizes),
 });
@@ -59,31 +59,31 @@ type FormCallback = (data: FormType) => void;
 type NetworkFormProps = {
   onSubmitHandler: FormCallback;
   networkUserLabel?: string;
-  networkTypeName?: z.infer<typeof networkSchema>['networkTypeName'];
-  jobType: 'create' | 'retry';
+  networkTypeName?: z.infer<typeof networkSchema>["networkTypeName"];
+  jobType: "create" | "retry";
 };
 
 export function useNetworkForm({
-  networkUserLabel = '',
-  networkTypeName = 'vnet',
+  networkUserLabel = "",
+  networkTypeName = "vnet",
 }: {
   networkUserLabel?: string;
-  networkTypeName?: z.infer<typeof networkSchema>['networkTypeName'];
+  networkTypeName?: z.infer<typeof networkSchema>["networkTypeName"];
 }) {
   const form = useForm<FormType>({
     resolver: zodResolver(networkSchema),
     defaultValues: {
       networkUserLabel: networkUserLabel,
       networkTypeName: networkTypeName,
-      jobGPUs: '1',
+      jobGPUs: "1",
       iterations: 1,
       learningRate: 0.00001,
-      optimizer: 'adam',
-      patchSize: '32',
-      batchSize: '32',
-      lossFunction: 'CrossEntropy',
+      optimizer: "adam",
+      patchSize: "32",
+      batchSize: "32",
+      lossFunction: "CrossEntropy",
       slurmOptions: {
-        nGPU: '1',
+        nGPU: "1",
       },
     },
   });
@@ -101,21 +101,21 @@ type FieldItem = {
 type FormFieldItems = FieldItem[];
 
 const networkOpts: FormFieldItems = [
-  { label: 'unet 2D', value: 'unet2d' },
-  { label: 'unet 3D', value: 'unet3d' },
-  { label: 'vnet', value: 'vnet' },
+  { label: "unet 2D", value: "unet2d" },
+  { label: "unet 3D", value: "unet3d" },
+  { label: "vnet", value: "vnet" },
 ];
 
 const optimizerOpts: FormFieldItems = [
-  { label: 'Adam', value: 'adam' },
-  { label: 'Adagrad', value: 'adagrad' },
-  { label: 'Gradient Descent', value: 'gradientdescent' },
+  { label: "Adam", value: "adam" },
+  { label: "Adagrad", value: "adagrad" },
+  { label: "Gradient Descent", value: "gradientdescent" },
 ];
 
 const lossOpts: FormFieldItems = [
-  { label: 'Cross Entropy', value: 'CrossEntropy' },
-  { label: 'Dice', value: 'dice' },
-  { label: 'Cross Entropy + Dice', value: 'xent_dice' },
+  { label: "Cross Entropy", value: "CrossEntropy" },
+  { label: "Dice", value: "dice" },
+  { label: "Cross Entropy + Dice", value: "xent_dice" },
 ];
 
 export function NetworkForm({
@@ -349,7 +349,7 @@ export function NetworkForm({
                           <span className="text-sm text-green-500">
                             {option.cpus.free}
                           </span>
-                          /{option.cpus.max} cpus,{' '}
+                          /{option.cpus.max} cpus,{" "}
                           <span className="text-sm text-green-500">
                             {option.gpus.free}
                           </span>
@@ -391,7 +391,7 @@ export function NetworkForm({
                       <SelectItem key={item} value={item}>
                         <p className="flex flex-row items-center gap-1">
                           <span className="mr-2 text-xs text-muted-foreground">
-                            GPUs:{' '}
+                            GPUs:{" "}
                           </span>
                           <span>{item.toString()}</span>
                         </p>

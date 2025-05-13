@@ -1,10 +1,10 @@
-import { useCallback, useState } from 'react';
-import { Button } from '~/components/ui/button';
-import { Dialog, DialogTrigger, DialogContent } from '~/components/ui/dialog';
-import { Label } from '~/components/ui/label';
-import { ArrowLeftCircleIcon, ArrowRightCircleIcon } from 'lucide-react';
-import { useHotkeys } from 'react-hotkeys-hook';
-import { Skeleton } from './ui/skeleton';
+import { useCallback, useState } from "react";
+import { ArrowLeftCircleIcon, ArrowRightCircleIcon } from "lucide-react";
+import { useHotkeys } from "react-hotkeys-hook";
+import { Button } from "~/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "~/components/ui/dialog";
+import { Label } from "~/components/ui/label";
+import { Skeleton } from "./ui/skeleton";
 
 type ImageProps = {
   src: string;
@@ -58,7 +58,7 @@ export function ImageGallery({ images, sizelg }: ImageGalleryProps) {
             <DialogTrigger
               key={image.name}
               className={
-                'mx-auto w-full rounded-md p-1 md:mx-4 md:w-32 lg:mx-4 lg:w-32'
+                "mx-auto w-full rounded-md p-1 md:mx-4 md:w-32 lg:mx-4 lg:w-32"
               }
               onClick={() => onSelectionChange(image)}
             >
@@ -67,8 +67,8 @@ export function ImageGallery({ images, sizelg }: ImageGalleryProps) {
                 src={image.src}
                 alt={image.name}
                 style={{
-                  objectFit: 'contain',
-                  alignSelf: 'center',
+                  objectFit: "contain",
+                  alignSelf: "center",
                 }}
                 className="rounded-md transition-all duration-300 ease-in-out hover:scale-105 hover:opacity-95"
                 loading="lazy"
@@ -79,7 +79,7 @@ export function ImageGallery({ images, sizelg }: ImageGalleryProps) {
             </DialogTrigger>
           ))}
         </div>
-        <DialogContent className="flex flex-shrink flex-col items-center gap-1 p-10 ">
+        <DialogContent className="flex flex-shrink flex-col items-center gap-1 p-10">
           {open && (
             <ImageFull
               image={selected.image}
@@ -109,10 +109,10 @@ function ImageFull({
   onSelectionChange: (image: ImageProps | undefined) => void;
 }) {
   const { src, name } = image;
-  useHotkeys('left', () => onSelectionChange(leftNeighbour), {
+  useHotkeys("left", () => onSelectionChange(leftNeighbour), {
     enabled: !!leftNeighbour,
   });
-  useHotkeys('right', () => onSelectionChange(rightNeighbour), {
+  useHotkeys("right", () => onSelectionChange(rightNeighbour), {
     enabled: !!rightNeighbour,
   });
 
@@ -140,7 +140,7 @@ function ImageFull({
         alt={name}
         width={size ?? 512}
         height={size ?? 512}
-        style={{ objectFit: 'contain' }}
+        style={{ objectFit: "contain" }}
         className="rounded-md"
         loading="lazy"
       />

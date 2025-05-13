@@ -1,13 +1,13 @@
-import { type NextPage } from 'next';
-import dynamic from 'next/dynamic';
-import ErrorPage from 'next/error';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { Layout } from '~/components/layout';
-import { useUser } from '~/hooks/use-user';
+import { type NextPage } from "next";
+import dynamic from "next/dynamic";
+import ErrorPage from "next/error";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import { Layout } from "~/components/layout";
+import { useUser } from "~/hooks/use-user";
 
 const NoSSRFlow = dynamic(
-  () => import('~/components/workboard/workspace-flow-controller'),
+  () => import("~/components/workboard/workspace-flow-controller"),
   {
     ssr: false,
   },
@@ -21,7 +21,7 @@ const Workspace: NextPage = () => {
     return (
       <ErrorPage
         statusCode={404}
-        title={'Error: User not found. Please login'}
+        title={"Error: User not found. Please login"}
       />
     );
   }

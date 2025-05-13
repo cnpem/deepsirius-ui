@@ -1,16 +1,16 @@
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeftIcon,
+  ArrowRightIcon,
   FileIcon,
   FolderIcon,
   LayoutGridIcon,
   LayoutListIcon,
-} from 'lucide-react';
-import { ArrowRightIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import * as z from 'zod';
+} from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
 import {
   Form,
   FormControl,
@@ -19,15 +19,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '~/components/ui/form';
-import { env } from '~/env.mjs';
-import { cn, toUnixPath } from '~/lib/utils';
-import { api } from '~/utils/api';
-
-import { Button } from './ui/button';
-import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
-import { Input } from './ui/input';
-import { ScrollArea, ScrollBar } from './ui/scroll-area';
+} from "~/components/ui/form";
+import { env } from "~/env.mjs";
+import { cn, toUnixPath } from "~/lib/utils";
+import { api } from "~/utils/api";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 
 type Shortcut = {
   name: string;
@@ -36,12 +35,12 @@ type Shortcut = {
 
 const shortcuts: Shortcut[] = [
   {
-    name: 'ibirá',
+    name: "ibirá",
     path: env.NEXT_PUBLIC_STORAGE_PATH,
   },
   {
-    name: 'home',
-    path: '/ibira/lnls/labs/tepui/home',
+    name: "home",
+    path: "/ibira/lnls/labs/tepui/home",
   },
 ];
 
@@ -52,7 +51,7 @@ const FormSchema = z.object({
     .transform((v) => toUnixPath(v)),
 });
 
-type Display = 'grid' | 'list';
+type Display = "grid" | "list";
 
 const Skeleton = () => {
   return (
@@ -92,9 +91,9 @@ export const NautilusDialog = ({
 const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
   const [path, setPath] = useState(env.NEXT_PUBLIC_STORAGE_PATH);
   const [history, setHistory] = useState<string[]>([]);
-  const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState('');
-  const [display, setDisplay] = useState<Display>('grid');
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState("");
+  const [display, setDisplay] = useState<Display>("grid");
 
   const { data, isLoading, error } = api.ssh.ls.useQuery({ path });
 
@@ -122,9 +121,9 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
 
   useEffect(() => {
     if (data) {
-      form.setValue('path', path);
-      setSearch('');
-      setSelected('');
+      form.setValue("path", path);
+      setSearch("");
+      setSelected("");
     }
   }, [data, form, path]);
 
@@ -135,7 +134,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
   }
 
   function formatPath(p: string) {
-    return p.endsWith('/') ? p.slice(0, -1) : p;
+    return p.endsWith("/") ? p.slice(0, -1) : p;
   }
   function handleSelect() {
     let p = formatPath(path);
@@ -144,8 +143,8 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
     toast.success(`Selected ${p}`);
   }
 
-  const gridClass = 'grid grid-flow-row grid-cols-5 gap-1 p-2';
-  const listClass = 'flex flex-col gap-1 p-2';
+  const gridClass = "grid grid-flow-row grid-cols-5 gap-1 p-2";
+  const listClass = "flex flex-col gap-1 p-2";
 
   return (
     <div className="flex flex-col gap-4">
@@ -153,7 +152,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
         <ScrollArea className="max-w-sm rounded-sm border p-2">
           <p className="flex flex-row gap-1 text-xs text-muted-foreground">
             <span className="text-purple-500 dark:text-purple-400">
-              selected:{' '}
+              selected:{" "}
             </span>
             <span>{`${formatPath(path)}/${selected}`}</span>
           </p>
@@ -190,7 +189,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
         {shortcuts.map((shortcut) => (
           <Button
             key={shortcut.name}
-            className=" h-8 text-xs"
+            className="h-8 text-xs"
             variant="outline"
             onClick={() => {
               if (shortcut.path === path) return;
@@ -243,9 +242,9 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
           title="Change layout"
           size="icon"
           variant="outline"
-          onClick={() => setDisplay(display === 'grid' ? 'list' : 'grid')}
+          onClick={() => setDisplay(display === "grid" ? "list" : "grid")}
         >
-          {display === 'grid' ? (
+          {display === "grid" ? (
             <LayoutGridIcon className="h-4 w-4" />
           ) : (
             <LayoutListIcon className="h-4 w-4" />
@@ -256,7 +255,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
         <Skeleton />
       ) : (
         <ScrollArea className="h-[35vh]">
-          <div className={display === 'grid' ? gridClass : listClass}>
+          <div className={display === "grid" ? gridClass : listClass}>
             {filteredData?.map((item) => (
               <div
                 data-selected={item.name === selected}
@@ -264,7 +263,7 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
                   setSelected(item.name);
                 }}
                 onDoubleClick={() => {
-                  if (item.type === 'directory') {
+                  if (item.type === "directory") {
                     const basePath = formatPath(path);
                     const newPath = `${basePath}/${item.name}`;
                     setHistory((prev) => [...prev, path]);
@@ -275,14 +274,14 @@ const Nautilus = ({ onSelect }: { onSelect: (p: string) => void }) => {
                 }}
                 key={item.name}
                 className={cn(
-                  'flex h-fit items-center rounded-lg px-2 py-1 hover:cursor-pointer hover:bg-violet-100 data-[selected=true]:bg-violet-200 data-[selected=true]:hover:bg-violet-100 dark:hover:bg-violet-800 dark:data-[selected=true]:bg-violet-900 dark:data-[selected=true]:hover:bg-violet-800',
-                  display === 'grid' ? 'flex-col' : 'flex-row gap-2',
+                  "flex h-fit items-center rounded-lg px-2 py-1 hover:cursor-pointer hover:bg-violet-100 data-[selected=true]:bg-violet-200 data-[selected=true]:hover:bg-violet-100 dark:hover:bg-violet-800 dark:data-[selected=true]:bg-violet-900 dark:data-[selected=true]:hover:bg-violet-800",
+                  display === "grid" ? "flex-col" : "flex-row gap-2",
                 )}
               >
-                {item.type === 'directory' && (
+                {item.type === "directory" && (
                   <FolderIcon className="h-10 w-10 fill-muted stroke-1 dark:stroke-background" />
                 )}
-                {item.type === 'file' && (
+                {item.type === "file" && (
                   <FileIcon className="h-10 w-10 fill-muted stroke-1 dark:stroke-background" />
                 )}
                 <span className="select-none text-balance break-all text-center text-xs text-muted-foreground">

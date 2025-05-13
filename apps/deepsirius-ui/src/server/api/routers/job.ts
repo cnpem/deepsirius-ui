@@ -1,8 +1,8 @@
-import { TRPCError } from '@trpc/server';
-import { z } from 'zod';
-import { createTRPCRouter, protectedSSHProcedure } from '~/server/api/trpc';
-import { userPartitionsResponseSchema } from '~/lib/schemas/user-partitions';
-import fs from 'fs/promises';
+import fs from "fs/promises";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { userPartitionsResponseSchema } from "~/lib/schemas/user-partitions";
+import { createTRPCRouter, protectedSSHProcedure } from "~/server/api/trpc";
 
 // from the query format State,Submit,Start,End,Elapsed,Partition,NodeList,AllocGRES,NCPUS,Reason,ExitCode
 const reportSacctFormatSchema = z.object({
@@ -35,13 +35,13 @@ export const jobRouter = createTRPCRouter({
 
       if (stderr) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: stderr,
         });
       }
 
       // The output of the sacct command comes in two lines, the first line is the header and the second is the actual state: i.e. State\nRUNNING, State\nCOMPLETED, etc.
-      const lines = stdout.trim().split('\n');
+      const lines = stdout.trim().split("\n");
       const status = lines[1];
       if (!status) {
         // If the status is empty, it means the job.batch wasn't found, but the job might be PENDING
@@ -49,11 +49,11 @@ export const jobRouter = createTRPCRouter({
         const { stdout, stderr } = await connection.execCommand(command);
         if (stderr) {
           throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
+            code: "INTERNAL_SERVER_ERROR",
             message: stderr,
           });
         }
-        const lines = stdout.trim().split('\n');
+        const lines = stdout.trim().split("\n");
         const status = lines[1];
         return { jobStatus: status };
       }
@@ -74,12 +74,12 @@ export const jobRouter = createTRPCRouter({
 
       if (stderr) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: stderr,
         });
       }
 
-      return { cancelStatus: 'CANCELLED' };
+      return { cancelStatus: "CANCELLED" };
     }),
   report: protectedSSHProcedure
     .input(
@@ -97,7 +97,7 @@ export const jobRouter = createTRPCRouter({
 
       if (stderr) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: stderr,
         });
       }
@@ -105,15 +105,15 @@ export const jobRouter = createTRPCRouter({
       const data = stdout.trim();
       if (data.length === 0) {
         throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Job data not found',
+          code: "NOT_FOUND",
+          message: "Job data not found",
         });
       }
 
-      const firstline = data.split('\n')[0];
+      const firstline = data.split("\n")[0];
       if (!firstline) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: `Error parsing job data for jobId ${jobId}`,
         });
       }
@@ -130,10 +130,10 @@ export const jobRouter = createTRPCRouter({
         nCPUS,
         reason,
         exitCode,
-      ] = data.split('|');
+      ] = data.split("|");
 
       const report = reportSacctFormatSchema.safeParse({
-        state: state?.split(' ')[0] ?? state, // the state comes with a suffix that we don't need, so we split it and get the first part
+        state: state?.split(" ")[0] ?? state, // the state comes with a suffix that we don't need, so we split it and get the first part
         submit,
         start,
         end,
@@ -148,8 +148,8 @@ export const jobRouter = createTRPCRouter({
 
       if (report.error) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Error parsing job data:' + report.error.message,
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error parsing job data:" + report.error.message,
         });
       }
 
@@ -160,10 +160,10 @@ export const jobRouter = createTRPCRouter({
   userPartitions: protectedSSHProcedure.query(async ({ ctx }) => {
     const connection = ctx.connection;
 
-    const templatePath = 'public/templates/user-partitions.sh';
-    const scriptTemplate = await fs.readFile(templatePath, 'utf-8');
+    const templatePath = "public/templates/user-partitions.sh";
+    const scriptTemplate = await fs.readFile(templatePath, "utf-8");
 
-    const content = scriptTemplate.replace('${INPUT_USERNAME}', ctx.username);
+    const content = scriptTemplate.replace("${INPUT_USERNAME}", ctx.username);
 
     const { stdout, stderr } = await connection.execCommand(content);
 
@@ -172,7 +172,7 @@ export const jobRouter = createTRPCRouter({
     }
 
     if (stdout.trim().length === 0) {
-      throw new Error('Empty response from user partitions script.');
+      throw new Error("Empty response from user partitions script.");
     }
 
     const parsed = userPartitionsResponseSchema.safeParse(
@@ -186,7 +186,7 @@ export const jobRouter = createTRPCRouter({
       if (value === null || value === undefined) {
         return undefined;
       }
-      if (value === 'null') {
+      if (value === "null") {
         return undefined;
       }
       const parsed = parseInt(value, 10);

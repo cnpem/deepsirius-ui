@@ -1,22 +1,22 @@
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
-import { type NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { toast } from 'sonner';
-import {
-  FinetuneForm,
-  type FormType,
-} from '~/components/workboard/node-component-forms/finetune-form';
-import { type NodeData, useStoreActions, useStore } from '~/hooks/use-store';
-import { api } from '~/utils/api';
-import NodeCard from './node-components/node-card';
+import type { NodeProps } from "reactflow";
+import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import { useUpdateNodeInternals } from "reactflow";
+import { toast } from "sonner";
+import type { FormType } from "~/components/workboard/node-component-forms/finetune-form";
+import type { NodeData } from "~/hooks/use-store";
+import { FinetuneForm } from "~/components/workboard/node-component-forms/finetune-form";
+import { useStore, useStoreActions } from "~/hooks/use-store";
+import { useUser } from "~/hooks/use-user";
+import { checkStatusRefetchInterval } from "~/lib/constants";
+import { api } from "~/utils/api";
+import NodeCard from "./node-components/node-card";
 import {
   ActiveSheet,
   BusySheet,
   ErrorSheet,
   SuccessSheet,
-} from './node-components/node-sheet';
-import { useUser } from '~/hooks/use-user';
-import { checkStatusRefetchInterval } from '~/lib/constants';
+} from "./node-components/node-sheet";
 
 export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
   const user = useUser();
@@ -31,13 +31,13 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
     const sourceNodes = sourceNodesId.map((id) =>
       useStore.getState().nodes.find((node) => node.id === id.source),
     );
-    const sourceDataset = sourceNodes.find((node) => node?.type === 'dataset');
+    const sourceDataset = sourceNodes.find((node) => node?.type === "dataset");
     const sourceAugmentedDataset = sourceNodes.find(
-      (node) => node?.type === 'augmentation',
+      (node) => node?.type === "augmentation",
     );
-    const sourceNetwork = sourceNodes.find((node) => node?.type === 'network');
+    const sourceNetwork = sourceNodes.find((node) => node?.type === "network");
     const sourceFinetune = sourceNodes.find(
-      (node) => node?.type === 'finetune',
+      (node) => node?.type === "finetune",
     );
 
     return {
@@ -60,7 +60,7 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
   useEffect(() => {
     const formEditState =
       nodeProps.selected &&
-      ['active', 'error', 'success'].includes(nodeProps.data.status);
+      ["active", "error", "success"].includes(nodeProps.data.status);
     setOpen(formEditState);
   }, [nodeProps.selected, nodeProps.data.status]);
 
@@ -70,21 +70,21 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
     { jobId: nodeProps.data.jobId as string },
     {
       refetchOnMount: false,
-      enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
+      enabled: nodeProps.data.status === "busy" && !!nodeProps.data.jobId,
       refetchInterval: checkStatusRefetchInterval,
       refetchIntervalInBackground: true,
     },
   );
 
   useEffect(() => {
-    if (nodeProps.data.status !== 'busy') return;
+    if (nodeProps.data.status !== "busy") return;
     if (!jobData) return;
-    if (jobData.jobStatus === 'COMPLETED') {
-      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      toast.success('Job completed');
+    if (jobData.jobStatus === "COMPLETED") {
+      const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+      toast.success("Job completed");
       const finetuneData = nodeProps.data.finetuneData;
       if (!finetuneData) {
-        toast.warning('Finetune data not found');
+        toast.warning("Finetune data not found");
         return;
       }
       onUpdateNode({
@@ -92,11 +92,11 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
         data: {
           ...nodeProps.data,
 
-          status: 'success',
+          status: "success",
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
           message: `Job ${
-            nodeProps.data.jobId ?? 'aa'
+            nodeProps.data.jobId ?? "aa"
           } finished successfully in ${date}`,
           updatedAt: date,
           finetuneData: {
@@ -106,34 +106,34 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
       });
       updateNodeInternals(nodeProps.id);
     } else if (
-      jobData.jobStatus === 'FAILED' ||
-      jobData.jobStatus?.includes('CANCELLED')
+      jobData.jobStatus === "FAILED" ||
+      jobData.jobStatus?.includes("CANCELLED")
     ) {
-      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      toast.error('Job failed');
+      const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+      toast.error("Job failed");
       onUpdateNode({
         id: nodeProps.id,
         data: {
           ...nodeProps.data,
-          status: 'error',
+          status: "error",
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
-          message: `Job ${nodeProps.data.jobId ?? 'aa'} failed in ${date}`,
+          message: `Job ${nodeProps.data.jobId ?? "aa"} failed in ${date}`,
           updatedAt: date,
         },
       });
       updateNodeInternals(nodeProps.id);
     } else {
-      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
       onUpdateNode({
         id: nodeProps.id,
         data: {
           ...nodeProps.data,
-          status: 'busy',
+          status: "busy",
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
-          message: `Job ${nodeProps.data.jobId ?? 'aa'} is ${
-            jobData.jobStatus?.toLocaleLowerCase() ?? 'aa'
+          message: `Job ${nodeProps.data.jobId ?? "aa"} is ${
+            jobData.jobStatus?.toLocaleLowerCase() ?? "aa"
           }, last checked at ${date}`,
           updatedAt: date,
         },
@@ -157,11 +157,11 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
     const { sourceDatasetName, sourceNetworkLabel, sourceNetworkType } =
       getSourceData(nodeProps.id);
     if (!sourceDatasetName) {
-      toast.warning('Please connect a dataset');
+      toast.warning("Please connect a dataset");
       return;
     }
     if (!sourceNetworkLabel || !sourceNetworkType) {
-      toast.warning('Please connect a network');
+      toast.warning("Please connect a network");
       return;
     }
     submitJob({
@@ -173,8 +173,8 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
     })
       .then(({ jobId }) => {
         if (!jobId) {
-          console.error('handleSubmitJob then?', 'no jobId');
-          toast.error('Error submitting job');
+          console.error("handleSubmitJob then?", "no jobId");
+          toast.error("Error submitting job");
           return;
         }
         setFormData(formData);
@@ -182,11 +182,11 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
           id: nodeProps.id,
           data: {
             ...nodeProps.data,
-            status: 'busy',
+            status: "busy",
             remotePath: ``,
             jobId: jobId,
             message: `Job ${jobId} submitted in ${dayjs().format(
-              'YYYY-MM-DD HH:mm:ss',
+              "YYYY-MM-DD HH:mm:ss",
             )}`,
             finetuneData: {
               sourceDatasetName,
@@ -200,17 +200,17 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
         setOpen(!open);
       })
       .catch(() => {
-        toast.error('Error submitting job');
+        toast.error("Error submitting job");
         setFormData(formData);
         onUpdateNode({
           id: nodeProps.id,
           data: {
             ...nodeProps.data,
-            status: 'error',
+            status: "error",
             remotePath: ``,
-            jobId: '',
+            jobId: "",
             message: `Error submitting job in ${dayjs().format(
-              'YYYY-MM-DD HH:mm:ss',
+              "YYYY-MM-DD HH:mm:ss",
             )}`,
           },
         });
@@ -221,17 +221,17 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
   const handleCancel = () => {
     cancelJob({ jobId: nodeProps.data.jobId as string })
       .then(() => {
-        const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-        toast.success('Job canceled');
+        const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+        toast.success("Job canceled");
         onUpdateNode({
           id: nodeProps.id,
           data: {
             ...nodeProps.data,
-            status: 'error',
+            status: "error",
             jobId: nodeProps.data.jobId,
-            jobStatus: 'CANCELLED',
+            jobStatus: "CANCELLED",
             message: `Job ${
-              nodeProps.data.jobId ?? '[jobId not found]'
+              nodeProps.data.jobId ?? "[jobId not found]"
             } canceled in ${date}`,
             updatedAt: date,
           },
@@ -239,31 +239,31 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
         updateNodeInternals(nodeProps.id);
       })
       .catch(() => {
-        toast.error('Error canceling job');
+        toast.error("Error canceling job");
       });
-    toast.info('Canceling job..');
+    toast.info("Canceling job..");
   };
 
   if (!user) return null;
   if (!nodeProps.data.workspacePath) return null;
 
-  const workspaceName = nodeProps.data.workspacePath.split('/').pop();
+  const workspaceName = nodeProps.data.workspacePath.split("/").pop();
   if (!workspaceName) return null;
   const nodeIdParams = new URLSearchParams({
     nodeId: nodeProps.id,
   });
   const galleryUrl =
-    user.route + '/' + workspaceName + '/gallery?' + nodeIdParams.toString();
+    user.route + "/" + workspaceName + "/gallery?" + nodeIdParams.toString();
 
-  if (nodeProps.data.status === 'active') {
+  if (nodeProps.data.status === "active") {
     return (
       <>
         <NodeCard
-          title={'finetune'}
-          subtitle={'click to finetune a network'}
+          title={"finetune"}
+          subtitle={"click to finetune a network"}
           {...nodeProps}
         />
-        <ActiveSheet selected={nodeProps.selected} title={'Finetune Network'}>
+        <ActiveSheet selected={nodeProps.selected} title={"Finetune Network"}>
           <FinetuneForm
             onSubmitHandler={(formData) => handleSubmit(formData)}
           />
@@ -272,19 +272,19 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
     );
   }
 
-  if (nodeProps.data.status === 'busy') {
+  if (nodeProps.data.status === "busy") {
     return (
       <>
         <NodeCard
-          title={'finetune'}
-          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
-            nodeProps.data.jobStatus || 'UNDEFINED'
+          title={"finetune"}
+          subtitle={`${nodeProps.data.jobId || "jobId"} -- ${
+            nodeProps.data.jobStatus || "UNDEFINED"
           }`}
           {...nodeProps}
         />
         <BusySheet
           selected={nodeProps.selected}
-          title={'Details'}
+          title={"Details"}
           jobId={nodeProps.data.jobId}
           jobStatus={nodeProps.data.jobStatus}
           updatedAt={nodeProps.data.updatedAt}
@@ -296,13 +296,13 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
     );
   }
 
-  if (nodeProps.data.status === 'success') {
+  if (nodeProps.data.status === "success") {
     return (
       <>
         <NodeCard
-          title={'finetune'}
-          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
-            nodeProps.data.jobStatus || 'jobStatus'
+          title={"finetune"}
+          subtitle={`${nodeProps.data.jobId || "jobId"} -- ${
+            nodeProps.data.jobStatus || "jobStatus"
           }`}
           {...nodeProps}
         />
@@ -317,9 +317,9 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
               Object.entries(formData)
                 .filter(
                   ([_, value]) =>
-                    typeof value === 'string' ||
-                    typeof value === 'number' ||
-                    typeof value === 'boolean',
+                    typeof value === "string" ||
+                    typeof value === "number" ||
+                    typeof value === "boolean",
                 )
                 .map(([key, value], index) => {
                   const isEven = index % 2 === 0;
@@ -329,11 +329,11 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
                       className="flex flex-row items-center justify-between gap-1"
                     >
                       <p className="font-medium">
-                        {key.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()}
+                        {key.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()}
                       </p>
                       <p
                         data-even={isEven}
-                        className="text-end data-[even=true]:text-violet-600 "
+                        className="text-end data-[even=true]:text-violet-600"
                       >
                         {value.toString()}
                       </p>
@@ -346,13 +346,13 @@ export function FinetuneNode(nodeProps: NodeProps<NodeData>) {
     );
   }
 
-  if (nodeProps.data.status === 'error') {
+  if (nodeProps.data.status === "error") {
     return (
       <>
         <NodeCard
-          title={'finetune'}
-          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
-            nodeProps.data.jobStatus || 'Error'
+          title={"finetune"}
+          subtitle={`${nodeProps.data.jobId || "jobId"} -- ${
+            nodeProps.data.jobStatus || "Error"
           }`}
           {...nodeProps}
         />

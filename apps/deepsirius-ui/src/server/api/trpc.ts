@@ -22,17 +22,17 @@
  * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
-import { TRPCError, initTRPC } from '@trpc/server';
-import { type CreateNextContextOptions } from '@trpc/server/adapters/next';
-import { type Session } from 'next-auth';
-import { getToken } from 'next-auth/jwt';
-import superjson from 'superjson';
-import { ZodError } from 'zod';
-import { env } from '~/env.mjs';
-import { getServerAuthSession } from '~/server/auth';
-import { prisma } from '~/server/db';
-import { NodeSSH } from 'node-ssh';
-import { cache as sshCache } from '../ssh-cache';
+import { initTRPC, TRPCError } from "@trpc/server";
+import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
+import { type Session } from "next-auth";
+import { getToken } from "next-auth/jwt";
+import { NodeSSH } from "node-ssh";
+import superjson from "superjson";
+import { ZodError } from "zod";
+import { env } from "~/env.mjs";
+import { getServerAuthSession } from "~/server/auth";
+import { prisma } from "~/server/db";
+import { cache as sshCache } from "../ssh-cache";
 
 type CreateContextOptions = {
   session: Session | null;
@@ -121,7 +121,7 @@ export const publicProcedure = t.procedure;
 /** Reusable middleware that enforces users are logged in before running the procedure. */
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.session || !ctx.session.user) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+    throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   return next({
     ctx: {
@@ -143,15 +143,15 @@ export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
 
 const ensureSSHConnection = t.middleware(async ({ ctx, next }) => {
   if (!ctx.session || !ctx.session.user) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+    throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
   if (!ctx.privateKey) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+    throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
   if (!ctx.session.user.name) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+    throw new TRPCError({ code: "UNAUTHORIZED" });
   }
 
   let connection = sshCache.get(ctx.session.user.name);
@@ -166,7 +166,7 @@ const ensureSSHConnection = t.middleware(async ({ ctx, next }) => {
       passphrase: env.PRIVATE_KEY_PASSPHRASE,
     });
     if (!connection) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     }
 
     sshCache.set(ctx.session.user.name, connection, 1000 * 60 * 6);

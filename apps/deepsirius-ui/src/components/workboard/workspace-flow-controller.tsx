@@ -1,43 +1,35 @@
-import { ArrowBigLeftIcon, PlusCircle } from 'lucide-react';
-import ErrorPage from 'next/error';
-import { useRouter } from 'next/router';
-import { useCallback, useEffect, useState } from 'react';
-import { useHotkeys } from 'react-hotkeys-hook';
+import type { Edge, Node, NodeTypes } from "reactflow";
+import { useCallback, useEffect, useState } from "react";
+import ErrorPage from "next/error";
+import { useRouter } from "next/router";
+import { ArrowBigLeftIcon, PlusCircle } from "lucide-react";
+import { useHotkeys } from "react-hotkeys-hook";
 import ReactFlow, {
   Background,
   BackgroundVariant,
   Controls,
-  type Edge,
   MiniMap,
-  type Node,
-  type NodeTypes,
   Panel,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
-import { toast } from 'sonner';
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
-import CustomConnectionLine from '~/components/workboard/connection-line';
-import {
-  type NodeData,
-  type WorkspaceInfo,
-  useStore,
-  useStoreActions,
-} from '~/hooks/use-store';
-import { DatasetNode } from '~/components/workboard/dataset-node';
-import { InferenceNode } from '~/components/workboard/inference-node';
-import { NetworkNode } from '~/components/workboard/network-node';
-import { FinetuneNode } from '~/components/workboard/finetune-node';
-import { AugmentationNode } from '~/components/workboard/augmentation-node';
-
-import { api } from '~/utils/api';
-
-import { AvatarDrop } from '../avatar-dropdown';
-import { ControlHelpButton } from '../help';
-import { LayoutNav } from '../layout-nav';
-import AlertDelete from '~/components/alert-delete';
-import { PlusOneMenu } from '~/components/workboard/plusone-menu';
-import NodeIcon from '~/components/workboard/node-components/node-icon';
-import { TooltipProvider } from '../ui/tooltip';
+} from "reactflow";
+import "reactflow/dist/style.css";
+import { toast } from "sonner";
+import type { NodeData, WorkspaceInfo } from "~/hooks/use-store";
+import AlertDelete from "~/components/alert-delete";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { AugmentationNode } from "~/components/workboard/augmentation-node";
+import CustomConnectionLine from "~/components/workboard/connection-line";
+import { DatasetNode } from "~/components/workboard/dataset-node";
+import { FinetuneNode } from "~/components/workboard/finetune-node";
+import { InferenceNode } from "~/components/workboard/inference-node";
+import { NetworkNode } from "~/components/workboard/network-node";
+import NodeIcon from "~/components/workboard/node-components/node-icon";
+import { PlusOneMenu } from "~/components/workboard/plusone-menu";
+import { useStore, useStoreActions } from "~/hooks/use-store";
+import { api } from "~/utils/api";
+import { AvatarDrop } from "../avatar-dropdown";
+import { ControlHelpButton } from "../help";
+import { LayoutNav } from "../layout-nav";
+import { TooltipProvider } from "../ui/tooltip";
 
 const nodeTypes: NodeTypes = {
   dataset: DatasetNode,
@@ -74,18 +66,18 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
   const { nodes, edges, stateSnapshot } = useStore();
   const { mutate: updateDbState } = api.db.updateWorkspace.useMutation({
     onError: (error) => {
-      console.error('dbstate update error', error);
-      toast.error('Error updating workspace state');
+      console.error("dbstate update error", error);
+      toast.error("Error updating workspace state");
     },
   });
   const { mutate: rmFile } = api.ssh.rmFile.useMutation({
     onError: () => {
-      toast.error('Error deleting file');
+      toast.error("Error deleting file");
     },
   });
   const { mutate: rmDir } = api.ssh.rmDir.useMutation({
     onError: () => {
-      toast.error('Error deleting directory');
+      toast.error("Error deleting directory");
     },
   });
 
@@ -99,22 +91,22 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
   const handleDeleteDatasetAndAugmentationNode = useCallback(
     (selectedNode: Node<NodeData>) => {
       // this node can be deleted if its targets are not protected or if its not busy
-      if (selectedNode.data.status === 'busy') {
-        toast.error('Cannot delete busy node');
+      if (selectedNode.data.status === "busy") {
+        toast.error("Cannot delete busy node");
         return;
       }
       const targetNodes = getTargetNodes(selectedNode.id, edges, nodes);
       const hasProtectedTargetNodes = targetNodes.some(
-        (node) => node.data.status === 'busy' || node.data.status === 'success',
+        (node) => node.data.status === "busy" || node.data.status === "success",
       );
       if (hasProtectedTargetNodes) {
         toast.error(
-          'Cannot delete network node with protected inference nodes',
+          "Cannot delete network node with protected inference nodes",
         );
         return;
       }
       // delete the remote files
-      if (selectedNode.type === 'dataset') {
+      if (selectedNode.type === "dataset") {
         const remotePath =
           selectedNode.data.datasetData?.remotePath ||
           selectedNode.data.remotePath;
@@ -122,7 +114,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
           rmFile({ path: remotePath });
         }
       }
-      if (selectedNode.type === 'augmentation') {
+      if (selectedNode.type === "augmentation") {
         const remotePath =
           selectedNode.data.augmentationData?.remotePath ||
           selectedNode.data.remotePath;
@@ -137,7 +129,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
       }
       // delete the node on the store
       onNodesDelete([selectedNode]);
-      toast.info('Dataset node deleted');
+      toast.info("Dataset node deleted");
       return;
     },
     [edges, nodes, onNodesDelete, rmDir, rmFile],
@@ -145,22 +137,22 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
 
   const handleDeleteNetworkNode = useCallback(
     (selectedNode: Node<NodeData>) => {
-      if (selectedNode.data.status === 'busy') {
-        toast.error('Cannot delete busy node');
+      if (selectedNode.data.status === "busy") {
+        toast.error("Cannot delete busy node");
         return;
       }
 
       const targetNodes = getTargetNodes(selectedNode.id, edges, nodes);
       const hasProtectedInferenceNodes = targetNodes.some((node) => {
-        if (node.data.status === 'busy') return true;
-        if (node.type === 'inference' && node.data.status === 'success') {
+        if (node.data.status === "busy") return true;
+        if (node.type === "inference" && node.data.status === "success") {
           return true;
         }
         return false;
       });
       if (hasProtectedInferenceNodes) {
         toast.error(
-          'Cannot delete network node with protected inference nodes',
+          "Cannot delete network node with protected inference nodes",
         );
         return;
       }
@@ -171,7 +163,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
           node.id,
           edges,
           nodes,
-        ).filter((node) => node.type === 'finetune');
+        ).filter((node) => node.type === "finetune");
         const targetNodesOfTargetNodes: Node<NodeData>[] = [];
         targetFinetuneNodes.forEach((node) => {
           targetNodesOfTargetNodes.push(...getTargetFinetuneNodes(node));
@@ -181,16 +173,16 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
       const targetFinetuneNodes = getTargetFinetuneNodes(selectedNode);
 
       const hasProtectedFinetuneNodes = targetFinetuneNodes.some(
-        (node) => node.data.status === 'busy',
+        (node) => node.data.status === "busy",
       );
       if (hasProtectedFinetuneNodes) {
-        toast.error('Cannot delete network node with protected finetune nodes');
+        toast.error("Cannot delete network node with protected finetune nodes");
         return;
       }
 
       if (targetFinetuneNodes.length > 0) {
         onNodesDelete(targetFinetuneNodes);
-        toast.info('Related Finetune nodes deleted');
+        toast.info("Related Finetune nodes deleted");
       }
 
       // delete the remote files
@@ -200,7 +192,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
       }
       // delete the node on the store
       onNodesDelete([selectedNode]);
-      toast.info('Network node deleted');
+      toast.info("Network node deleted");
       return;
     },
     [edges, nodes, onNodesDelete, rmDir],
@@ -209,21 +201,21 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
   const handleDeleteFinetuneNode = useCallback(
     (selectedNode: Node<NodeData>) => {
       // this node cant be deleted if its a target node or if its busy
-      if (selectedNode.data.status === 'busy') {
-        toast.error('Cannot delete busy node');
+      if (selectedNode.data.status === "busy") {
+        toast.error("Cannot delete busy node");
         return;
       }
 
       const isTarget = edges.some((edge) => edge.target === selectedNode.id);
       if (isTarget) {
         toast.error(
-          'Cannot delete finetune node with connected nodes. You must delete the parent network node.',
+          "Cannot delete finetune node with connected nodes. You must delete the parent network node.",
         );
         return;
       }
       // delete the node on the store
       onNodesDelete([selectedNode]);
-      toast.info('Finetune node deleted');
+      toast.info("Finetune node deleted");
       return;
     },
     [edges, onNodesDelete],
@@ -232,13 +224,13 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
   const handleDeleteInferenceNode = useCallback(
     (selectedNode: Node<NodeData>) => {
       // this node cant be deleted if its busy
-      if (selectedNode.data.status === 'busy') {
-        toast.error('Cannot delete busy node');
+      if (selectedNode.data.status === "busy") {
+        toast.error("Cannot delete busy node");
         return;
       }
       // delete the node on the store
       onNodesDelete([selectedNode]);
-      toast.info('Inference node deleted');
+      toast.info("Inference node deleted");
       return;
     },
     [onNodesDelete],
@@ -248,7 +240,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
     const selectedNodes = nodes.filter((node) => node.selected);
     // delete dataset and augmentation nodes
     const selectedDatasetAndAugmentationNodes = selectedNodes.filter(
-      (node) => node.type === 'dataset' || node.type === 'augmentation',
+      (node) => node.type === "dataset" || node.type === "augmentation",
     );
     if (selectedDatasetAndAugmentationNodes.length > 0) {
       selectedDatasetAndAugmentationNodes.forEach((selectedNode) =>
@@ -258,7 +250,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
     }
     // delete network nodes
     const selectedNetworkNodes = selectedNodes.filter(
-      (node) => node.type === 'network',
+      (node) => node.type === "network",
     );
     if (selectedNetworkNodes.length > 0) {
       selectedNetworkNodes.forEach((selectedNode) =>
@@ -268,7 +260,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
     }
     // delete finetune nodes
     const selectedFinetuneNodes = selectedNodes.filter(
-      (node) => node.type === 'finetune',
+      (node) => node.type === "finetune",
     );
     if (selectedFinetuneNodes.length > 0) {
       selectedFinetuneNodes.forEach((selectedNode) =>
@@ -278,7 +270,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
     }
     // delete inference nodes
     const selectedInferenceNodes = selectedNodes.filter(
-      (node) => node.type === 'inference',
+      (node) => node.type === "inference",
     );
     if (selectedInferenceNodes.length > 0) {
       selectedInferenceNodes.forEach((selectedNode) =>
@@ -297,7 +289,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
   const handleEdgesDelete = useCallback(() => {
     const nodeIsProtected = (nodeId: string) => {
       const status = nodes.find((node) => node.id === nodeId)?.data.status;
-      return status === 'busy' || status === 'success';
+      return status === "busy" || status === "success";
     };
     const [protectedEdges, deletableEdges] = edges.reduce(
       (acc, edge) => {
@@ -314,14 +306,14 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
     );
     // show error message if some edges should not be deleted
     if (protectedEdges.length > 0) {
-      toast.error('Cannot delete edges to protected nodes');
+      toast.error("Cannot delete edges to protected nodes");
     }
     if (deletableEdges.length === 0) return;
     // remove deletable edges from the store
     onEdgesDelete(deletableEdges);
   }, [edges, nodes, onEdgesDelete]);
 
-  useHotkeys(['backspace', 'del', 'Delete'], () => {
+  useHotkeys(["backspace", "del", "Delete"], () => {
     // check if there are selected nodes
     const selectedNodes = nodes.filter((node) => node.selected);
     if (selectedNodes.length > 0) {
@@ -337,16 +329,16 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
 
   const nodeColor = (node: Node<NodeData>) => {
     switch (node.data.status) {
-      case 'active':
-        return '#4CAF50';
-      case 'busy':
-        return '#FFC107';
-      case 'error':
-        return '#F44336';
-      case 'success':
-        return '#2196F3';
+      case "active":
+        return "#4CAF50";
+      case "busy":
+        return "#FFC107";
+      case "error":
+        return "#F44336";
+      case "success":
+        return "#2196F3";
       default:
-        return '#9E9E9E';
+        return "#9E9E9E";
     }
   };
 
@@ -379,7 +371,7 @@ function Geppetto({ workspaceInfo }: { workspaceInfo: WorkspaceInfo }) {
               <PlusOneMenu />
             </Panel>
             <Panel position="bottom-center">
-              <span className="flex w-fit rounded-sm border bg-muted p-2 text-sm font-semibold text-slate-500 dark:text-slate-400 ">
+              <span className="flex w-fit rounded-sm border bg-muted p-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
                 <span className="mr-2 text-purple-500 dark:text-purple-400">
                   Workspace:
                 </span>
@@ -463,11 +455,11 @@ function AlertDemo() {
       <div>
         <AlertTitle>Heads up!</AlertTitle>
         <AlertDescription>
-          You can add{' '}
+          You can add{" "}
           <span className="font-semibold text-purple-500 dark:text-purple-400">
             nodes
-          </span>{' '}
-          to your workspace by clicking on the{' '}
+          </span>{" "}
+          to your workspace by clicking on the{" "}
           <PlusCircle className="inline h-5 w-5" /> button on the top left
           corner.
         </AlertDescription>
@@ -488,8 +480,8 @@ export default function FlowRouter() {
   const storeWorkspace = workspaceInStore?.name;
   const router = useRouter();
   const { workspace } = router.query; // Assuming 'user' and 'workspace' are dynamic segments
-  const routeWorkspace = typeof workspace === 'string' ? workspace : '';
-  const isGalleryRoute = router.pathname.includes('/gallery');
+  const routeWorkspace = typeof workspace === "string" ? workspace : "";
+  const isGalleryRoute = router.pathname.includes("/gallery");
 
   const workspaceChanged = routeWorkspace !== storeWorkspace;
 
@@ -554,11 +546,11 @@ export default function FlowRouter() {
   }
 
   if (error) {
-    console.error('error', error);
+    console.error("error", error);
     return <ErrorPage statusCode={500} title={error.message} />;
   }
 
-  console.error('Hey! Forbidden state!', {
+  console.error("Hey! Forbidden state!", {
     workspaceChanged,
     workspaceInStore,
     routeWorkspace,

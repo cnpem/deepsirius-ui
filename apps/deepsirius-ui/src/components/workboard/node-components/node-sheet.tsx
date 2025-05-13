@@ -1,14 +1,14 @@
-import { type ReactNode } from 'react';
+import { type ReactNode } from "react";
+import Link from "next/link";
+import { AlertTriangleIcon, MoveUpRightIcon } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { Button } from "~/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from '~/components/ui/sheet';
-import { AlertTriangleIcon, MoveUpRightIcon } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
-import { Button } from '~/components/ui/button';
-import Link from 'next/link';
+} from "~/components/ui/sheet";
 
 export function ActiveSheet(props: {
   selected: boolean;
@@ -102,7 +102,7 @@ export function ErrorSheet(props: ErrorSheetProps) {
           <AlertTriangleIcon className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
-            {message || 'Something went wrong'}
+            {message || "Something went wrong"}
           </AlertDescription>
         </Alert>
         <SheetHeader>
@@ -132,11 +132,11 @@ export function SuccessSheet(props: SuccessSheetProps) {
         <Alert>
           <AlertTitle>Success</AlertTitle>
           <AlertDescription>
-            {message || 'Operation successful'}
+            {message || "Operation successful"}
           </AlertDescription>
         </Alert>
         <SheetHeader>
-          <SheetTitle>{title ? title : 'Overview'}</SheetTitle>
+          <SheetTitle>{title ? title : "Overview"}</SheetTitle>
         </SheetHeader>
         {children}
         {hrefToGallery && <GalleryLink href={hrefToGallery} />}

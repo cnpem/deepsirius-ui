@@ -1,24 +1,24 @@
-import { HeartIcon, PlusSquareIcon, TrashIcon } from 'lucide-react';
-import { type NextPage } from 'next';
-import ErrorPage from 'next/error';
-import { useRouter } from 'next/router';
-import { useCallback, useState } from 'react';
-import { toast } from 'sonner';
-import AlertDelete from '~/components/alert-delete';
-import { LayoutNav } from '~/components/layout-nav';
-import { Button } from '~/components/ui/button';
+import { useCallback, useState } from "react";
+import { type NextPage } from "next";
+import ErrorPage from "next/error";
+import { useRouter } from "next/router";
+import { type WorkspaceState } from "@prisma/client";
+import { HeartIcon, PlusSquareIcon, TrashIcon } from "lucide-react";
+import { toast } from "sonner";
+import AlertDelete from "~/components/alert-delete";
+import { LayoutNav } from "~/components/layout-nav";
+import { Button } from "~/components/ui/button";
 import {
   Card,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '~/components/ui/card';
-import { Input } from '~/components/ui/input';
-import { Skeleton } from '~/components/ui/skeleton';
-import { useUser } from '~/hooks/use-user';
-import { api } from '~/utils/api';
-import { type WorkspaceState } from '@prisma/client';
+} from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Skeleton } from "~/components/ui/skeleton";
+import { useUser } from "~/hooks/use-user";
+import { api } from "~/utils/api";
 
 const UserPage: NextPage = () => {
   const user = useUser();
@@ -49,10 +49,10 @@ function UserWorkspaces({ userRoute }: { userRoute: string }) {
   const router = useRouter();
 
   const handleNewWorkspace = async () => {
-    await router.push('/new');
+    await router.push("/new");
   };
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -72,7 +72,7 @@ function UserWorkspaces({ userRoute }: { userRoute: string }) {
           onClick={() => void handleNewWorkspace()}
         >
           <PlusSquareIcon className="mr-2 h-4 w-4" />
-          {'New'}
+          {"New"}
         </button>
       </div>
       <WorkspaceList userRoute={userRoute} search={search} />
@@ -133,7 +133,7 @@ function WorkspaceList({ userRoute, search }: WorkspaceListProps) {
   const router = useRouter();
 
   function workspaceShortName(path: string) {
-    return path.split('/').pop() as string;
+    return path.split("/").pop() as string;
   }
 
   function sortAndSearchWorkspaces({
@@ -157,7 +157,7 @@ function WorkspaceList({ userRoute, search }: WorkspaceListProps) {
 
   const handleSelect = useCallback(
     async (props: WorkspaceSelectProps) => {
-      await router.push(userRoute + '/' + workspaceShortName(props.path));
+      await router.push(userRoute + "/" + workspaceShortName(props.path));
     },
     [router, userRoute],
   );
@@ -165,18 +165,18 @@ function WorkspaceList({ userRoute, search }: WorkspaceListProps) {
   const { mutate: deleteWorkspace } = api.ssh.rmWorkspace.useMutation({
     onSuccess: async ({ message, type }) => {
       await utils.db.getUserWorkspaces.invalidate();
-      if (type === 'warning') {
+      if (type === "warning") {
         toast.warning(message);
         return;
       }
-      if (type === 'success') {
+      if (type === "success") {
         toast.success(message);
         return;
       }
       toast.info(message);
     },
     onError: ({ message }) => {
-      toast.error('Error deleting workspace');
+      toast.error("Error deleting workspace");
       console.error(message);
     },
   });
@@ -185,10 +185,10 @@ function WorkspaceList({ userRoute, search }: WorkspaceListProps) {
     {
       onSuccess: async () => {
         await utils.db.getUserWorkspaces.invalidate();
-        toast.success('Favorite Updated');
+        toast.success("Favorite Updated");
       },
       onError: () => {
-        toast.error('Error updating favorite workspace');
+        toast.error("Error updating favorite workspace");
       },
     },
   );
@@ -241,7 +241,7 @@ function WorkspaceList({ userRoute, search }: WorkspaceListProps) {
               </CardHeader>
               <CardFooter className="my-2 p-0 text-sm text-muted-foreground">
                 <p>
-                  {'Last updated at: ' +
+                  {"Last updated at: " +
                     new Date(workspace.updatedAt).toLocaleString()}
                 </p>
               </CardFooter>

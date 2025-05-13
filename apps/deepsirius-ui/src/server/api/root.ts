@@ -1,8 +1,8 @@
-import { createTRPCRouter } from '~/server/api/trpc';
-import { jobRouter } from './routers/job';
-import { deepsiriusJobRouter } from './routers/deepsirius-job';
-import { sshRouter } from './routers/ssh';
-import { dbRouter } from './routers/db';
+import { createTRPCRouter } from "~/server/api/trpc";
+import { dbRouter } from "./routers/db";
+import { deepsiriusJobRouter } from "./routers/deepsirius-job";
+import { jobRouter } from "./routers/job";
+import { sshRouter } from "./routers/ssh";
 
 /**
  * This is the primary router for your server.

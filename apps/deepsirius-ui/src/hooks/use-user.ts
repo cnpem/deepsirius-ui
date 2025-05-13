@@ -1,5 +1,5 @@
-import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 type User = {
   name: string;

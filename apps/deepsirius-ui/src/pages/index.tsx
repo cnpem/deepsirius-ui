@@ -1,11 +1,12 @@
-import { type NextPage } from 'next';
-import { signIn } from 'next-auth/react';
-import Head from 'next/head';
-import Link, { type LinkProps } from 'next/link';
-import { AvatarDrop } from '~/components/avatar-dropdown';
-import { FullBgImage } from '~/components/bg-images';
-import { Layout } from '~/components/layout';
-import { useUser } from '~/hooks/use-user';
+import type { LinkProps } from "next/link";
+import { type NextPage } from "next";
+import Head from "next/head";
+import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { AvatarDrop } from "~/components/avatar-dropdown";
+import { FullBgImage } from "~/components/bg-images";
+import { Layout } from "~/components/layout";
+import { useUser } from "~/hooks/use-user";
 
 type StyledLinkProps = LinkProps & {
   children: React.ReactNode;
@@ -26,10 +27,10 @@ const SessionOptions: React.FC = () => {
   if (!user)
     return (
       <>
-        <StyledLink href={'/'} onClick={() => void signIn(undefined)}>
+        <StyledLink href={"/"} onClick={() => void signIn(undefined)}>
           Sign in
         </StyledLink>
-        <StyledLink href={'https://deepsirius.lnls.br/dive'}>
+        <StyledLink href={"https://deepsirius.lnls.br/dive"}>
           Documentation
         </StyledLink>
       </>
@@ -38,7 +39,7 @@ const SessionOptions: React.FC = () => {
   return (
     <>
       <StyledLink href={user.route}>Workspaces</StyledLink>
-      <StyledLink href={'https://deepsirius.lnls.br/dive'}>
+      <StyledLink href={"https://deepsirius.lnls.br/dive"}>
         Documentation
       </StyledLink>
     </>
@@ -60,7 +61,7 @@ const Home: NextPage = () => {
         <div className="absolute right-0 top-0 z-10">
           <AvatarDrop />
         </div>
-        <div className="container my-auto flex flex-col items-center justify-center gap-4 lg:flex-row lg:gap-12 ">
+        <div className="container my-auto flex flex-col items-center justify-center gap-4 lg:flex-row lg:gap-12">
           <div className="relative flex h-[32vh] w-[32vh] justify-center overflow-hidden">
             <FullBgImage />
           </div>

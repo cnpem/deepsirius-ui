@@ -1,22 +1,22 @@
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
-import { type NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { toast } from 'sonner';
-import {
-  NetworkForm,
-  type FormType,
-} from '~/components/workboard/node-component-forms/network-form';
-import { type NodeData, useStoreActions } from '~/hooks/use-store';
-import { api } from '~/utils/api';
-import NodeCard from './node-components/node-card';
+import type { NodeProps } from "reactflow";
+import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import { useUpdateNodeInternals } from "reactflow";
+import { toast } from "sonner";
+import type { FormType } from "~/components/workboard/node-component-forms/network-form";
+import type { NodeData } from "~/hooks/use-store";
+import { NetworkForm } from "~/components/workboard/node-component-forms/network-form";
+import { useStoreActions } from "~/hooks/use-store";
+import { useUser } from "~/hooks/use-user";
+import { checkStatusRefetchInterval } from "~/lib/constants";
+import { api } from "~/utils/api";
+import NodeCard from "./node-components/node-card";
 import {
   ActiveSheet,
   BusySheet,
   ErrorSheet,
   SuccessSheet,
-} from './node-components/node-sheet';
-import { useUser } from '~/hooks/use-user';
-import { checkStatusRefetchInterval } from '~/lib/constants';
+} from "./node-components/node-sheet";
 
 export function NetworkNode(nodeProps: NodeProps<NodeData>) {
   const user = useUser();
@@ -49,7 +49,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
   useEffect(() => {
     const formEditState =
       nodeProps.selected &&
-      ['active', 'error', 'success'].includes(nodeProps.data.status);
+      ["active", "error", "success"].includes(nodeProps.data.status);
     setOpen(formEditState);
   }, [nodeProps.selected, nodeProps.data.status]);
 
@@ -59,63 +59,63 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     { jobId: nodeProps.data.jobId as string },
     {
       refetchOnMount: false,
-      enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
+      enabled: nodeProps.data.status === "busy" && !!nodeProps.data.jobId,
       refetchInterval: checkStatusRefetchInterval,
       refetchIntervalInBackground: true,
     },
   );
 
   useEffect(() => {
-    if (nodeProps.data.status !== 'busy') return;
+    if (nodeProps.data.status !== "busy") return;
     if (!jobData) return;
-    if (jobData.jobStatus === 'COMPLETED') {
-      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      toast.success('Job completed');
+    if (jobData.jobStatus === "COMPLETED") {
+      const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+      toast.success("Job completed");
       onUpdateNode({
         id: nodeProps.id,
         data: {
           ...nodeProps.data,
-          status: 'success',
+          status: "success",
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
           message: `Job ${
-            nodeProps.data.jobId ?? 'aa'
+            nodeProps.data.jobId ?? "aa"
           } finished successfully in ${date}`,
           updatedAt: date,
         },
       });
       updateNodeInternals(nodeProps.id);
     } else if (
-      jobData.jobStatus === 'FAILED' ||
-      jobData.jobStatus?.includes('CANCELLED')
+      jobData.jobStatus === "FAILED" ||
+      jobData.jobStatus?.includes("CANCELLED")
     ) {
-      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      toast.error('Job failed');
+      const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+      toast.error("Job failed");
       const networkData = nodeProps.data.networkData;
       onUpdateNode({
         id: nodeProps.id,
         data: {
           ...nodeProps.data,
-          status: 'error',
+          status: "error",
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
-          message: `Job ${nodeProps.data.jobId ?? 'aa'} failed in ${date}`,
+          message: `Job ${nodeProps.data.jobId ?? "aa"} failed in ${date}`,
           updatedAt: date,
           networkData,
         },
       });
       updateNodeInternals(nodeProps.id);
     } else {
-      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
+      const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
       onUpdateNode({
         id: nodeProps.id,
         data: {
           ...nodeProps.data,
-          status: 'busy',
+          status: "busy",
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
-          message: `Job ${nodeProps.data.jobId ?? 'jobId not found'} is ${
-            jobData.jobStatus?.toLocaleLowerCase() ?? 'jobStatus not found'
+          message: `Job ${nodeProps.data.jobId ?? "jobId not found"} is ${
+            jobData.jobStatus?.toLocaleLowerCase() ?? "jobStatus not found"
           }, last checked at ${date}`,
           updatedAt: date,
         },
@@ -134,7 +134,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
   const { mutateAsync: submitJob } =
     api.deepsiriusJob.submitNetwork.useMutation();
 
-  type NetworkFormSubmitType = 'create' | 'retry';
+  type NetworkFormSubmitType = "create" | "retry";
 
   const handleSubmit = (
     formData: FormType,
@@ -142,7 +142,7 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
   ) => {
     const { sourceDatasetName } = getSourceDatasetData(nodeProps.id);
     if (!sourceDatasetName) {
-      toast.warning('Please connect a dataset');
+      toast.warning("Please connect a dataset");
       return;
     }
     submitJob({
@@ -153,8 +153,8 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     })
       .then(({ jobId }) => {
         if (!jobId) {
-          console.error('handleSubmitJob then?', 'no jobId');
-          toast.error('Error submitting job');
+          console.error("handleSubmitJob then?", "no jobId");
+          toast.error("Error submitting job");
           return;
         }
         setFormData(formData);
@@ -162,11 +162,11 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
           id: nodeProps.id,
           data: {
             ...nodeProps.data,
-            status: 'busy',
+            status: "busy",
             remotePath: `${nodeProps.data.workspacePath}/networks/${formData.networkUserLabel}`,
             jobId: jobId,
             message: `Job ${jobId} submitted in ${dayjs().format(
-              'YYYY-MM-DD HH:mm:ss',
+              "YYYY-MM-DD HH:mm:ss",
             )}`,
             networkData: {
               sourceDatasetName,
@@ -181,17 +181,17 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
         setOpen(!open);
       })
       .catch(() => {
-        toast.error('Error submitting job');
+        toast.error("Error submitting job");
         setFormData(formData);
         onUpdateNode({
           id: nodeProps.id,
           data: {
             ...nodeProps.data,
-            status: 'error',
+            status: "error",
             remotePath: ``,
-            jobId: '',
+            jobId: "",
             message: `Error submitting job in ${dayjs().format(
-              'YYYY-MM-DD HH:mm:ss',
+              "YYYY-MM-DD HH:mm:ss",
             )}`,
             networkData: {
               sourceDatasetName,
@@ -209,69 +209,69 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
   const handleCancel = () => {
     cancelJob({ jobId: nodeProps.data.jobId as string })
       .then(() => {
-        const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-        toast.success('Job canceled');
+        const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+        toast.success("Job canceled");
         onUpdateNode({
           id: nodeProps.id,
           data: {
             ...nodeProps.data,
-            status: 'error',
+            status: "error",
             jobId: nodeProps.data.jobId,
-            jobStatus: 'CANCELLED',
-            message: `Job ${nodeProps.data.jobId ?? 'aa'} canceled in ${date}`,
+            jobStatus: "CANCELLED",
+            message: `Job ${nodeProps.data.jobId ?? "aa"} canceled in ${date}`,
             updatedAt: date,
           },
         });
         updateNodeInternals(nodeProps.id);
       })
       .catch(() => {
-        toast.error('Error canceling job');
+        toast.error("Error canceling job");
       });
-    toast.info('Canceling job..');
+    toast.info("Canceling job..");
   };
 
   if (!user) return null;
   if (!nodeProps.data.workspacePath) return null;
 
-  const workspaceName = nodeProps.data.workspacePath.split('/').pop();
+  const workspaceName = nodeProps.data.workspacePath.split("/").pop();
   if (!workspaceName) return null;
   const nodeIdParams = new URLSearchParams({
     nodeId: nodeProps.id,
   });
   const galleryUrl =
-    user.route + '/' + workspaceName + '/gallery?' + nodeIdParams.toString();
+    user.route + "/" + workspaceName + "/gallery?" + nodeIdParams.toString();
 
-  if (nodeProps.data.status === 'active') {
+  if (nodeProps.data.status === "active") {
     return (
       <>
         <NodeCard
-          title={'network'}
-          subtitle={'click to train a network'}
+          title={"network"}
+          subtitle={"click to train a network"}
           {...nodeProps}
         />
-        <ActiveSheet selected={nodeProps.selected} title={'Network Training'}>
+        <ActiveSheet selected={nodeProps.selected} title={"Network Training"}>
           <NetworkForm
             jobType="create"
-            onSubmitHandler={(formData) => handleSubmit(formData, 'create')}
+            onSubmitHandler={(formData) => handleSubmit(formData, "create")}
           />
         </ActiveSheet>
       </>
     );
   }
 
-  if (nodeProps.data.status === 'busy') {
+  if (nodeProps.data.status === "busy") {
     return (
       <>
         <NodeCard
-          title={formData?.networkUserLabel || 'network'}
-          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
-            nodeProps.data.jobStatus || 'jobStatus'
+          title={formData?.networkUserLabel || "network"}
+          subtitle={`${nodeProps.data.jobId || "jobId"} -- ${
+            nodeProps.data.jobStatus || "jobStatus"
           }`}
           {...nodeProps}
         />
         <BusySheet
           selected={nodeProps.selected}
-          title={'Overview'}
+          title={"Overview"}
           jobId={nodeProps.data.jobId}
           jobStatus={nodeProps.data.jobStatus}
           updatedAt={nodeProps.data.updatedAt}
@@ -283,13 +283,13 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     );
   }
 
-  if (nodeProps.data.status === 'success') {
+  if (nodeProps.data.status === "success") {
     return (
       <>
         <NodeCard
-          title={formData?.networkUserLabel || 'network'}
-          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
-            nodeProps.data.jobStatus || 'jobStatus'
+          title={formData?.networkUserLabel || "network"}
+          subtitle={`${nodeProps.data.jobId || "jobId"} -- ${
+            nodeProps.data.jobStatus || "jobStatus"
           }`}
           {...nodeProps}
         />
@@ -303,9 +303,9 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
               Object.entries(formData)
                 .filter(
                   ([_, value]) =>
-                    typeof value === 'string' ||
-                    typeof value === 'number' ||
-                    typeof value === 'boolean',
+                    typeof value === "string" ||
+                    typeof value === "number" ||
+                    typeof value === "boolean",
                 )
                 .map(([key, value], index) => {
                   const isEven = index % 2 === 0;
@@ -316,11 +316,11 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
                       className="flex flex-row items-center justify-between gap-1"
                     >
                       <p className="font-medium">
-                        {key.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()}
+                        {key.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()}
                       </p>
                       <p
                         data-even={isEven}
-                        className="text-end data-[even=true]:text-violet-600 "
+                        className="text-end data-[even=true]:text-violet-600"
                       >
                         {value.toString()}
                       </p>
@@ -333,13 +333,13 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
     );
   }
 
-  if (nodeProps.data.status === 'error') {
+  if (nodeProps.data.status === "error") {
     return (
       <>
         <NodeCard
-          title={formData?.networkUserLabel || 'network'}
-          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
-            nodeProps.data.jobStatus || 'Error'
+          title={formData?.networkUserLabel || "network"}
+          subtitle={`${nodeProps.data.jobId || "jobId"} -- ${
+            nodeProps.data.jobStatus || "Error"
           }`}
           {...nodeProps}
         />
@@ -349,11 +349,11 @@ export function NetworkNode(nodeProps: NodeProps<NodeData>) {
           hrefToGallery={galleryUrl}
         >
           <NetworkForm
-            networkTypeName={formData?.networkTypeName || 'vnet'}
-            networkUserLabel={formData?.networkUserLabel || 'new network'}
+            networkTypeName={formData?.networkTypeName || "vnet"}
+            networkUserLabel={formData?.networkUserLabel || "new network"}
             jobType="retry"
             onSubmitHandler={(data) => {
-              handleSubmit(data, 'retry');
+              handleSubmit(data, "retry");
             }}
           />
         </ErrorSheet>

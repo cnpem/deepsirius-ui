@@ -1,15 +1,15 @@
-import { Badge } from '~/components/ui/badge';
-import { cn } from '~/lib/utils';
-import { cva } from 'class-variance-authority';
-import { type NodeStatus } from '~/hooks/use-store';
+import { cva } from "class-variance-authority";
+import { Badge } from "~/components/ui/badge";
+import { type NodeStatus } from "~/hooks/use-store";
+import { cn } from "~/lib/utils";
 
-const nodeStatusBadgeVariants = cva('', {
+const nodeStatusBadgeVariants = cva("", {
   variants: {
     status: {
-      active: 'bg-green-500 hover:bg-green-600',
-      busy: 'bg-yellow-500 hover:bg-yellow-600',
-      error: 'bg-red-500 hover:bg-red-600',
-      success: 'bg-blue-500 hover:bg-blue-600',
+      active: "bg-green-500 hover:bg-green-600",
+      busy: "bg-yellow-500 hover:bg-yellow-600",
+      error: "bg-red-500 hover:bg-red-600",
+      success: "bg-blue-500 hover:bg-blue-600",
     },
   },
 });
@@ -25,7 +25,7 @@ export function StatusBadge({
   return (
     <Badge
       className={cn(
-        'mx-1 rounded-full text-xs font-semibold',
+        "mx-1 rounded-full text-xs font-semibold",
         nodeStatusBadgeVariants({
           status,
         }),

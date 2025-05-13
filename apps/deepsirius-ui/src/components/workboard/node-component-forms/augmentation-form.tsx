@@ -1,8 +1,9 @@
-'use client';
-import * as z from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { slurmGPUOptions } from '~/lib/constants';
-import { useForm } from 'react-hook-form';
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "~/components/ui/button";
 import {
   Form,
   FormControl,
@@ -11,19 +12,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '~/components/ui/form';
+} from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
+import { ScrollArea } from "~/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select';
-import { Input } from '~/components/ui/input';
-import { Button } from '~/components/ui/button';
-import { Switch } from '~/components/ui/switch';
-import { ScrollArea } from '~/components/ui/scroll-area';
-import { api } from '~/utils/api';
+} from "~/components/ui/select";
+import { Switch } from "~/components/ui/switch";
+import { slurmGPUOptions } from "~/lib/constants";
+import { api } from "~/utils/api";
 
 const slurmOptions = z.object({
   partition: z.string(),
@@ -32,17 +33,17 @@ const slurmOptions = z.object({
 
 const floatInterval = z
   .tuple([z.coerce.number(), z.coerce.number()])
-  .refine(([min, max]) => min < max, 'Min must be less than max')
-  .refine(([min, max]) => min >= 0 && max >= 0, 'Must be greater than 0')
+  .refine(([min, max]) => min < max, "Min must be less than max")
+  .refine(([min, max]) => min >= 0 && max >= 0, "Must be greater than 0")
   .optional();
 
 const intInterval = z
   .tuple([z.coerce.number(), z.coerce.number()])
-  .refine(([min, max]) => min < max, 'Min must be less than max')
-  .refine(([min, max]) => min >= 0 && max >= 0, 'Must be greater than 0')
+  .refine(([min, max]) => min < max, "Min must be less than max")
+  .refine(([min, max]) => min >= 0 && max >= 0, "Must be greater than 0")
   .refine(
     ([min, max]) => Number.isInteger(min) && Number.isInteger(max),
-    'Must be an integer',
+    "Must be an integer",
   )
   .optional();
 
@@ -96,8 +97,8 @@ export const augmentationSchema = z.object({
   slurmOptions,
   augmentedDatasetName: z
     .string()
-    .min(1, { message: 'Must have a name!' })
-    .refine((s) => !s.includes(' '), 'No Spaces!'),
+    .min(1, { message: "Must have a name!" })
+    .refine((s) => !s.includes(" "), "No Spaces!"),
   augmentationArgs,
 });
 
@@ -106,10 +107,10 @@ export type FormCallback = (data: FormType) => void;
 
 export type FormProps = {
   onSubmitHandler: FormCallback;
-  name?: FormType['augmentedDatasetName'];
+  name?: FormType["augmentedDatasetName"];
 };
 
-function useAugmentationForm(name: FormProps['name'] = '') {
+function useAugmentationForm(name: FormProps["name"] = "") {
   const form = useForm<FormType>({
     resolver: zodResolver(augmentationSchema),
     defaultValues: {
@@ -299,7 +300,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
                         )}
                       />
                     </div>
-                    {form.watch('augmentationArgs.elastic.select') && (
+                    {form.watch("augmentationArgs.elastic.select") && (
                       <div className="flex flex-col">
                         <div className="flex flex-row items-center justify-between gap-2 px-4 py-2">
                           <FormLabel>Alpha</FormLabel>
@@ -406,7 +407,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
                         )}
                       />
                     </div>
-                    {form.watch('augmentationArgs.gaussianBlur.select') && (
+                    {form.watch("augmentationArgs.gaussianBlur.select") && (
                       <div className="flex flex-row items-center justify-between gap-2 px-4 py-2">
                         <FormLabel>Sigma</FormLabel>
                         <FormField
@@ -474,7 +475,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
                         )}
                       />
                     </div>
-                    {form.watch('augmentationArgs.contrast.select') && (
+                    {form.watch("augmentationArgs.contrast.select") && (
                       <div className="flex flex-row items-center justify-between gap-2 px-4 py-2">
                         <FormLabel>Factor</FormLabel>
                         <FormField
@@ -542,7 +543,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
                         )}
                       />
                     </div>
-                    {form.watch('augmentationArgs.averageBlur.select') && (
+                    {form.watch("augmentationArgs.averageBlur.select") && (
                       <div className="flex flex-row items-center justify-between gap-2 px-4 py-2">
                         <FormLabel>Kernel Size</FormLabel>
                         <FormField
@@ -610,7 +611,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
                         )}
                       />
                     </div>
-                    {form.watch('augmentationArgs.linearContrast.select') && (
+                    {form.watch("augmentationArgs.linearContrast.select") && (
                       <div className="flex flex-row items-center justify-between gap-2 px-4 py-2">
                         <FormLabel>Factor</FormLabel>
                         <FormField
@@ -678,7 +679,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
                         )}
                       />
                     </div>
-                    {form.watch('augmentationArgs.dropout.select') && (
+                    {form.watch("augmentationArgs.dropout.select") && (
                       <div className="flex flex-row items-center justify-between gap-2 px-4 py-2">
                         <FormLabel>Factor</FormLabel>
                         <FormField
@@ -746,7 +747,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
                         )}
                       />
                     </div>
-                    {form.watch('augmentationArgs.poissonNoise.select') && (
+                    {form.watch("augmentationArgs.poissonNoise.select") && (
                       <div className="flex flex-row items-center justify-between gap-2 px-4 py-2">
                         <FormLabel>Scale</FormLabel>
                         <FormField
@@ -821,7 +822,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
                           <span className="text-sm text-green-500">
                             {option.cpus.free}
                           </span>
-                          /{option.cpus.max} cpus,{' '}
+                          /{option.cpus.max} cpus,{" "}
                           <span className="text-sm text-green-500">
                             {option.gpus.free}
                           </span>
@@ -863,7 +864,7 @@ export function AugmentationForm({ onSubmitHandler, name }: FormProps) {
                       <SelectItem key={item} value={item}>
                         <p className="flex flex-row items-center gap-1">
                           <span className="mr-2 text-xs text-muted-foreground">
-                            GPUs:{' '}
+                            GPUs:{" "}
                           </span>
                           <span>{item.toString()}</span>
                         </p>

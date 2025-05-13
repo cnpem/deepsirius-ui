@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { Button } from '~/components/ui/button';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "~/components/ui/button";
 import {
   Form,
   FormControl,
@@ -12,33 +12,33 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '~/components/ui/form';
-import { Input } from '~/components/ui/input';
+} from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select';
-import { Switch } from '~/components/ui/switch';
-import { slurmGPUOptions } from '~/lib/constants';
-import { api } from '~/utils/api';
+} from "~/components/ui/select";
+import { Switch } from "~/components/ui/switch";
+import { slurmGPUOptions } from "~/lib/constants";
+import { api } from "~/utils/api";
 
 const slurmOptions = z.object({
   partition: z.string(),
   nGPU: z.enum(slurmGPUOptions),
 });
 
-const patchSizes = ['16', '32', '64', '128', '256', '512', '1024'] as const;
-const batchSizes = ['2', '4', '8', '16', '32'] as const;
+const patchSizes = ["16", "32", "64", "128", "256", "512", "1024"] as const;
+const batchSizes = ["2", "4", "8", "16", "32"] as const;
 export const finetuneSchema = z.object({
   slurmOptions,
   dropClassifier: z.boolean(),
-  iterations: z.coerce.number().gte(1, { message: 'Must be >= 1' }),
-  learningRate: z.coerce.number().gt(0, { message: 'Must be greater than 0' }),
-  optimizer: z.enum(['adam', 'adagrad', 'gradientdescent']),
-  lossFunction: z.enum(['CrossEntropy', 'dice', 'xent_dice']),
+  iterations: z.coerce.number().gte(1, { message: "Must be >= 1" }),
+  learningRate: z.coerce.number().gt(0, { message: "Must be greater than 0" }),
+  optimizer: z.enum(["adam", "adagrad", "gradientdescent"]),
+  lossFunction: z.enum(["CrossEntropy", "dice", "xent_dice"]),
   patchSize: z.enum(patchSizes),
   batchSize: z.enum(batchSizes),
 });
@@ -57,12 +57,12 @@ export function useFinetuneForm() {
       dropClassifier: false,
       iterations: 1,
       learningRate: 0.00001,
-      optimizer: 'adam',
-      patchSize: '32',
-      batchSize: '32',
-      lossFunction: 'CrossEntropy',
+      optimizer: "adam",
+      patchSize: "32",
+      batchSize: "32",
+      lossFunction: "CrossEntropy",
       slurmOptions: {
-        nGPU: '1',
+        nGPU: "1",
       },
     },
   });
@@ -80,15 +80,15 @@ type FieldItem = {
 type FormFieldItems = FieldItem[];
 
 const optimizerOpts: FormFieldItems = [
-  { label: 'Adam', value: 'adam' },
-  { label: 'Adagrad', value: 'adagrad' },
-  { label: 'Gradient Descent', value: 'gradientdescent' },
+  { label: "Adam", value: "adam" },
+  { label: "Adagrad", value: "adagrad" },
+  { label: "Gradient Descent", value: "gradientdescent" },
 ];
 
 const lossOpts: FormFieldItems = [
-  { label: 'Cross Entropy', value: 'CrossEntropy' },
-  { label: 'Dice', value: 'dice' },
-  { label: 'Cross Entropy + Dice', value: 'xent_dice' },
+  { label: "Cross Entropy", value: "CrossEntropy" },
+  { label: "Dice", value: "dice" },
+  { label: "Cross Entropy + Dice", value: "xent_dice" },
 ];
 
 export function FinetuneForm({ onSubmitHandler }: FormProps) {
@@ -288,7 +288,7 @@ export function FinetuneForm({ onSubmitHandler }: FormProps) {
                           <span className="text-sm text-green-500">
                             {option.cpus.free}
                           </span>
-                          /{option.cpus.max} cpus,{' '}
+                          /{option.cpus.max} cpus,{" "}
                           <span className="text-sm text-green-500">
                             {option.gpus.free}
                           </span>
@@ -330,7 +330,7 @@ export function FinetuneForm({ onSubmitHandler }: FormProps) {
                       <SelectItem key={item} value={item}>
                         <p className="flex flex-row items-center gap-1">
                           <span className="mr-2 text-xs text-muted-foreground">
-                            GPUs:{' '}
+                            GPUs:{" "}
                           </span>
                           <span>{item.toString()}</span>
                         </p>

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { FolderIcon, PlusIcon, X } from 'lucide-react';
-import { useFieldArray, useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { NautilusDialog } from '~/components/nautilus';
-import { Button } from '~/components/ui/button';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FolderIcon, PlusIcon, X } from "lucide-react";
+import { useFieldArray, useForm } from "react-hook-form";
+import * as z from "zod";
+import { NautilusDialog } from "~/components/nautilus";
+import { Button } from "~/components/ui/button";
 import {
   Form,
   FormControl,
@@ -14,44 +14,44 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '~/components/ui/form';
-import { Input } from '~/components/ui/input';
+} from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select';
-import { Switch } from '~/components/ui/switch';
-import { slurmGPUOptions } from '~/lib/constants';
-import { api } from '~/utils/api';
+} from "~/components/ui/select";
+import { Switch } from "~/components/ui/switch";
+import { slurmGPUOptions } from "~/lib/constants";
+import { api } from "~/utils/api";
 
 const slurmOptions = z.object({
   partition: z.string(),
   nGPU: z.enum(slurmGPUOptions),
 });
 
-const paddingSizes = ['0', '2', '4', '8'] as const;
-const patchSizes = ['0', '2', '4', '8', '16'] as const;
+const paddingSizes = ["0", "2", "4", "8"] as const;
+const patchSizes = ["0", "2", "4", "8", "16"] as const;
 export const inferenceSchema = z.object({
   slurmOptions: slurmOptions,
   outputDir: z
     .string()
-    .endsWith('/', { message: 'Must be a valid directory!' }),
+    .endsWith("/", { message: "Must be a valid directory!" }),
   inputImages: z
     .array(
       z.object({
         name: z
           .string()
-          .min(2, { message: 'Must be a valid image name!' })
+          .min(2, { message: "Must be a valid image name!" })
           .regex(/^.*\.(tif|tiff|TIFF|hdf5|h5|raw|b)$/, {
-            message: 'Must be a valid image extension!',
+            message: "Must be a valid image extension!",
           }),
         path: z.string(),
       }),
     )
-    .nonempty({ message: 'Must have at least one image!' }),
+    .nonempty({ message: "Must have at least one image!" }),
   saveProbMap: z.boolean(),
   normalize: z.boolean(),
   paddingSize: z.enum(paddingSizes),
@@ -64,7 +64,7 @@ export type InferenceFormCallback = (data: FormType) => void;
 type InferenceFormProps = {
   onSubmitHandler: InferenceFormCallback;
   outputDir?: string;
-  inputImages?: z.infer<typeof inferenceSchema>['inputImages'][number][];
+  inputImages?: z.infer<typeof inferenceSchema>["inputImages"][number][];
 };
 
 export function useInferenceForm(
@@ -77,10 +77,10 @@ export function useInferenceForm(
       inputImages: inputImages,
       saveProbMap: false,
       normalize: false,
-      paddingSize: '0',
-      patchSize: '0',
+      paddingSize: "0",
+      patchSize: "0",
       slurmOptions: {
-        nGPU: '1',
+        nGPU: "1",
       },
     },
   });
@@ -96,7 +96,7 @@ export function InferenceForm({
   const userPartitions = api.job.userPartitions.useQuery();
   const form = useInferenceForm(outputDir, inputImages);
   const { fields, append, remove } = useFieldArray({
-    name: 'inputImages',
+    name: "inputImages",
     control: form.control,
   });
 
@@ -105,16 +105,16 @@ export function InferenceForm({
   };
 
   const onSelect = (path: string) => {
-    const name = path.split('/').slice(-1)[0] ?? path;
+    const name = path.split("/").slice(-1)[0] ?? path;
     append({ name: name, path: path });
   };
 
   const onOutputDirSelect = (path: string) => {
-    form.setValue('outputDir', path);
+    form.setValue("outputDir", path);
   };
 
   const toUnixPath = (path: string) =>
-    path.replace(/[\\/]+/g, '/').replace(/^([a-zA-Z]+:|\.\/)/, '');
+    path.replace(/[\\/]+/g, "/").replace(/^([a-zA-Z]+:|\.\/)/, "");
 
   return (
     <Form {...form}>
@@ -127,8 +127,8 @@ export function InferenceForm({
           name="outputDir"
           render={({ field }) => (
             <FormItem className="w-full">
-              <FormLabel className={'sr-only'}>Output Directory</FormLabel>
-              <FormDescription className={'sr-only'}>
+              <FormLabel className={"sr-only"}>Output Directory</FormLabel>
+              <FormDescription className={"sr-only"}>
                 Select the output directory.
               </FormDescription>
               <FormControl>
@@ -145,7 +145,7 @@ export function InferenceForm({
                     {...field}
                     className="text-ellipsis"
                     placeholder="Output directory"
-                    value={toUnixPath(field.value ?? '')}
+                    value={toUnixPath(field.value ?? "")}
                   />
                 </div>
               </FormControl>
@@ -166,7 +166,7 @@ export function InferenceForm({
                       <Input {...field} className="text-ellipsis" disabled />
                       <Button
                         onClick={() => remove(index)}
-                        size={'icon'}
+                        size={"icon"}
                         variant="ghost"
                       >
                         <X className="h-[14px] w-[14px]" />
@@ -321,7 +321,7 @@ export function InferenceForm({
                           <span className="text-sm text-green-500">
                             {option.cpus.free}
                           </span>
-                          /{option.cpus.max} cpus,{' '}
+                          /{option.cpus.max} cpus,{" "}
                           <span className="text-sm text-green-500">
                             {option.gpus.free}
                           </span>
@@ -363,7 +363,7 @@ export function InferenceForm({
                       <SelectItem key={item} value={item}>
                         <p className="flex flex-row items-center gap-1">
                           <span className="mr-2 text-xs text-muted-foreground">
-                            GPUs:{' '}
+                            GPUs:{" "}
                           </span>
                           <span>{item.toString()}</span>
                         </p>

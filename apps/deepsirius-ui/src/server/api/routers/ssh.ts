@@ -1,13 +1,13 @@
-import { TRPCError } from '@trpc/server';
-import { Prisma } from '@prisma/client';
-import { z } from 'zod';
-import { env } from '~/env.mjs';
+import { Prisma } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
+import JSZip from "jszip";
+import { z } from "zod";
+import { env } from "~/env.mjs";
 import {
   createTRPCRouter,
   protectedProcedure,
   protectedSSHProcedure,
-} from '~/server/api/trpc';
-import JSZip from 'jszip';
+} from "~/server/api/trpc";
 
 const unzippedImage = z.object({
   name: z.string(),
@@ -22,7 +22,7 @@ const apiErrorSchema = z
   .transform((data) => {
     return {
       status: data.status,
-      message: data.message.replace(env.STORAGE_API_KEY, '***'),
+      message: data.message.replace(env.STORAGE_API_KEY, "***"),
     };
   });
 
@@ -35,23 +35,23 @@ export const sshRouter = createTRPCRouter({
         })
         .transform((data) => {
           return {
-            path: data.path.replace(/^\/ibira/, ''),
+            path: data.path.replace(/^\/ibira/, ""),
           };
         }),
     )
     .query(async ({ ctx, input }) => {
       const cookie = ctx.storageApiCookie;
-      if (!cookie) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      if (!cookie) throw new TRPCError({ code: "UNAUTHORIZED" });
 
       const path = input.path;
       const params = new URLSearchParams({
         key: env.STORAGE_API_KEY,
-        path: path || '/',
+        path: path || "/",
       });
       const url = `${env.STORAGE_API_URL}/api/files/ls?${params.toString()}`;
 
       const res = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
           Cookie: cookie,
         },
@@ -63,7 +63,7 @@ export const sshRouter = createTRPCRouter({
         const error = apiErrorSchema.parse(data);
 
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: error.message,
         });
       }
@@ -83,7 +83,7 @@ export const sshRouter = createTRPCRouter({
         .parse(data);
 
       const noHiddenFiles = files.results.filter(
-        (file) => !file.name.startsWith('.'),
+        (file) => !file.name.startsWith("."),
       );
 
       return { files: noHiddenFiles };
@@ -96,23 +96,23 @@ export const sshRouter = createTRPCRouter({
         })
         .transform((data) => {
           return {
-            path: data.path.replace(/^\/ibira/, ''),
+            path: data.path.replace(/^\/ibira/, ""),
           };
         }),
     )
     .query(async ({ ctx, input }) => {
       const cookie = ctx.storageApiCookie;
-      if (!cookie) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      if (!cookie) throw new TRPCError({ code: "UNAUTHORIZED" });
 
       const path = input.path;
       const params = new URLSearchParams({
         key: env.STORAGE_API_KEY,
-        path: path || '/',
+        path: path || "/",
       });
       const url = `${env.STORAGE_API_URL}/api/files/cat?${params.toString()}`;
 
       const res = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
           Cookie: cookie,
         },
@@ -122,7 +122,7 @@ export const sshRouter = createTRPCRouter({
         const error = apiErrorSchema.parse(data);
 
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: error.message,
         });
       }
@@ -137,21 +137,21 @@ export const sshRouter = createTRPCRouter({
         })
         .transform((data) => {
           return {
-            path: data.path.replace(/^\/ibira/, ''),
+            path: data.path.replace(/^\/ibira/, ""),
           };
         }),
     )
     .query(async ({ ctx, input }) => {
       const cookie = ctx.storageApiCookie;
-      if (!cookie) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      if (!cookie) throw new TRPCError({ code: "UNAUTHORIZED" });
       const path = input.path;
       const params = new URLSearchParams({
         key: env.STORAGE_API_KEY,
-        path: path || '/',
+        path: path || "/",
       });
       const url = `${env.STORAGE_API_URL}/api/files/cat?${params.toString()}`;
       const res = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
           Cookie: cookie,
         },
@@ -161,12 +161,12 @@ export const sshRouter = createTRPCRouter({
         const error = apiErrorSchema.parse(data);
 
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: error.message,
         });
       }
       const data = await res.arrayBuffer();
-      const base64data = Buffer.from(data).toString('base64');
+      const base64data = Buffer.from(data).toString("base64");
       return { src: `data:image/png;base64,${base64data}` };
     }),
   unzipImagesFromPath: protectedProcedure
@@ -177,21 +177,21 @@ export const sshRouter = createTRPCRouter({
         })
         .transform((data) => {
           return {
-            dirPath: data.dirPath.replace(/^\/ibira/, ''),
+            dirPath: data.dirPath.replace(/^\/ibira/, ""),
           };
         }),
     )
     .query(async ({ ctx, input }) => {
       const cookie = ctx.storageApiCookie;
-      if (!cookie) throw new TRPCError({ code: 'UNAUTHORIZED' });
+      if (!cookie) throw new TRPCError({ code: "UNAUTHORIZED" });
       const path = input.dirPath;
       const params = new URLSearchParams({
         key: env.STORAGE_API_KEY,
-        path: path || '/',
+        path: path || "/",
       });
       const url = `${env.STORAGE_API_URL}/api/files/zip?${params.toString()}`;
       const res = await fetch(url, {
-        method: 'GET',
+        method: "GET",
         headers: {
           Cookie: cookie,
         },
@@ -201,7 +201,7 @@ export const sshRouter = createTRPCRouter({
         const error = apiErrorSchema.parse(data);
 
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: error.message,
         });
       }
@@ -212,21 +212,21 @@ export const sshRouter = createTRPCRouter({
       // const imagesBase64: string[] = [];
       const unzippedImages: z.infer<typeof unzippedImage>[] = [];
       for (const [filename, fileData] of Object.entries(zip.files)) {
-        if (filename.endsWith('.png')) {
-          const fileContent = await fileData.async('nodebuffer'); // For Node.js environment
-          const base64data = fileContent.toString('base64');
-          const fname = filename.split('/')[1];
+        if (filename.endsWith(".png")) {
+          const fileContent = await fileData.async("nodebuffer"); // For Node.js environment
+          const base64data = fileContent.toString("base64");
+          const fname = filename.split("/")[1];
           if (!fname) {
             throw new Error(
-              'Invalid file name. Expected format: path/to/file.png',
+              "Invalid file name. Expected format: path/to/file.png",
             );
           }
-          const [name, extension] = fname.split('.');
-          if (extension !== 'png') {
-            throw new Error('Invalid file extension');
+          const [name, extension] = fname.split(".");
+          if (extension !== "png") {
+            throw new Error("Invalid file extension");
           }
           if (!name) {
-            throw new Error('Could not extract file name');
+            throw new Error("Could not extract file name");
           }
           unzippedImages.push({
             name,
@@ -235,7 +235,7 @@ export const sshRouter = createTRPCRouter({
         }
       }
       if (unzippedImages.length === 0) {
-        throw new Error('No PNG images found in ZIP file');
+        throw new Error("No PNG images found in ZIP file");
       }
       return { srcList: unzippedImages };
     }),
@@ -252,11 +252,11 @@ export const sshRouter = createTRPCRouter({
 
       const { stderr } = await connection.execCommand(`rm -r ${path}`);
 
-      const pathNotFound = stderr.includes('No such file or directory');
+      const pathNotFound = stderr.includes("No such file or directory");
 
       if (!!stderr && !pathNotFound) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: stderr,
         });
       }
@@ -270,29 +270,29 @@ export const sshRouter = createTRPCRouter({
         .catch((err) => {
           if (err instanceof Prisma.PrismaClientKnownRequestError) {
             throw new TRPCError({
-              code: 'INTERNAL_SERVER_ERROR',
+              code: "INTERNAL_SERVER_ERROR",
               message:
-                'Workspace deleted from storage but not deleted from database. ' +
+                "Workspace deleted from storage but not deleted from database. " +
                 err.message,
             });
           }
           throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
+            code: "INTERNAL_SERVER_ERROR",
             message:
-              'Workspace deleted from storage but not deleted from db. Failed to delete workspace state from database.',
+              "Workspace deleted from storage but not deleted from db. Failed to delete workspace state from database.",
           });
         });
 
       if (pathNotFound) {
         return {
-          message: 'Workspace path not found. State removed from database.',
-          type: 'warning',
+          message: "Workspace path not found. State removed from database.",
+          type: "warning",
         };
       }
 
       return {
-        message: 'Workspace deleted from server and database.',
-        type: 'success',
+        message: "Workspace deleted from server and database.",
+        type: "success",
       };
     }),
   rmFile: protectedSSHProcedure
@@ -309,7 +309,7 @@ export const sshRouter = createTRPCRouter({
 
       if (!!stderr) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: stderr,
         });
       }
@@ -329,7 +329,7 @@ export const sshRouter = createTRPCRouter({
 
       if (!!stderr) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: stderr,
         });
       }
@@ -345,14 +345,14 @@ export const sshRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const connection = ctx.connection;
 
-      const command = `head ${input.lines ? `-n ${input.lines} ` : ''}${
+      const command = `head ${input.lines ? `-n ${input.lines} ` : ""}${
         input.path
       }`;
       const { stdout, stderr } = await connection.execCommand(command);
 
       if (!!stderr) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: stderr,
         });
       }
@@ -369,24 +369,24 @@ export const sshRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const connection = ctx.connection;
 
-      const command = `head ${input.lines ? `-n ${input.lines} ` : ''}${
+      const command = `head ${input.lines ? `-n ${input.lines} ` : ""}${
         input.path
       }`;
       const { stdout, stderr } = await connection.execCommand(command);
 
       if (!!stderr) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
+          code: "INTERNAL_SERVER_ERROR",
           message: stderr,
         });
       }
       // search for the line containing the tensorboard url
-      const urlKey = 'Tensorboard:';
+      const urlKey = "Tensorboard:";
       const url = stdout.match(new RegExp(`${urlKey}(.*)`))?.[1]?.trim();
       if (!url) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'No tensorboard url found in the file',
+          code: "INTERNAL_SERVER_ERROR",
+          message: "No tensorboard url found in the file",
         });
       }
       return { url };

@@ -1,14 +1,14 @@
+import type { LucideProps } from "lucide-react";
 import {
-  ImagesIcon,
+  BrainCircuitIcon,
   DatabaseIcon,
   DatabaseZapIcon,
-  BrainCircuitIcon,
   GoalIcon,
-  type LucideProps,
-} from 'lucide-react';
-import { cn } from '~/lib/utils';
+  ImagesIcon,
+} from "lucide-react";
+import { cn } from "~/lib/utils";
 
-interface NodeIconProps extends Omit<LucideProps, 'ref'> {
+interface NodeIconProps extends Omit<LucideProps, "ref"> {
   nodeType: string;
 }
 export default function NodeIcon({
@@ -17,26 +17,26 @@ export default function NodeIcon({
   ...props
 }: NodeIconProps) {
   switch (nodeType) {
-    case 'dataset':
+    case "dataset":
       return (
-        <DatabaseIcon className={cn('inline-block', className)} {...props} />
+        <DatabaseIcon className={cn("inline-block", className)} {...props} />
       );
-    case 'augmentation':
+    case "augmentation":
       return (
-        <DatabaseZapIcon className={cn('inline-block', className)} {...props} />
+        <DatabaseZapIcon className={cn("inline-block", className)} {...props} />
       );
-    case 'network':
+    case "network":
       return (
         <BrainCircuitIcon
-          className={cn('inline-block', className)}
+          className={cn("inline-block", className)}
           {...props}
         />
       );
-    case 'finetune':
-      return <GoalIcon className={cn('inline-block', className)} {...props} />;
-    case 'inference':
+    case "finetune":
+      return <GoalIcon className={cn("inline-block", className)} {...props} />;
+    case "inference":
       return (
-        <ImagesIcon className={cn('inline-block', className)} {...props} />
+        <ImagesIcon className={cn("inline-block", className)} {...props} />
       );
     default:
       return <></>;

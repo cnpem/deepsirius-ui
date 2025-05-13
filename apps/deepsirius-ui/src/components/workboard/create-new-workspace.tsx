@@ -1,17 +1,16 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { FolderIcon } from 'lucide-react';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { z } from 'zod';
-import { Button } from '~/components/ui/button';
-import { env } from '~/env.mjs';
-import { useStoreActions } from '~/hooks/use-store';
-import { checkStatusRefetchInterval } from '~/lib/constants';
-import { api } from '~/utils/api';
-
-import { NautilusDialog } from '../nautilus';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FolderIcon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "~/components/ui/button";
+import { env } from "~/env.mjs";
+import { useStoreActions } from "~/hooks/use-store";
+import { checkStatusRefetchInterval } from "~/lib/constants";
+import { api } from "~/utils/api";
+import { NautilusDialog } from "../nautilus";
 import {
   Form,
   FormControl,
@@ -20,15 +19,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../ui/form';
-import { Input } from '../ui/input';
+} from "../ui/form";
+import { Input } from "../ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from "../ui/select";
 
 interface NewWorkspaceState {
   path?: string;
@@ -54,16 +53,16 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
         name: data.name,
         path: data.path,
       });
-      toast.success('New workspace registered in the database');
+      toast.success("New workspace registered in the database");
       await router.push(`${userRoute}/${data.name}`);
     },
     onError: () => {
-      toast.error('Error registering workspace in the database');
+      toast.error("Error registering workspace in the database");
       // the worksppace was created in the filesystem but not registered in the database
       // the user cant use the workspace until it is registered in the database
       // what to do here?
       throw new Error(
-        'Error registering workspace in the database. Last state: ' +
+        "Error registering workspace in the database. Last state: " +
           JSON.stringify(newWorkspaceState),
       );
     },
@@ -78,7 +77,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
         });
       },
       onError: () => {
-        toast.error('Error creating workspace');
+        toast.error("Error creating workspace");
         setNewWorkspaceState({}); // reset the state?
       },
     });
@@ -96,7 +95,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
   useEffect(() => {
     if (!newWorkspaceState.jobIsPending) return;
     if (!newWorkspaceState.path || !newWorkspaceState.name) return;
-    if (jobData && jobData.jobStatus === 'COMPLETED') {
+    if (jobData && jobData.jobStatus === "COMPLETED") {
       // disable refetching until there is a new job
       createWorkspaceDbMutation.mutate({
         path: newWorkspaceState.path,
@@ -106,11 +105,11 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
         ...newWorkspaceState,
         jobIsPending: false,
       });
-      toast.success('Workspace created in the storage');
-      toast.info('Registering workspace in the database...');
+      toast.success("Workspace created in the storage");
+      toast.info("Registering workspace in the database...");
     }
-    if (jobData && jobData.jobStatus === 'FAILED') {
-      toast.error('Error creating workspace');
+    if (jobData && jobData.jobStatus === "FAILED") {
+      toast.error("Error creating workspace");
       setNewWorkspaceState({});
     }
   }, [
@@ -131,7 +130,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
       workspacePath: fullPath,
       partition: data.slurmPartition,
     });
-    toast.info('Creating workspace...');
+    toast.info("Creating workspace...");
   };
 
   const basePathLsQuery = api.ssh.ls.useQuery(
@@ -145,7 +144,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
 
   const schema = z
     .object({
-      workspaceBasePath: z.string().endsWith('/'),
+      workspaceBasePath: z.string().endsWith("/"),
       workspaceName: z.string().min(1),
       slurmPartition: z.string(),
     })
@@ -154,9 +153,9 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message:
-            'Error fetching base path data: ' + basePathLsQuery.error.message,
+            "Error fetching base path data: " + basePathLsQuery.error.message,
           fatal: true,
-          path: ['workspaceBasePath'],
+          path: ["workspaceBasePath"],
         });
         return z.NEVER;
       }
@@ -165,8 +164,8 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Workspace name already exists in the base directory :(',
-          path: ['workspaceName'],
+          message: "Workspace name already exists in the base directory :(",
+          path: ["workspaceName"],
         });
       }
     });
@@ -176,8 +175,8 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
   const form = useForm<Form>({
     resolver: zodResolver(schema),
     defaultValues: {
-      workspaceBasePath: '',
-      workspaceName: '',
+      workspaceBasePath: "",
+      workspaceName: "",
     },
   });
 
@@ -190,7 +189,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
     const { buttonText, buttonDisabled } = (() => {
       if (basePathLsQuery.isLoading) {
         return {
-          buttonText: 'Fetching base path data...',
+          buttonText: "Fetching base path data...",
           buttonDisabled: true,
         };
       }
@@ -199,13 +198,13 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
           buttonText: `Creating workspace ${
             newWorkspaceState.jobId
               ? `Job ID: ${newWorkspaceState.jobId}`
-              : '...'
+              : "..."
           }`,
           buttonDisabled: true,
         };
       }
       return {
-        buttonText: 'Submit New Workspace',
+        buttonText: "Submit New Workspace",
         buttonDisabled: !!newWorkspaceState.path,
       };
     })();
@@ -307,7 +306,7 @@ export function CreateNewWorkspace({ userRoute }: { userRoute: string }) {
                             <span className="text-sm text-green-500">
                               {option.cpus.free}
                             </span>
-                            /{option.cpus.max} cpus,{' '}
+                            /{option.cpus.max} cpus,{" "}
                             <span className="text-sm text-green-500">
                               {option.gpus.free}
                             </span>

@@ -1,4 +1,4 @@
-import { type ConnectionLineComponentProps } from 'reactflow';
+import { type ConnectionLineComponentProps } from "reactflow";
 
 /**
  * Custom connection line component that renders an animated cubic bezier curve following the edge path.

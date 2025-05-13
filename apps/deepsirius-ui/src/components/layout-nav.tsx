@@ -1,6 +1,6 @@
-import Head from 'next/head';
-import { AvatarDrop } from '~/components/avatar-dropdown';
-import { TopBgImage, BottomBgImage } from '~/components/bg-images';
+import Head from "next/head";
+import { AvatarDrop } from "~/components/avatar-dropdown";
+import { BottomBgImage, TopBgImage } from "~/components/bg-images";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,7 +11,7 @@ export function LayoutNav({ children, title }: LayoutProps) {
   return (
     <main>
       <Head>
-        <title>{title || 'Deepsirius UI'}</title>
+        <title>{title || "Deepsirius UI"}</title>
         <meta name="deepsirius-ui" content="Deepsirius UI Nav" />
         <link rel="icon" href="/favicon.ico" />
       </Head>

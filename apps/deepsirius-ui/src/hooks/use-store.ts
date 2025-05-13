@@ -1,37 +1,36 @@
-import { nanoid } from 'nanoid';
-import {
-  type Connection,
-  type Edge,
-  type EdgeChange,
-  type Node,
-  type NodeChange,
-  type NodeDragHandler,
-  type OnConnect,
-  type OnEdgesChange,
-  type OnEdgesDelete,
-  type OnNodesChange,
-  type OnNodesDelete,
-  applyEdgeChanges,
-  applyNodeChanges,
-} from 'reactflow';
-import { toast } from 'sonner';
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { FormType as DatasetForm } from '~/components/workboard/node-component-forms/dataset-form';
-import type { FormType as InferenceForm } from '~/components/workboard/node-component-forms/inference-form';
-import type { FormType as NetworkForm } from '~/components/workboard/node-component-forms/network-form';
-import type { FormType as FinetuneForm } from '~/components/workboard/node-component-forms/finetune-form';
-import type { FormType as AugmentationForm } from '~/components/workboard/node-component-forms/augmentation-form';
+import type {
+  Connection,
+  Edge,
+  EdgeChange,
+  Node,
+  NodeChange,
+  NodeDragHandler,
+  OnConnect,
+  OnEdgesChange,
+  OnEdgesDelete,
+  OnNodesChange,
+  OnNodesDelete,
+} from "reactflow";
+import { nanoid } from "nanoid";
+import { applyEdgeChanges, applyNodeChanges } from "reactflow";
+import { toast } from "sonner";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { FormType as AugmentationForm } from "~/components/workboard/node-component-forms/augmentation-form";
+import type { FormType as DatasetForm } from "~/components/workboard/node-component-forms/dataset-form";
+import type { FormType as FinetuneForm } from "~/components/workboard/node-component-forms/finetune-form";
+import type { FormType as InferenceForm } from "~/components/workboard/node-component-forms/inference-form";
+import type { FormType as NetworkForm } from "~/components/workboard/node-component-forms/network-form";
 
 const validConnectionPairs = [
-  ['dataset', 'augmentation'],
-  ['dataset', 'network'],
-  ['augmentation', 'network'],
-  ['network', 'inference'],
-  ['network', 'finetune'],
-  ['dataset', 'finetune'],
-  ['augmentation', 'finetune'],
-  ['finetune', 'finetune'],
+  ["dataset", "augmentation"],
+  ["dataset", "network"],
+  ["augmentation", "network"],
+  ["network", "inference"],
+  ["network", "finetune"],
+  ["dataset", "finetune"],
+  ["augmentation", "finetune"],
+  ["finetune", "finetune"],
 ];
 
 export type WorkspaceInfo = {
@@ -39,7 +38,7 @@ export type WorkspaceInfo = {
   name: string;
 };
 
-export type NodeStatus = 'success' | 'error' | 'active' | 'busy';
+export type NodeStatus = "success" | "error" | "active" | "busy";
 
 export type DatasetData = {
   form: DatasetForm;
@@ -126,7 +125,7 @@ const initialState: RFState = {
   nodes: [],
   edges: [],
   workspaceInfo: undefined,
-  stateSnapshot: '',
+  stateSnapshot: "",
 };
 
 export const useStore = create<RFStore>()(
@@ -169,7 +168,7 @@ export const useStore = create<RFStore>()(
         },
         onNodesChange: (changes: NodeChange[]) => {
           const allowedChanges = changes.filter(
-            (change) => change.type !== 'remove',
+            (change) => change.type !== "remove",
           );
           set({
             nodes: applyNodeChanges(allowedChanges, get().nodes),
@@ -177,7 +176,7 @@ export const useStore = create<RFStore>()(
         },
         onEdgesChange: (changes: EdgeChange[]) => {
           const allowedChanges = changes.filter(
-            (change) => change.type !== 'remove',
+            (change) => change.type !== "remove",
           );
 
           set({
@@ -201,7 +200,7 @@ export const useStore = create<RFStore>()(
           // return without making the connection if a connection already exists
           if (get().edges.find((edge) => edge.target === params.target)) {
             // the finetune node is allowed to have two sources, a network (obligatory) and a dataset (optional)
-            if (targetNode?.type === 'finetune') {
+            if (targetNode?.type === "finetune") {
               const existingSourceNodes = get()
                 .edges.filter((edge) => edge.target === params.target)
                 .map((edge) =>
@@ -224,7 +223,7 @@ export const useStore = create<RFStore>()(
             }
           }
           // check source status
-          if (sourceNode.data.status !== 'success') {
+          if (sourceNode.data.status !== "success") {
             return false;
           }
           // check connection pairs and connect if valid
@@ -245,20 +244,20 @@ export const useStore = create<RFStore>()(
             return;
           }
           if (get().actions.isValidConnection(params)) {
-            toast.success('Connected');
+            toast.success("Connected");
             const targetType = get().nodes.find(
               (node) => node.id === params.target,
             )?.type;
-            if (targetType === 'finetune') {
+            if (targetType === "finetune") {
               // finetune node have named target handles
               const sourceType = get().nodes.find(
                 (node) => node.id === params.source,
               )?.type;
-              if (sourceType === 'network') {
-                params.targetHandle = 'network-target';
-                params.sourceHandle = 'finetune-source';
-              } else if (sourceType === 'dataset') {
-                params.targetHandle = 'dataset-target';
+              if (sourceType === "network") {
+                params.targetHandle = "network-target";
+                params.sourceHandle = "finetune-source";
+              } else if (sourceType === "dataset") {
+                params.targetHandle = "dataset-target";
               }
             }
             get().actions.addEdge({
@@ -269,7 +268,7 @@ export const useStore = create<RFStore>()(
               targetHandle: params.targetHandle,
             });
           } else {
-            toast.error('Invalid connection');
+            toast.error("Invalid connection");
           }
         },
         checkSourceIsConnected: (targetId: string) => {
@@ -280,9 +279,9 @@ export const useStore = create<RFStore>()(
           const sourceNode = get().nodes.find(
             (node) => node.id === edge.source,
           );
-          if (sourceNode && sourceNode?.data.status === 'success') {
+          if (sourceNode && sourceNode?.data.status === "success") {
             return true;
-          } else if (sourceNode && sourceNode?.data.status !== 'success') {
+          } else if (sourceNode && sourceNode?.data.status !== "success") {
             return false;
           } else {
             return false;
@@ -291,7 +290,7 @@ export const useStore = create<RFStore>()(
         getSourceData: (targetId: string) => {
           const edge = get().edges.find((edge) => edge.target === targetId);
           if (!edge) {
-            console.error('Store.getSourceData: No connection found');
+            console.error("Store.getSourceData: No connection found");
             return undefined;
           }
           const sourceNode = get().nodes.find(
@@ -301,7 +300,7 @@ export const useStore = create<RFStore>()(
             return sourceNode.data;
           } else {
             console.error(
-              'Store.getSourceData: No source found but the edge exsists',
+              "Store.getSourceData: No source found but the edge exsists",
               edge,
             );
             return undefined;
@@ -365,7 +364,7 @@ export const useStore = create<RFStore>()(
       },
     }),
     {
-      name: 'workspace-state',
+      name: "workspace-state",
       partialize: (state) => ({
         workspaceInfo: state.workspaceInfo,
         stateSnapshot: state.stateSnapshot,

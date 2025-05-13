@@ -1,34 +1,34 @@
-import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
-import { type NodeProps, useUpdateNodeInternals } from 'reactflow';
-import { toast } from 'sonner';
-import { ScrollArea } from '~/components/ui/scroll-area';
+import type { NodeProps } from "reactflow";
+import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import { useUpdateNodeInternals } from "reactflow";
+import { toast } from "sonner";
+import type { FormType } from "~/components/workboard/node-component-forms/dataset-form";
+import type { NodeData } from "~/hooks/use-store";
+import { ScrollArea } from "~/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from '~/components/ui/sheet';
-import {
-  DatasetForm,
-  type FormType,
-} from '~/components/workboard/node-component-forms/dataset-form';
-import { type NodeData, useStoreActions } from '~/hooks/use-store';
-import { api } from '~/utils/api';
-import NodeCard from './node-components/node-card';
+} from "~/components/ui/sheet";
+import { DatasetForm } from "~/components/workboard/node-component-forms/dataset-form";
+import { useStoreActions } from "~/hooks/use-store";
+import { useUser } from "~/hooks/use-user";
+import { checkStatusRefetchInterval } from "~/lib/constants";
+import { api } from "~/utils/api";
+import NodeCard from "./node-components/node-card";
 import {
   BusySheet,
   ErrorSheet,
   SuccessSheet,
-} from './node-components/node-sheet';
-import { useUser } from '~/hooks/use-user';
-import { checkStatusRefetchInterval } from '~/lib/constants';
+} from "./node-components/node-sheet";
 
 export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   const user = useUser();
   const formEditState =
     nodeProps.selected &&
-    ['active', 'error', 'success'].includes(nodeProps.data.status);
+    ["active", "error", "success"].includes(nodeProps.data.status);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   const { data: jobData } = api.job.checkStatus.useQuery(
     { jobId: nodeProps.data.jobId as string },
     {
-      enabled: nodeProps.data.status === 'busy' && !!nodeProps.data.jobId,
+      enabled: nodeProps.data.status === "busy" && !!nodeProps.data.jobId,
       refetchInterval: checkStatusRefetchInterval,
       refetchIntervalInBackground: true,
       refetchOnWindowFocus: true,
@@ -53,38 +53,38 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   );
 
   useEffect(() => {
-    if (nodeProps.data.status !== 'busy') return;
+    if (nodeProps.data.status !== "busy") return;
     if (!jobData) return;
-    const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-    if (jobData.jobStatus === 'COMPLETED') {
-      toast.success('Job completed');
+    const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+    if (jobData.jobStatus === "COMPLETED") {
+      toast.success("Job completed");
       onUpdateNode({
         id: nodeProps.id,
         data: {
           ...nodeProps.data,
-          status: 'success',
+          status: "success",
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
           message: `Job ${
-            nodeProps.data.jobId ?? 'aa'
+            nodeProps.data.jobId ?? "aa"
           } finished successfully in ${date}`,
           updatedAt: date,
         },
       });
       updateNodeInternals(nodeProps.id);
     } else if (
-      jobData.jobStatus === 'FAILED' ||
-      jobData.jobStatus?.includes('CANCELLED')
+      jobData.jobStatus === "FAILED" ||
+      jobData.jobStatus?.includes("CANCELLED")
     ) {
-      toast.error('Job failed');
+      toast.error("Job failed");
       onUpdateNode({
         id: nodeProps.id,
         data: {
           ...nodeProps.data,
-          status: 'error',
+          status: "error",
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
-          message: `Job ${nodeProps.data.jobId ?? 'aa'} failed in ${date}`,
+          message: `Job ${nodeProps.data.jobId ?? "aa"} failed in ${date}`,
           updatedAt: date,
         },
       });
@@ -94,11 +94,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
         id: nodeProps.id,
         data: {
           ...nodeProps.data,
-          status: 'busy',
+          status: "busy",
           jobId: nodeProps.data.jobId,
           jobStatus: jobData.jobStatus,
-          message: `Job ${nodeProps.data.jobId ?? 'aa'} is ${
-            jobData.jobStatus?.toLocaleLowerCase() ?? 'no status'
+          message: `Job ${nodeProps.data.jobId ?? "aa"} is ${
+            jobData.jobStatus?.toLocaleLowerCase() ?? "no status"
           }, last checked at ${date}`,
           updatedAt: date,
         },
@@ -124,8 +124,8 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     })
       .then(({ jobId }) => {
         if (!jobId) {
-          console.error('handleSubmitJob then?', 'no jobId');
-          toast.error('Error submitting job');
+          console.error("handleSubmitJob then?", "no jobId");
+          toast.error("Error submitting job");
           return;
         }
         setFormData(formData);
@@ -133,11 +133,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
           id: nodeProps.id,
           data: {
             ...nodeProps.data,
-            status: 'busy',
+            status: "busy",
             remotePath: `${nodeProps.data.workspacePath}/datasets/${formData.datasetName}.h5`,
             jobId: jobId,
             message: `Job ${jobId} submitted in ${dayjs().format(
-              'YYYY-MM-DD HH:mm:ss',
+              "YYYY-MM-DD HH:mm:ss",
             )}`,
             datasetData: {
               name: formData.datasetName,
@@ -150,21 +150,21 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
         setOpen(!open);
       })
       .catch(() => {
-        toast.error('Error submitting job');
+        toast.error("Error submitting job");
         setFormData(formData);
         onUpdateNode({
           id: nodeProps.id,
           data: {
             ...nodeProps.data,
-            status: 'error',
-            remotePath: '',
-            jobId: '',
+            status: "error",
+            remotePath: "",
+            jobId: "",
             message: `Error submitting job in ${dayjs().format(
-              'YYYY-MM-DD HH:mm:ss',
+              "YYYY-MM-DD HH:mm:ss",
             )}`,
             datasetData: {
               name: formData.datasetName,
-              remotePath: '',
+              remotePath: "",
               form: formData,
             },
           },
@@ -176,39 +176,39 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
   const handleCancelJob = () => {
     cancelJob({ jobId: nodeProps.data.jobId as string })
       .then(() => {
-        const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-        toast.success('Job canceled');
+        const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+        toast.success("Job canceled");
         onUpdateNode({
           id: nodeProps.id,
           data: {
             ...nodeProps.data,
-            status: 'error',
+            status: "error",
             jobId: nodeProps.data.jobId,
-            jobStatus: 'CANCELLED',
-            message: `Job ${nodeProps.data.jobId ?? 'aa'} canceled in ${date}`,
+            jobStatus: "CANCELLED",
+            message: `Job ${nodeProps.data.jobId ?? "aa"} canceled in ${date}`,
             updatedAt: date,
           },
         });
         updateNodeInternals(nodeProps.id);
       })
       .catch(() => {
-        toast.error('Error canceling job');
+        toast.error("Error canceling job");
       });
-    toast.info('Canceling job..');
+    toast.info("Canceling job..");
   };
 
   if (!user) return null;
   if (!nodeProps.data.workspacePath) return null;
 
-  const workspaceName = nodeProps.data.workspacePath.split('/').pop();
+  const workspaceName = nodeProps.data.workspacePath.split("/").pop();
   if (!workspaceName) return null;
   const nodeIdParams = new URLSearchParams({
     nodeId: nodeProps.id,
   });
   const galleryUrl =
-    user.route + '/' + workspaceName + '/gallery?' + nodeIdParams.toString();
+    user.route + "/" + workspaceName + "/gallery?" + nodeIdParams.toString();
 
-  if (nodeProps.data.status === 'active') {
+  if (nodeProps.data.status === "active") {
     return (
       <>
         <NodeCard
@@ -228,19 +228,19 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     );
   }
 
-  if (nodeProps.data.status === 'busy') {
+  if (nodeProps.data.status === "busy") {
     return (
       <>
         <NodeCard
-          title={nodeProps.data?.remotePath?.split('/').pop() ?? 'new dataset'}
-          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
-            nodeProps.data.jobStatus || 'checking status..'
+          title={nodeProps.data?.remotePath?.split("/").pop() ?? "new dataset"}
+          subtitle={`${nodeProps.data.jobId || "jobId"} -- ${
+            nodeProps.data.jobStatus || "checking status.."
           }`}
           {...nodeProps}
         />
         <BusySheet
           selected={nodeProps.selected}
-          title={'Details'}
+          title={"Details"}
           jobId={nodeProps.data.jobId}
           jobStatus={nodeProps.data.jobStatus}
           updatedAt={nodeProps.data.updatedAt}
@@ -252,13 +252,13 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     );
   }
 
-  if (nodeProps.data.status === 'success') {
+  if (nodeProps.data.status === "success") {
     return (
       <>
         <NodeCard
-          title={nodeProps.data?.remotePath?.split('/').pop() ?? 'new dataset'}
-          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
-            nodeProps.data.jobStatus || 'jobStatus'
+          title={nodeProps.data?.remotePath?.split("/").pop() ?? "new dataset"}
+          subtitle={`${nodeProps.data.jobId || "jobId"} -- ${
+            nodeProps.data.jobStatus || "jobStatus"
           }`}
           {...nodeProps}
         />
@@ -272,7 +272,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               Object.entries(formData)
                 .filter(
                   ([_, value]) =>
-                    typeof value === 'string' || typeof value === 'number',
+                    typeof value === "string" || typeof value === "number",
                 )
                 .map(([key, value], index) => {
                   const isEven = index % 2 === 0;
@@ -282,11 +282,11 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
                       className="flex flex-row items-center justify-between gap-1"
                     >
                       <p className="font-medium">
-                        {key.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()}
+                        {key.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()}
                       </p>
                       <p
                         data-even={isEven}
-                        className="text-end data-[even=true]:text-violet-600 "
+                        className="text-end data-[even=true]:text-violet-600"
                       >
                         {value as string}
                       </p>
@@ -300,14 +300,14 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
               {formData?.data.map((d, i) => (
                 <div key={i} className="flex flex-col items-start">
                   <p className="w-full text-ellipsis bg-muted px-2 py-1 text-sm font-medium">
-                    {d.image.split('/').slice(-1)}
+                    {d.image.split("/").slice(-1)}
                   </p>
-                  <p className="w-full  text-ellipsis bg-violet-200 px-2 py-1 text-sm font-medium dark:bg-violet-900">
-                    {d.label.split('/').slice(-1)}
+                  <p className="w-full text-ellipsis bg-violet-200 px-2 py-1 text-sm font-medium dark:bg-violet-900">
+                    {d.label.split("/").slice(-1)}
                   </p>
                   {!!d.weightMap && (
                     <p className="w-full text-ellipsis bg-violet-300 px-2 py-1 text-sm font-medium dark:bg-violet-900">
-                      {d.weightMap?.split('/').slice(-1)}
+                      {d.weightMap?.split("/").slice(-1)}
                     </p>
                   )}
                 </div>
@@ -319,13 +319,13 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
     );
   }
 
-  if (nodeProps.data.status === 'error') {
+  if (nodeProps.data.status === "error") {
     return (
       <>
         <NodeCard
-          title={nodeProps.data?.remotePath?.split('/').pop() ?? 'new dataset'}
-          subtitle={`${nodeProps.data.jobId || 'jobId'} -- ${
-            nodeProps.data.jobStatus || 'jobStatus'
+          title={nodeProps.data?.remotePath?.split("/").pop() ?? "new dataset"}
+          subtitle={`${nodeProps.data.jobId || "jobId"} -- ${
+            nodeProps.data.jobStatus || "jobStatus"
           }`}
           {...nodeProps}
         />
@@ -335,7 +335,7 @@ export function DatasetNode(nodeProps: NodeProps<NodeData>) {
           hrefToGallery={galleryUrl}
         >
           <DatasetForm
-            name={formData?.datasetName ?? ''}
+            name={formData?.datasetName ?? ""}
             data={formData?.data ?? []}
             onSubmitHandler={handleSubmitJob}
           />

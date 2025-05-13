@@ -1,25 +1,24 @@
-import { ExternalLinkIcon } from 'lucide-react';
-import NodeIcon from './workboard/node-components/node-icon';
-import Link from 'next/link';
-import React, { useState } from 'react';
-import { useHotkeys } from 'react-hotkeys-hook';
-import { ControlButton } from 'reactflow';
-import { cn } from '~/lib/utils';
-
-import { buttonVariants } from './ui/button';
+import React, { useState } from "react";
+import Link from "next/link";
+import { ExternalLinkIcon } from "lucide-react";
+import { useHotkeys } from "react-hotkeys-hook";
+import { ControlButton } from "reactflow";
+import { cn } from "~/lib/utils";
+import { buttonVariants } from "./ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from './ui/dialog';
+} from "./ui/dialog";
+import NodeIcon from "./workboard/node-components/node-icon";
 
 function ExternalLinks() {
   return (
     <div className="flex flex-row items-start justify-between gap-1">
       <Link
-        className={cn(buttonVariants({ variant: 'outline' }), '')}
+        className={cn(buttonVariants({ variant: "outline" }), "")}
         href="https://deepsirius.lnls.br/dive"
         rel="noopener noreferrer"
         target="_blank"
@@ -30,7 +29,7 @@ function ExternalLinks() {
       </Link>
       <p className="mt-1 text-xl text-input"> | </p>
       <Link
-        className={cn(buttonVariants({ variant: 'outline' }), '')}
+        className={cn(buttonVariants({ variant: "outline" }), "")}
         href="https://github.com/cnpem/deepsirius-ui/issues"
         rel="noopener noreferrer"
         target="_blank"
@@ -46,16 +45,16 @@ function ExternalLinks() {
 function MinimapCaption() {
   const nodeColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return '#4CAF50';
-      case 'busy':
-        return '#FFC107';
-      case 'error':
-        return '#F44336';
-      case 'success':
-        return '#2196F3';
+      case "active":
+        return "#4CAF50";
+      case "busy":
+        return "#FFC107";
+      case "error":
+        return "#F44336";
+      case "success":
+        return "#2196F3";
       default:
-        return '#9E9E9E';
+        return "#9E9E9E";
     }
   };
   return (
@@ -88,21 +87,21 @@ function MinimapCaption() {
           <div className="flex flex-row items-center gap-1">
             <div
               className="h-4 w-4 rounded-full"
-              style={{ backgroundColor: nodeColor('active') }}
+              style={{ backgroundColor: nodeColor("active") }}
             />
             <p className="text-xs">Active</p>
           </div>
           <div className="flex flex-row items-center gap-1">
             <div
               className="h-4 w-4 rounded-full"
-              style={{ backgroundColor: nodeColor('busy') }}
+              style={{ backgroundColor: nodeColor("busy") }}
             />
             <p className="text-xs">Busy</p>
           </div>
           <div className="flex flex-row items-center gap-1">
             <div
               className="h-4 w-4 rounded-full"
-              style={{ backgroundColor: nodeColor('error') }}
+              style={{ backgroundColor: nodeColor("error") }}
             />
             <p className="text-xs">Error</p>
           </div>
@@ -181,7 +180,7 @@ function KeyboardShortcuts() {
 
 export function ControlHelpButton() {
   const [open, setOpen] = useState(false);
-  useHotkeys('h', () => setOpen((s) => !s));
+  useHotkeys("h", () => setOpen((s) => !s));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

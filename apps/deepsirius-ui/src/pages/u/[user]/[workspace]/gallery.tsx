@@ -1,46 +1,41 @@
-'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/router';
-import { useQueryState } from 'nuqs';
-import dayjs from 'dayjs';
+"use client";
 
-import { api } from '~/utils/api';
+import { useEffect, useMemo, useState } from "react";
+import ErrorPage from "next/error";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import dayjs from "dayjs";
+import { ArrowLeftIcon } from "lucide-react";
+import { useQueryState } from "nuqs";
+import { type Edge, type Node } from "reactflow";
+import { toast } from "sonner";
+import type { NodeData, NodeStatus } from "~/hooks/use-store";
+import { AvatarDrop } from "~/components/avatar-dropdown";
 import {
-  useStore,
-  useStoreActions,
-  type NodeData,
-  type NodeStatus,
-} from '~/hooks/use-store';
-
-import ErrorPage from 'next/error';
-import { toast } from 'sonner';
-import { type Node, type Edge } from 'reactflow';
-import { Layout } from '~/components/layout';
-import { Button } from '~/components/ui/button';
+  Tensorboard,
+  TensorboardLink,
+  ViewRemoteImages,
+  ViewRemoteLog,
+} from "~/components/gallery-views";
+import { Layout } from "~/components/layout";
+import { Button } from "~/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '~/components/ui/tooltip';
-import NodeIcon from '~/components/workboard/node-components/node-icon';
-import { AvatarDrop } from '~/components/avatar-dropdown';
-import Link from 'next/link';
-import { useUser } from '~/hooks/use-user';
-import { ArrowLeftIcon } from 'lucide-react';
-import {
-  ViewRemoteLog,
-  ViewRemoteImages,
-  Tensorboard,
-  TensorboardLink,
-} from '~/components/gallery-views';
-import { StatusBadge } from '~/components/workboard/status-badge';
-import { defaultSlurmLogPath } from '~/lib/utils';
-import { checkStatusRefetchInterval } from '~/lib/constants';
+} from "~/components/ui/tooltip";
+import NodeIcon from "~/components/workboard/node-components/node-icon";
+import { StatusBadge } from "~/components/workboard/status-badge";
+import { useStore, useStoreActions } from "~/hooks/use-store";
+import { useUser } from "~/hooks/use-user";
+import { checkStatusRefetchInterval } from "~/lib/constants";
+import { defaultSlurmLogPath } from "~/lib/utils";
+import { api } from "~/utils/api";
 
 function Gallery({ user, workspace }: { user: string; workspace: string }) {
-  const [nodeId] = useQueryState('nodeId');
-  const [view] = useQueryState('view');
+  const [nodeId] = useQueryState("nodeId");
+  const [view] = useQueryState("view");
   const { nodes } = useStore();
   const selectedNode = useMemo(
     () => nodes.find((node) => node.id === nodeId),
@@ -49,7 +44,7 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
 
   if (!selectedNode || !selectedNode.type) {
     return (
-      <div className="flex h-screen w-screen flex-col bg-light-ocean dark:bg-dark-ocean ">
+      <div className="flex h-screen w-screen flex-col bg-light-ocean dark:bg-dark-ocean">
         <div className="flex h-[8%] w-full flex-row justify-between">
           <BoardLink user={user} workspace={workspace} />
           <AvatarDrop />
@@ -62,7 +57,7 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
   }
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-light-ocean dark:bg-dark-ocean ">
+    <div className="flex h-screen w-screen flex-col bg-light-ocean dark:bg-dark-ocean">
       <div className="flex h-[8%] w-full flex-row justify-between">
         <BoardLink user={user} workspace={workspace} />
         <AvatarDrop />
@@ -82,7 +77,7 @@ function Gallery({ user, workspace }: { user: string; workspace: string }) {
 function getLogPath(node: Node<NodeData>) {
   const workspacePath = node.data.workspacePath;
   const jobId = node.data.jobId;
-  const jobName = node.type ? `deepsirius-${node.type}` : '';
+  const jobName = node.type ? `deepsirius-${node.type}` : "";
   return defaultSlurmLogPath({
     workspacePath,
     jobId,
@@ -92,7 +87,7 @@ function getLogPath(node: Node<NodeData>) {
 
 function SidePanelContent({ node }: { node: Node<NodeData> }) {
   const [status, setStatus] = useState<NodeStatus>(node.data.status);
-  const [view, setView] = useQueryState('view');
+  const [view, setView] = useQueryState("view");
 
   if (!node.data) return null;
   if (!node.type) return null;
@@ -109,8 +104,8 @@ function SidePanelContent({ node }: { node: Node<NodeData> }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              onClick={() => void setView('log-output')}
-              variant={(view === 'log-output' && 'default') || 'outline'}
+              onClick={() => void setView("log-output")}
+              variant={(view === "log-output" && "default") || "outline"}
             >
               Output Logs
             </Button>
@@ -124,8 +119,8 @@ function SidePanelContent({ node }: { node: Node<NodeData> }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              onClick={() => void setView('log-err')}
-              variant={(view === 'log-err' && 'default') || 'outline'}
+              onClick={() => void setView("log-err")}
+              variant={(view === "log-err" && "default") || "outline"}
             >
               Error Logs
             </Button>
@@ -140,9 +135,9 @@ function SidePanelContent({ node }: { node: Node<NodeData> }) {
           <TooltipTrigger asChild>
             <span tabIndex={0}>
               <Button
-                onClick={() => void setView('preview-imgs')}
-                variant={(view === 'preview-imgs' && 'default') || 'outline'}
-                disabled={!['augmentation'].includes(node.type)}
+                onClick={() => void setView("preview-imgs")}
+                variant={(view === "preview-imgs" && "default") || "outline"}
+                disabled={!["augmentation"].includes(node.type)}
                 className="!w-full"
               >
                 Preview Images
@@ -152,8 +147,8 @@ function SidePanelContent({ node }: { node: Node<NodeData> }) {
           <TooltipContent>
             <p className="text-muted-foreground">
               Preview the images generated by the augmentation process.
-              {node.type !== 'augmentation' &&
-                ' Only available for augmentation nodes.'}
+              {node.type !== "augmentation" &&
+                " Only available for augmentation nodes."}
             </p>
           </TooltipContent>
         </Tooltip>
@@ -163,10 +158,10 @@ function SidePanelContent({ node }: { node: Node<NodeData> }) {
               <TensorboardLink
                 logdir={getLogPath(node).out}
                 disabled={
-                  !(node.type === 'network' || node.type === 'finetune') ||
-                  status !== 'busy'
+                  !(node.type === "network" || node.type === "finetune") ||
+                  status !== "busy"
                 }
-                onClick={() => void setView('tensorboard')}
+                onClick={() => void setView("tensorboard")}
               />
             </span>
           </TooltipTrigger>
@@ -197,18 +192,18 @@ function NodeInfo({
   const nodeName = useMemo(() => {
     if (!type) return undefined;
     switch (type) {
-      case 'dataset':
+      case "dataset":
         return nodeData.datasetData?.name;
-      case 'augmentation':
+      case "augmentation":
         return nodeData.augmentationData?.name;
-      case 'network':
+      case "network":
         return nodeData.networkData?.label;
-      case 'finetune':
+      case "finetune":
         const sourceLabel =
           nodeData.finetuneData?.sourceNetworkLabel ?? undefined;
-        return sourceLabel ? `${sourceLabel} finetune` : 'finetune';
-      case 'inference':
-        const outputPath = nodeData.inferenceData?.outputPath ?? '';
+        return sourceLabel ? `${sourceLabel} finetune` : "finetune";
+      case "inference":
+        const outputPath = nodeData.inferenceData?.outputPath ?? "";
 
         return outputPath;
       default:
@@ -217,10 +212,10 @@ function NodeInfo({
   }, [type, nodeData]);
 
   const { data: jobData } = api.job.checkStatus.useQuery(
-    { jobId: nodeData.jobId ?? '' },
+    { jobId: nodeData.jobId ?? "" },
     {
       refetchOnMount: false,
-      enabled: status === 'busy' && !!nodeData.jobId,
+      enabled: status === "busy" && !!nodeData.jobId,
       refetchInterval: checkStatusRefetchInterval,
       refetchIntervalInBackground: true,
     },
@@ -228,24 +223,24 @@ function NodeInfo({
 
   useEffect(() => {
     if (!jobData) return;
-    if (status === 'success' || status === 'error') return;
-    if (jobData.jobStatus === 'COMPLETED') {
-      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      setStatus('success');
+    if (status === "success" || status === "error") return;
+    if (jobData.jobStatus === "COMPLETED") {
+      const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+      setStatus("success");
       setMessage(
-        `Job ${nodeData.jobId ?? 'Err'} finished successfully in ${date}`,
+        `Job ${nodeData.jobId ?? "Err"} finished successfully in ${date}`,
       );
     } else if (
-      jobData.jobStatus === 'FAILED' ||
-      jobData.jobStatus?.includes('CANCELLED')
+      jobData.jobStatus === "FAILED" ||
+      jobData.jobStatus?.includes("CANCELLED")
     ) {
-      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      setStatus('error');
-      setMessage(`Job ${nodeData.jobId ?? 'Err'} failed in ${date}`);
-    } else if (jobData.jobStatus === 'RUNNING') {
-      const date = dayjs().format('YYYY-MM-DD HH:mm:ss');
-      setStatus('busy');
-      setMessage(`Job ${nodeData.jobId ?? 'Err'} last checked at ${date}`);
+      const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+      setStatus("error");
+      setMessage(`Job ${nodeData.jobId ?? "Err"} failed in ${date}`);
+    } else if (jobData.jobStatus === "RUNNING") {
+      const date = dayjs().format("YYYY-MM-DD HH:mm:ss");
+      setStatus("busy");
+      setMessage(`Job ${nodeData.jobId ?? "Err"} last checked at ${date}`);
     }
   }, [jobData, status, nodeData.jobId, setStatus]);
 
@@ -258,7 +253,7 @@ function NodeInfo({
         </div>
         <StatusBadge status={status} />
       </div>
-      <p className="text-md text-wrap">{nodeName ?? 'node'}</p>
+      <p className="text-md text-wrap">{nodeName ?? "node"}</p>
       <p className="text-muted-foreground">{message}</p>
     </div>
   );
@@ -271,7 +266,7 @@ function BoardLink({ user, workspace }: { user: string; workspace: string }) {
       className="flex flex-row items-center p-4 hover:underline"
     >
       <ArrowLeftIcon className="mr-2 h-4 w-4" />
-      {'Back to'}
+      {"Back to"}
       <p className="ml-1 text-blue-800 dark:text-blue-500">{`"${workspace}"`}</p>
     </Link>
   );
@@ -287,21 +282,21 @@ function GalleryView({
   const jobId = node.data.jobId;
   const { out, err } = getLogPath(node);
   switch (view) {
-    case 'log-output':
+    case "log-output":
       if (!jobId) return <p>Job Id not found</p>;
       if (!node.type) return <p>Node type not found</p>;
       return <ViewRemoteLog path={out} />;
-    case 'log-err':
+    case "log-err":
       if (!jobId) return <p>Job Id not found</p>;
       if (!node.type) return <p>Node type not found</p>;
       return <ViewRemoteLog path={err} />;
-    case 'preview-imgs':
+    case "preview-imgs":
       if (!node.data?.augmentationData)
         return <p>Augmentation data not found</p>;
       return (
         <ViewRemoteImages path={node.data.augmentationData.remotePreviewPath} />
       );
-    case 'tensorboard':
+    case "tensorboard":
       return <Tensorboard logdir={out} />;
     default:
       return (
@@ -323,8 +318,8 @@ export default function GalleryRouter() {
   const sessionUser = useUser();
 
   const { user, workspace } = router.query; // Assuming 'user' and 'workspace' are dynamic segments
-  const routeWorkspace = typeof workspace === 'string' ? workspace : '';
-  const isGalleryRoute = router.pathname.includes('/gallery');
+  const routeWorkspace = typeof workspace === "string" ? workspace : "";
+  const isGalleryRoute = router.pathname.includes("/gallery");
 
   const workspaceChanged = routeWorkspace !== storeWorkspace;
 
@@ -396,11 +391,11 @@ export default function GalleryRouter() {
   }
 
   if (error) {
-    console.error('error', error);
+    console.error("error", error);
     return <ErrorPage statusCode={500} title={error.message} />;
   }
 
-  console.error('Hey! Forbidden state!', {
+  console.error("Hey! Forbidden state!", {
     workspaceChanged,
     routeWorkspace,
     isGalleryRoute,

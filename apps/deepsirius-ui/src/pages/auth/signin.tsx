@@ -1,20 +1,21 @@
-import type { GetServerSidePropsContext } from 'next';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/router';
-import { type SubmitHandler, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { LayoutNav } from '~/components/layout-nav';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
+import type { GetServerSidePropsContext } from "next";
+import type { SubmitHandler } from "react-hook-form";
+import { useRouter } from "next/router";
+import { signIn } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { LayoutNav } from "~/components/layout-nav";
+import { Button } from "~/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-} from '~/components/ui/card';
-import { getServerAuthSession } from '~/server/auth';
+} from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { getServerAuthSession } from "~/server/auth";
 
 type FormData = {
   email: string;
@@ -23,7 +24,7 @@ type FormData = {
 function Form() {
   const router = useRouter();
   const query = router.query;
-  const callbackUrl = (query.callbackUrl as string) || '/';
+  const callbackUrl = (query.callbackUrl as string) || "/";
 
   const {
     register,
@@ -31,15 +32,15 @@ function Form() {
     formState: { errors },
   } = useForm<FormData>();
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    toast.info('Signing in...');
-    const res = await signIn('credentials', {
+    toast.info("Signing in...");
+    const res = await signIn("credentials", {
       email: data.email,
       password: data.password,
       callbackUrl: callbackUrl,
       redirect: false,
     });
     if (res?.ok) {
-      toast.success('Sign in successfully!');
+      toast.success("Sign in successfully!");
       await router.push(callbackUrl);
     }
     if (!res?.ok) {
@@ -74,7 +75,7 @@ function Form() {
             <Input
               id="username"
               placeholder="user.name@example.com"
-              {...register('email', { required: 'Email is required!' })}
+              {...register("email", { required: "Email is required!" })}
             />
           </div>
           <div className="grid w-full items-center gap-1.5">
@@ -88,8 +89,8 @@ function Form() {
               id="password"
               type="password"
               placeholder="********"
-              {...register('password', {
-                required: 'Password is required!',
+              {...register("password", {
+                required: "Password is required!",
               })}
             />
           </div>
@@ -120,9 +121,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   // To avoid an infinite loop!
   if (session) {
     if (!session.user.name) {
-      throw new Error('User name not found');
+      throw new Error("User name not found");
     }
-    return { redirect: { destination: '/u/' + session.user.name } };
+    return { redirect: { destination: "/u/" + session.user.name } };
   }
 
   return {

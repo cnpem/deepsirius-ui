@@ -1,68 +1,68 @@
-import { type NodeStatus } from '~/hooks/use-store';
-import { Card, CardContent } from '~/components/ui/card';
-import NodeIcon from './node-icon';
-import { Handle, type NodeProps, Position, useReactFlow } from 'reactflow';
-import { cn } from '~/lib/utils';
-import { buttonVariants } from '~/components/ui/button';
-import { nanoid } from 'nanoid';
-import { type Node, type XYPosition } from 'reactflow';
-import { toast } from 'sonner';
-import { type NodeData, useStore, useStoreActions } from '~/hooks/use-store';
+import type { Node, NodeProps, XYPosition } from "reactflow";
+import { cva } from "class-variance-authority";
+import { nanoid } from "nanoid";
+import { Handle, Position, useReactFlow } from "reactflow";
+import { toast } from "sonner";
+import type { NodeData, NodeStatus } from "~/hooks/use-store";
+import { buttonVariants } from "~/components/ui/button";
+import { Card, CardContent } from "~/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '~/components/ui/tooltip';
-import { cva } from 'class-variance-authority';
+} from "~/components/ui/tooltip";
+import { useStore, useStoreActions } from "~/hooks/use-store";
+import { cn } from "~/lib/utils";
+import NodeIcon from "./node-icon";
 
-const nodeCardVariants = cva('h-[80px] w-[280px]', {
+const nodeCardVariants = cva("h-[80px] w-[280px]", {
   variants: {
     status: {
       active:
-        'border-green-800 bg-green-100 text-green-800 data-[selected=true]:border-green-500 dark:bg-muted dark:text-green-400',
-      busy: 'border-yellow-800 bg-yellow-100 text-yellow-800 data-[selected=true]:border-yellow-500 dark:bg-muted dark:text-yellow-400',
+        "border-green-800 bg-green-100 text-green-800 data-[selected=true]:border-green-500 dark:bg-muted dark:text-green-400",
+      busy: "border-yellow-800 bg-yellow-100 text-yellow-800 data-[selected=true]:border-yellow-500 dark:bg-muted dark:text-yellow-400",
       error:
-        'border-red-800 bg-red-100 text-red-800 data-[selected=true]:border-red-500 dark:bg-muted dark:text-red-400',
+        "border-red-800 bg-red-100 text-red-800 data-[selected=true]:border-red-500 dark:bg-muted dark:text-red-400",
       success:
-        'border-blue-800 bg-blue-100 text-blue-800 data-[selected=true]:border-blue-500 dark:bg-muted dark:text-blue-400',
+        "border-blue-800 bg-blue-100 text-blue-800 data-[selected=true]:border-blue-500 dark:bg-muted dark:text-blue-400",
     },
   },
   defaultVariants: {
-    status: 'active',
+    status: "active",
   },
 });
 
-const nodeHandleVariants = cva('', {
+const nodeHandleVariants = cva("", {
   variants: {
     status: {
       active: [
-        '!bg-green-500 !border-green-800 hover:!bg-green-800',
-        'data-[selected=true]:!border-green-500 data-[selected=true]:hover:!bg-green-800',
-        'dark:!bg-green-800 dark:!border-green-800 dark:hover:!bg-green-500',
-        'dark:data-[selected=true]:!bg-green-800 dark:data-[selected=true]:!border-green-500 dark:data-[selected=true]:hover:!bg-green-500',
+        "!border-green-800 !bg-green-500 hover:!bg-green-800",
+        "data-[selected=true]:!border-green-500 data-[selected=true]:hover:!bg-green-800",
+        "dark:!border-green-800 dark:!bg-green-800 dark:hover:!bg-green-500",
+        "dark:data-[selected=true]:!border-green-500 dark:data-[selected=true]:!bg-green-800 dark:data-[selected=true]:hover:!bg-green-500",
       ],
       busy: [
-        '!bg-yellow-500 !border-yellow-800 hover:!bg-yellow-800',
-        'data-[selected=true]:!border-yellow-500 data-[selected=true]:hover:!bg-yellow-800',
-        'dark:!bg-yellow-800 dark:!border-yellow-800 dark:hover:!bg-yellow-500',
-        'dark:data-[selected=true]:!bg-yellow-800 dark:data-[selected=true]:!border-yellow-500 dark:data-[selected=true]:hover:!bg-yellow-500',
+        "!border-yellow-800 !bg-yellow-500 hover:!bg-yellow-800",
+        "data-[selected=true]:!border-yellow-500 data-[selected=true]:hover:!bg-yellow-800",
+        "dark:!border-yellow-800 dark:!bg-yellow-800 dark:hover:!bg-yellow-500",
+        "dark:data-[selected=true]:!border-yellow-500 dark:data-[selected=true]:!bg-yellow-800 dark:data-[selected=true]:hover:!bg-yellow-500",
       ],
       error: [
-        '!bg-red-500 !border-red-800 hover:!bg-red-800',
-        'data-[selected=true]:!border-red-500 data-[selected=true]:hover:!bg-red-800',
-        'dark:!bg-red-800 dark:!border-red-800 dark:hover:!bg-red-500',
-        'dark:data-[selected=true]:!bg-red-800 dark:data-[selected=true]:!border-red-500 dark:data-[selected=true]:hover:!bg-red-500',
+        "!border-red-800 !bg-red-500 hover:!bg-red-800",
+        "data-[selected=true]:!border-red-500 data-[selected=true]:hover:!bg-red-800",
+        "dark:!border-red-800 dark:!bg-red-800 dark:hover:!bg-red-500",
+        "dark:data-[selected=true]:!border-red-500 dark:data-[selected=true]:!bg-red-800 dark:data-[selected=true]:hover:!bg-red-500",
       ],
       success: [
-        '!bg-blue-500 !border-blue-800 hover:!bg-blue-800',
-        'data-[selected=true]:!border-blue-500 data-[selected=true]:hover:!bg-blue-800',
-        'dark:!bg-blue-800 dark:!border-blue-800 dark:hover:!bg-blue-500',
-        'dark:data-[selected=true]:!bg-blue-800 dark:data-[selected=true]:!border-blue-500 dark:data-[selected=true]:hover:!bg-blue-500',
+        "!border-blue-800 !bg-blue-500 hover:!bg-blue-800",
+        "data-[selected=true]:!border-blue-500 data-[selected=true]:hover:!bg-blue-800",
+        "dark:!border-blue-800 dark:!bg-blue-800 dark:hover:!bg-blue-500",
+        "dark:data-[selected=true]:!border-blue-500 dark:data-[selected=true]:!bg-blue-800 dark:data-[selected=true]:hover:!bg-blue-500",
       ],
     },
   },
   defaultVariants: {
-    status: 'active',
+    status: "active",
   },
 });
 
@@ -106,10 +106,10 @@ export default function NodeCard({
   function getAvailablePosition(
     x: number,
     y: number,
-    spawnDirection: 'bottom' | 'right',
+    spawnDirection: "bottom" | "right",
   ) {
-    const newX = spawnDirection === 'right' ? x + 280 + 40 : x;
-    const newY = spawnDirection === 'bottom' ? y + 80 + 40 : y;
+    const newX = spawnDirection === "right" ? x + 280 + 40 : x;
+    const newY = spawnDirection === "bottom" ? y + 80 + 40 : y;
     if (!positionOccupied(x, y)) {
       return { x, y } as XYPosition;
     }
@@ -131,22 +131,22 @@ export default function NodeCard({
   const onNodeAdd = (props: {
     nodeType: string;
     handleId?: string;
-    spawnDirection: 'bottom' | 'right';
+    spawnDirection: "bottom" | "right";
   }) => {
     const { nodeType, handleId, spawnDirection } = props;
     if (!workspaceInfo) {
-      toast.error('uh oh! something went wrong', {
-        description: 'Looks like the workspace was not loaded properly.',
+      toast.error("uh oh! something went wrong", {
+        description: "Looks like the workspace was not loaded properly.",
         action: {
-          label: 'Reload the view',
+          label: "Reload the view",
           onClick: () => window.location.reload(),
         },
       });
       return;
     }
-    if (nodeStatus !== 'success') {
+    if (nodeStatus !== "success") {
       toast.error(
-        'This node is not ready to create a connection. It needs to be in a success state.',
+        "This node is not ready to create a connection. It needs to be in a success state.",
       );
       return;
     }
@@ -162,7 +162,7 @@ export default function NodeCard({
       position: initialPostition,
       data: {
         workspacePath: workspaceInfo.path,
-        status: 'active',
+        status: "active",
       },
     };
     // now that the node is created in the database, we can add it to the store with an always defined registryId
@@ -189,22 +189,22 @@ export default function NodeCard({
           <div className="flex-1 space-y-1">
             <p
               className={cn(
-                'text-sm font-medium leading-none',
-                nodeStatus === 'active' && 'text-green-800 dark:text-green-400',
-                nodeStatus === 'busy' && 'text-yellow-800 dark:text-yellow-400',
-                nodeStatus === 'error' && 'text-red-800 dark:text-red-400',
-                nodeStatus === 'success' && 'text-blue-800 dark:text-blue-400',
+                "text-sm font-medium leading-none",
+                nodeStatus === "active" && "text-green-800 dark:text-green-400",
+                nodeStatus === "busy" && "text-yellow-800 dark:text-yellow-400",
+                nodeStatus === "error" && "text-red-800 dark:text-red-400",
+                nodeStatus === "success" && "text-blue-800 dark:text-blue-400",
               )}
             >
               {title}
             </p>
             <p
               className={cn(
-                'text-sm',
-                nodeStatus === 'active' && 'text-green-600 dark:text-green-500',
-                nodeStatus === 'busy' && 'text-yellow-600 dark:text-yellow-500',
-                nodeStatus === 'error' && 'text-red-600 dark:text-red-500',
-                nodeStatus === 'success' && 'text-blue-600 dark:text-blue-500',
+                "text-sm",
+                nodeStatus === "active" && "text-green-600 dark:text-green-500",
+                nodeStatus === "busy" && "text-yellow-600 dark:text-yellow-500",
+                nodeStatus === "error" && "text-red-600 dark:text-red-500",
+                nodeStatus === "success" && "text-blue-600 dark:text-blue-500",
               )}
             >
               {subtitle}
@@ -246,11 +246,11 @@ function HandlesPerType({
   onNodeAdd: (props: {
     nodeType: string;
     handleId?: string;
-    spawnDirection: 'bottom' | 'right';
+    spawnDirection: "bottom" | "right";
   }) => void;
 }) {
   switch (nodeType) {
-    case 'dataset':
+    case "dataset":
       return (
         <>
           <Tooltip>
@@ -258,18 +258,18 @@ function HandlesPerType({
               <Handle
                 data-selected={selected}
                 className={cn(
-                  buttonVariants({ variant: 'ghost', size: 'icon' }),
+                  buttonVariants({ variant: "ghost", size: "icon" }),
                   nodeHandleVariants({ status: nodeStatus }),
                 )}
-                style={{ height: '1rem', width: '2.5rem' }}
+                style={{ height: "1rem", width: "2.5rem" }}
                 type="source"
                 id="augmentation-source"
                 position={Position.Bottom}
                 onClick={() =>
                   onNodeAdd({
-                    nodeType: 'augmentation',
-                    handleId: 'augmentation-source',
-                    spawnDirection: 'bottom',
+                    nodeType: "augmentation",
+                    handleId: "augmentation-source",
+                    spawnDirection: "bottom",
                   })
                 }
               />
@@ -283,19 +283,19 @@ function HandlesPerType({
               <Handle
                 data-selected={selected}
                 className={cn(
-                  buttonVariants({ variant: 'ghost', size: 'icon' }),
-                  'hover:bg-accent hover:text-accent-foreground',
+                  buttonVariants({ variant: "ghost", size: "icon" }),
+                  "hover:bg-accent hover:text-accent-foreground",
                   nodeHandleVariants({ status: nodeStatus }),
                 )}
-                style={{ width: '1rem', height: '2.5rem' }}
+                style={{ width: "1rem", height: "2.5rem" }}
                 id="network-source"
                 type="source"
                 position={Position.Right}
                 onClick={() =>
                   onNodeAdd({
-                    nodeType: 'network',
-                    handleId: 'network-source',
-                    spawnDirection: 'right',
+                    nodeType: "network",
+                    handleId: "network-source",
+                    spawnDirection: "right",
                   })
                 }
               />
@@ -306,7 +306,7 @@ function HandlesPerType({
           </Tooltip>
         </>
       );
-    case 'augmentation':
+    case "augmentation":
       return (
         <>
           <Tooltip>
@@ -314,18 +314,18 @@ function HandlesPerType({
               <Handle
                 data-selected={selected}
                 className={cn(
-                  buttonVariants({ variant: 'ghost', size: 'icon' }),
+                  buttonVariants({ variant: "ghost", size: "icon" }),
                   nodeHandleVariants({ status: nodeStatus }),
                 )}
-                style={{ width: '1rem', height: '2.5rem' }}
+                style={{ width: "1rem", height: "2.5rem" }}
                 id="network-source"
                 type="source"
                 position={Position.Right}
                 onClick={() =>
                   onNodeAdd({
-                    nodeType: 'network',
-                    handleId: 'network-source',
-                    spawnDirection: 'right',
+                    nodeType: "network",
+                    handleId: "network-source",
+                    spawnDirection: "right",
                   })
                 }
               />
@@ -339,7 +339,7 @@ function HandlesPerType({
               <Handle
                 data-selected={selected}
                 className={cn(nodeHandleVariants({ status: nodeStatus }))}
-                style={{ height: '1rem', width: '2.5rem' }}
+                style={{ height: "1rem", width: "2.5rem" }}
                 type="target"
                 id="dataset-target"
                 position={Position.Top}
@@ -351,7 +351,7 @@ function HandlesPerType({
           </Tooltip>
         </>
       );
-    case 'network':
+    case "network":
       return (
         <>
           <Tooltip>
@@ -359,10 +359,10 @@ function HandlesPerType({
               <Handle
                 data-selected={selected}
                 className={cn(
-                  buttonVariants({ variant: 'ghost', size: 'icon' }),
+                  buttonVariants({ variant: "ghost", size: "icon" }),
                   nodeHandleVariants({ status: nodeStatus }),
                 )}
-                style={{ height: '1rem', width: '2.5rem' }}
+                style={{ height: "1rem", width: "2.5rem" }}
                 type="source"
                 id="finetune-source"
                 position={Position.Bottom}
@@ -370,16 +370,16 @@ function HandlesPerType({
                   if (
                     sourceHandleIsConnected({
                       sourceId: nodeId,
-                      handleId: 'finetune-source',
+                      handleId: "finetune-source",
                     })
                   ) {
-                    toast.error('This node already has finetune a target');
+                    toast.error("This node already has finetune a target");
                     return;
                   }
                   onNodeAdd({
-                    nodeType: 'finetune',
-                    handleId: 'finetune-source',
-                    spawnDirection: 'bottom',
+                    nodeType: "finetune",
+                    handleId: "finetune-source",
+                    spawnDirection: "bottom",
                   });
                 }}
               />
@@ -393,15 +393,15 @@ function HandlesPerType({
               <Handle
                 data-selected={selected}
                 className={cn(nodeHandleVariants({ status: nodeStatus }))}
-                style={{ width: '1rem', height: '2.5rem' }}
+                style={{ width: "1rem", height: "2.5rem" }}
                 type="source"
                 position={Position.Right}
                 id="inference-source"
                 onClick={() =>
                   onNodeAdd({
-                    nodeType: 'inference',
-                    handleId: 'inference-source',
-                    spawnDirection: 'right',
+                    nodeType: "inference",
+                    handleId: "inference-source",
+                    spawnDirection: "right",
                   })
                 }
               />
@@ -415,7 +415,7 @@ function HandlesPerType({
               <Handle
                 data-selected={selected}
                 className={cn(nodeHandleVariants({ status: nodeStatus }))}
-                style={{ height: '2.5rem' }}
+                style={{ height: "2.5rem" }}
                 type="target"
                 id="dataset-target"
                 position={Position.Left}
@@ -427,7 +427,7 @@ function HandlesPerType({
           </Tooltip>
         </>
       );
-    case 'finetune':
+    case "finetune":
       return (
         <>
           <Tooltip>
@@ -435,10 +435,10 @@ function HandlesPerType({
               <Handle
                 data-selected={selected}
                 className={cn(
-                  buttonVariants({ variant: 'ghost', size: 'icon' }),
+                  buttonVariants({ variant: "ghost", size: "icon" }),
                   nodeHandleVariants({ status: nodeStatus }),
                 )}
-                style={{ height: '1rem', width: '2.5rem' }}
+                style={{ height: "1rem", width: "2.5rem" }}
                 type="source"
                 id="finetune-source"
                 position={Position.Bottom}
@@ -446,16 +446,16 @@ function HandlesPerType({
                   if (
                     sourceHandleIsConnected({
                       sourceId: nodeId,
-                      handleId: 'finetune-source',
+                      handleId: "finetune-source",
                     })
                   ) {
-                    toast.error('This node already has finetune a target');
+                    toast.error("This node already has finetune a target");
                     return;
                   }
                   onNodeAdd({
-                    nodeType: 'finetune',
-                    handleId: 'finetune-source',
-                    spawnDirection: 'bottom',
+                    nodeType: "finetune",
+                    handleId: "finetune-source",
+                    spawnDirection: "bottom",
                   });
                 }}
               />
@@ -469,7 +469,7 @@ function HandlesPerType({
               <Handle
                 data-selected={selected}
                 className={cn(nodeHandleVariants({ status: nodeStatus }))}
-                style={{ height: '1rem', width: '2.5rem' }}
+                style={{ height: "1rem", width: "2.5rem" }}
                 type="target"
                 id="network-target"
                 position={Position.Top}
@@ -484,7 +484,7 @@ function HandlesPerType({
               <Handle
                 data-selected={selected}
                 className={cn(nodeHandleVariants({ status: nodeStatus }))}
-                style={{ height: '2.5rem' }}
+                style={{ height: "2.5rem" }}
                 type="target"
                 id="dataset-target"
                 position={Position.Left}
@@ -496,14 +496,14 @@ function HandlesPerType({
           </Tooltip>
         </>
       );
-    case 'inference':
+    case "inference":
       return (
         <Tooltip>
           <TooltipTrigger asChild>
             <Handle
               data-selected={selected}
               className={cn(nodeHandleVariants({ status: nodeStatus }))}
-              style={{ height: '2.5rem' }}
+              style={{ height: "2.5rem" }}
               type="target"
               id="network-target"
               position={Position.Left}

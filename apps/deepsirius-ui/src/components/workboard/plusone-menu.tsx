@@ -1,8 +1,10 @@
-import { Plus } from 'lucide-react';
-import { nanoid } from 'nanoid';
-import { useReactFlow, type Node, type XYPosition } from 'reactflow';
-import { toast } from 'sonner';
-import { Button } from '~/components/ui/button';
+import type { Node, XYPosition } from "reactflow";
+import { Plus } from "lucide-react";
+import { nanoid } from "nanoid";
+import { useReactFlow } from "reactflow";
+import { toast } from "sonner";
+import type { NodeData } from "~/hooks/use-store";
+import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,15 +12,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu';
-import { type NodeData, useStore, useStoreActions } from '~/hooks/use-store';
+} from "~/components/ui/dropdown-menu";
+import { useStore, useStoreActions } from "~/hooks/use-store";
 
 const nodeTypes = [
-  'dataset',
-  'augmentation',
-  'network',
-  'finetune',
-  'inference',
+  "dataset",
+  "augmentation",
+  "network",
+  "finetune",
+  "inference",
 ];
 
 // selects the type of node to be created using a dropdown menu
@@ -32,10 +34,10 @@ export function PlusOneMenu() {
 
   const onNodeAdd = (nodeType: string) => {
     if (!workspaceInfo) {
-      toast.error('uh oh! something went wrong', {
-        description: 'Looks like the workspace was not loaded properly.',
+      toast.error("uh oh! something went wrong", {
+        description: "Looks like the workspace was not loaded properly.",
         action: {
-          label: 'Reload the view',
+          label: "Reload the view",
           onClick: () => window.location.reload(),
         },
       });
@@ -56,7 +58,7 @@ export function PlusOneMenu() {
       position: initialPostition,
       data: {
         workspacePath: workspaceInfo.path,
-        status: 'active',
+        status: "active",
       },
     };
     // now that the node is created in the database, we can add it to the store with an always defined registryId
@@ -72,8 +74,8 @@ export function PlusOneMenu() {
       >
         <Button
           title="add node"
-          variant={'default'}
-          size={'icon'}
+          variant={"default"}
+          size={"icon"}
           className="rounded-full"
         >
           <Plus />

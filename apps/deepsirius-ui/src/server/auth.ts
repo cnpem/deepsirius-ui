@@ -1,21 +1,20 @@
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { type GetServerSidePropsContext } from 'next';
-import {
-  type DefaultSession,
-  type DefaultUser,
-  type NextAuthOptions,
-  type User,
-  getServerSession,
-} from 'next-auth';
-import { type DefaultJWT } from 'next-auth/jwt';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import keygen from 'ssh-keygen-lite';
-import { env } from '~/env.mjs';
-
-import { prisma } from './db';
-import type { ErrnoException } from './remote-job';
-import { NodeSSH } from 'node-ssh';
-import { promisify } from 'util';
+import { promisify } from "util";
+import type {
+  DefaultSession,
+  DefaultUser,
+  NextAuthOptions,
+  User,
+} from "next-auth";
+import { type GetServerSidePropsContext } from "next";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { getServerSession } from "next-auth";
+import { type DefaultJWT } from "next-auth/jwt";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { NodeSSH } from "node-ssh";
+import keygen from "ssh-keygen-lite";
+import type { ErrnoException } from "./remote-job";
+import { env } from "~/env.mjs";
+import { prisma } from "./db";
 
 // TODO: Auth is breaking when the user's credentials are ok but the service can't ssh into SSH_HOST.
 // This will happen when the user doesn't have a scheduled proposal for the day, so its group is not allowed to ssh into SSH_HOST.
@@ -26,13 +25,13 @@ import { promisify } from 'util';
  *
  * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
  */
-declare module 'next-auth' {
+declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
       // ...other properties
       // role: UserRole;
-    } & DefaultSession['user'];
+    } & DefaultSession["user"];
   }
 
   interface User extends DefaultUser {
@@ -40,7 +39,7 @@ declare module 'next-auth' {
   }
 }
 
-declare module 'next-auth/jwt' {
+declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     privateKey?: string;
     storageApiCookie?: string;
@@ -56,17 +55,17 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: 'LDAP',
+      name: "LDAP",
       credentials: {
         email: {
-          label: 'Email',
-          type: 'text',
-          placeholder: 'user.name@example.com',
+          label: "Email",
+          type: "text",
+          placeholder: "user.name@example.com",
         },
         password: {
-          label: 'Password',
-          type: 'password',
-          placeholder: 'Password',
+          label: "Password",
+          type: "password",
+          placeholder: "Password",
         },
       },
       async authorize(credentials): Promise<User | null> {
@@ -75,22 +74,22 @@ export const authOptions: NextAuthOptions = {
         }
 
         const { email, password } = credentials;
-        const username = email.substring(0, email.lastIndexOf('@'));
+        const username = email.substring(0, email.lastIndexOf("@"));
 
         const formData = new FormData();
-        formData.append('username', username);
-        formData.append('password', password);
+        formData.append("username", username);
+        formData.append("password", password);
 
         const res = await fetch(`${env.TLDAP_API_URL}/auth/token`, {
-          method: 'POST',
+          method: "POST",
           body: formData,
         });
 
         if (res.status === 401) {
-          throw new Error('Invalid Credentials');
+          throw new Error("Invalid Credentials");
         }
         if (res.status === 500) {
-          throw new Error('Unexpected error on TLDAP_API');
+          throw new Error("Unexpected error on TLDAP_API");
         }
 
         // register user in database
@@ -119,7 +118,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
   },
   callbacks: {
     session: ({ session, token }) => {
@@ -137,21 +136,21 @@ export const authOptions: NextAuthOptions = {
         }/api/session?${params.toString()}`;
 
         const res = await fetch(authUrl, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            type: 'sftp',
-            hostname: env.STORAGE_API_URL.split('//')[1],
-            path: '/ibira',
+            type: "sftp",
+            hostname: env.STORAGE_API_URL.split("//")[1],
+            path: "/ibira",
             username: user.name,
             password: user.password,
           }),
         });
 
-        const resCookie = res.headers.get('set-cookie');
-        const authCookie = resCookie?.split(';')[0];
+        const resCookie = res.headers.get("set-cookie");
+        const authCookie = resCookie?.split(";")[0];
         token.storageApiCookie = authCookie;
 
         //ssh setup
@@ -175,7 +174,7 @@ export const authOptions: NextAuthOptions = {
 
         // Create the .ssh directory if it doesn't exist
         try {
-          await mkdir('.ssh');
+          await mkdir(".ssh");
         } catch (err) {
           const error = err as ErrnoException;
           if (error.code !== 4) {
@@ -193,9 +192,9 @@ export const authOptions: NextAuthOptions = {
           ) => sftp.readFile(path, callback),
         );
 
-        let keys = '';
+        let keys = "";
         try {
-          const buffer = await readFile('.ssh/authorized_keys');
+          const buffer = await readFile(".ssh/authorized_keys");
           keys = buffer.toString().trim();
         } catch (err) {
           const error = err as ErrnoException;
@@ -210,22 +209,22 @@ export const authOptions: NextAuthOptions = {
         const pair = await keygen({
           // sshKeygenPath: 'ssh-keygen',
           // location: path.join(homedir(), '.ssh', `${comment}_rsa`),
-          type: 'rsa',
+          type: "rsa",
           read: true,
           force: true,
           destroy: false,
           comment: comment,
           password: env.PRIVATE_KEY_PASSPHRASE,
-          size: '2048',
-          format: 'PEM',
+          size: "2048",
+          format: "PEM",
         });
 
         // replace old key with new one
         const newKeys = keys
-          .split('\n')
+          .split("\n")
           .filter((key) => !key.includes(comment))
           .concat(pair.pubKey)
-          .join('\n');
+          .join("\n");
 
         const writeFile = promisify(
           (
@@ -235,7 +234,7 @@ export const authOptions: NextAuthOptions = {
           ) => sftp.writeFile(path, data, callback),
         );
         try {
-          await writeFile('.ssh/authorized_keys', newKeys);
+          await writeFile(".ssh/authorized_keys", newKeys);
         } catch (err) {
           if (err instanceof Error) {
             throw new Error(`Failed to update authorized keys: ${err.message}`);
@@ -250,13 +249,13 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: '/auth/signin',
+    signIn: "/auth/signin",
   },
   theme: {
-    colorScheme: 'auto', // "auto" | "dark" | "light"
-    brandColor: '', // Hex color code
-    logo: '/logo.svg', // Absolute URL to image
-    buttonText: '', // Hex color code
+    colorScheme: "auto", // "auto" | "dark" | "light"
+    brandColor: "", // Hex color code
+    logo: "/logo.svg", // Absolute URL to image
+    buttonText: "", // Hex color code
   },
 };
 
@@ -266,8 +265,8 @@ export const authOptions: NextAuthOptions = {
  * @see https://next-auth.js.org/configuration/nextjs
  */
 export const getServerAuthSession = (ctx: {
-  req: GetServerSidePropsContext['req'];
-  res: GetServerSidePropsContext['res'];
+  req: GetServerSidePropsContext["req"];
+  res: GetServerSidePropsContext["res"];
 }) => {
   return getServerSession(ctx.req, ctx.res, authOptions);
 };

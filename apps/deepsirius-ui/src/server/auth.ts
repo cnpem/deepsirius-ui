@@ -1,6 +1,4 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import fs from 'fs';
-import ldap from 'ldapjs';
 import { type GetServerSidePropsContext } from 'next';
 import {
   type DefaultSession,
@@ -17,6 +15,7 @@ import { env } from '~/env.mjs';
 import { prisma } from './db';
 import type { ErrnoException } from './remote-job';
 import { NodeSSH } from 'node-ssh';
+import { promisify } from 'util';
 
 // TODO: Auth is breaking when the user's credentials are ok but the service can't ssh into SSH_HOST.
 // This will happen when the user doesn't have a scheduled proposal for the day, so its group is not allowed to ssh into SSH_HOST.
@@ -74,35 +73,25 @@ export const authOptions: NextAuthOptions = {
         if (!credentials) {
           return null;
         }
-        let certificate: Buffer;
-        try {
-          certificate = fs.readFileSync(env.CA_CERT);
-        } catch (err) {
-          throw new Error('INTERNAL SERVER ERROR: CA certificate not found');
-        }
-        const { email, password } = credentials;
-        const name = email.substring(0, email.lastIndexOf('@'));
-        // You might want to pull this call out so we're not making a new LDAP client on every login attemp
-        // tlsOption: https://stackoverflow.com/questions/31861109/tls-what-exactly-does-rejectunauthorized-mean-for-me
-        const client = ldap
-          .createClient({
-            url: env.LDAP_URI,
-            tlsOptions: { ca: [certificate] },
-          })
-          .on('error', () => {
-            throw new Error('INTERNAL SERVER ERROR: LDAP create client failed');
-          });
 
-        // Essentially promisify the LDAPJS client.bind function
-        await new Promise((resolve, reject) => {
-          client.bind(email, password, (error) => {
-            if (!!error) {
-              reject(new Error('Invalid credentials'));
-            } else {
-              resolve(console.log('LDAP bind successful'));
-            }
-          });
+        const { email, password } = credentials;
+        const username = email.substring(0, email.lastIndexOf('@'));
+
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('password', password);
+
+        const res = await fetch(`${env.TLDAP_API_URL}/auth/token`, {
+          method: 'POST',
+          body: formData,
         });
+
+        if (res.status === 401) {
+          throw new Error('Invalid Credentials');
+        }
+        if (res.status === 500) {
+          throw new Error('Unexpected error on TLDAP_API');
+        }
 
         // register user in database
         const userInDb = await prisma.user.findUnique({
@@ -112,7 +101,7 @@ export const authOptions: NextAuthOptions = {
         if (!userInDb) {
           const newUser = await prisma.user.create({
             data: {
-              name,
+              name: username,
               email,
             },
           });
@@ -176,42 +165,46 @@ export const authOptions: NextAuthOptions = {
           host: env.SSH_HOST,
         });
 
+        // Request SFTP
         const sftp = await connection.requestSFTP();
 
-        // creating the .ssh directory if it doesn't exist
-        await new Promise<void>((resolve, reject) => {
-          sftp.mkdir('.ssh', (err) => {
-            const error = err as ErrnoException;
-            if (error) {
-              if (error.code === 4) {
-                resolve();
-              } else {
-                reject(error);
-              }
-            } else {
-              resolve();
-            }
-          });
-        });
+        const mkdir = promisify(
+          (path: string, callback: (err: Error | null | undefined) => void) =>
+            sftp.mkdir(path, callback),
+        );
 
-        const keys = await new Promise<string>((resolve, reject) => {
-          sftp.readFile('.ssh/authorized_keys', (err, keys) => {
-            if (err) {
-              const error = err as ErrnoException;
-              if (error.code === 2) {
-                resolve('');
-              } else {
-                reject(error);
-              }
-            } else {
-              resolve(keys.toString());
-            }
-          });
-        });
-        const updatedKeys = keys
-          .split('\n')
-          .filter((key) => !key.includes(comment))
-          .join('\n');
+        // Create the .ssh directory if it doesn't exist
+        try {
+          await mkdir('.ssh');
+        } catch (err) {
+          const error = err as ErrnoException;
+          if (error.code !== 4) {
+            throw new Error(
+              `Failed to create remote .ssh directory: ${error.message}`,
+            );
+          }
+        }
+
+        // Read the authorized_keys file
+        const readFile = promisify(
+          (
+            path: string,
+            callback: (err: Error | undefined, handle: Buffer) => void,
+          ) => sftp.readFile(path, callback),
+        );
+
+        let keys = '';
+        try {
+          const buffer = await readFile('.ssh/authorized_keys');
+          keys = buffer.toString().trim();
+        } catch (err) {
+          const error = err as ErrnoException;
+          if (error.code !== 2) {
+            throw new Error(
+              `Failed to read authorized_keys file: ${error.message}`,
+            );
+          }
+        }
 
         //generate new key pair
         const pair = await keygen({
@@ -227,17 +220,27 @@ export const authOptions: NextAuthOptions = {
           format: 'PEM',
         });
 
-        // copy new public key
-        const newKeys = updatedKeys + '\n' + pair.pubKey;
-        await new Promise<void>((resolve, reject) => {
-          sftp.writeFile('.ssh/authorized_keys', newKeys, (err) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(console.log('authorized_keys updated'));
-            }
-          });
-        });
+        // replace old key with new one
+        const newKeys = keys
+          .split('\n')
+          .filter((key) => !key.includes(comment))
+          .concat(pair.pubKey)
+          .join('\n');
+
+        const writeFile = promisify(
+          (
+            path: string,
+            data: string,
+            callback: (error: Error | null | undefined) => void,
+          ) => sftp.writeFile(path, data, callback),
+        );
+        try {
+          await writeFile('.ssh/authorized_keys', newKeys);
+        } catch (err) {
+          if (err instanceof Error) {
+            throw new Error(`Failed to update authorized keys: ${err.message}`);
+          }
+        }
 
         token.privateKey = pair.key;
         token.email = user.email;

@@ -19,9 +19,8 @@ const server = z.object({
     process.env.VERCEL ? z.string().min(1) : z.string().url(),
   ),
   // Add `.min(1) on ID and SECRET if you want to make sure they're not empty
-  LDAP_URI: z.string(),
   SSH_HOST: z.string(),
-  CA_CERT: z.string(),
+  TLDAP_API_URL: z.string().url(),
   PRIVATE_KEY_PASSPHRASE: z.string().min(1),
   PROCESSING_CONTAINER_STORAGE_BIND: z.string(),
   PROCESSING_CONTAINER_PATH: z.string(),
@@ -49,9 +48,8 @@ const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-  LDAP_URI: process.env.LDAP_URI,
   SSH_HOST: process.env.SSH_HOST,
-  CA_CERT: process.env.CA_CERT,
+  TLDAP_API_URL: process.env.TLDAP_API_URL,
   PRIVATE_KEY_PASSPHRASE: process.env.PRIVATE_KEY_PASSPHRASE,
   NEXT_PUBLIC_STORAGE_PATH: process.env.NEXT_PUBLIC_STORAGE_PATH,
   PROCESSING_CONTAINER_STORAGE_BIND:

@@ -2,13 +2,16 @@
   "name": "deepsirius-ui",
   "private": true,
   "scripts": {
-    "clean": "turbo clean",
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,md}\"",
-    "type-check": "turbo type-check",
+    "build": "turbo run build",
+    "dev": "turbo watch dev --continue",
+    "start": "turbo start",
+    "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
+    "type-check": "turbo run type-check",
+    "clean": "git clean -xdf node_modules .cache .turbo",
+    "clean:workspaces": "turbo run clean",
+    "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
+    "format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
+    "local-ci": "pnpm lint && pnpm type-check && pnpm format",
     "db:generate": "turbo -F @deepsirius-ui/app db:generate"
   },
   "devDependencies": {

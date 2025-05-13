@@ -57,3 +57,5 @@ dist
 .vscode
 node_modules
 .turbo
+*.tsbuildinfo
+.cache

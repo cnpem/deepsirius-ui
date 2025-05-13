@@ -7,6 +7,7 @@ import { LayoutNav } from '~/components/layout-nav';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '~/components/ui/card';
 import { getServerAuthSession } from '~/server/auth';
 
 type FormData = {
@@ -42,16 +43,21 @@ function Form() {
   };
 
   return (
+    <Card className='w-full max-w-md sm:w-[400px]'>
+      <CardHeader>
+        <CardTitle>
+          <span className="text-fuchsia-600 dark:text-fuchsia-500">Deep</span>
+          Sirius
+        </CardTitle>
+        <CardDescription>Sign in with your credentials</CardDescription>
+      </CardHeader>
+      <CardContent>
     <form
-      className="w-full space-y-12 sm:w-[400px]"
+      className="space-y-12"
       // Note: This is a workaround for a bug in react-hook-form
       // See: https://github.com/orgs/react-hook-form/discussions/8020#discussioncomment-3362300
       onSubmit={(...args) => void handleSubmit(onSubmit)(...args)}
     >
-      <h1 className="mb-2 flex justify-center text-xl font-semibold">
-        <span className="text-fuchsia-600 dark:text-fuchsia-500">Deep</span>
-        Sirius
-      </h1>
       <div className="grid w-full items-center gap-1.5">
         <Label htmlFor="email">Email</Label>
         {errors.email && (
@@ -60,7 +66,7 @@ function Form() {
           </p>
         )}
         <Input
-          id="email"
+          id="username"
           placeholder="user.name@example.com"
           {...register('email', { required: 'Email is required!' })}
         />
@@ -75,7 +81,7 @@ function Form() {
         <Input
           id="password"
           type="password"
-          placeholder="Password"
+          placeholder="********"
           {...register('password', {
             required: 'Password is required!',
           })}
@@ -85,16 +91,17 @@ function Form() {
         Sign in
       </Button>
     </form>
+    </CardContent>
+    </Card>
+
   );
 }
 
 export default function SignIn() {
   return (
     <LayoutNav>
-      <div className="flex flex-row justify-center">
-        <div className="m-4 w-fit justify-center rounded-xl border bg-white px-8 pb-8 pt-12 dark:bg-slate-900 sm:shadow-xl">
-          <Form />
-        </div>
+      <div className="flex items-center justify-center">
+        <Form />
       </div>
     </LayoutNav>
   );

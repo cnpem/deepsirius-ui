@@ -7,7 +7,13 @@ import { LayoutNav } from '~/components/layout-nav';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '~/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '~/components/ui/card';
 import { getServerAuthSession } from '~/server/auth';
 
 type FormData = {
@@ -43,7 +49,7 @@ function Form() {
   };
 
   return (
-    <Card className='w-full max-w-md sm:w-[400px]'>
+    <Card className="w-full max-w-md sm:w-[400px]">
       <CardHeader>
         <CardTitle>
           <span className="text-fuchsia-600 dark:text-fuchsia-500">Deep</span>
@@ -52,48 +58,47 @@ function Form() {
         <CardDescription>Sign in with your credentials</CardDescription>
       </CardHeader>
       <CardContent>
-    <form
-      className="space-y-12"
-      // Note: This is a workaround for a bug in react-hook-form
-      // See: https://github.com/orgs/react-hook-form/discussions/8020#discussioncomment-3362300
-      onSubmit={(...args) => void handleSubmit(onSubmit)(...args)}
-    >
-      <div className="grid w-full items-center gap-1.5">
-        <Label htmlFor="email">Email</Label>
-        {errors.email && (
-          <p role="alert" className="text-red-600">
-            {errors.email?.message}
-          </p>
-        )}
-        <Input
-          id="username"
-          placeholder="user.name@example.com"
-          {...register('email', { required: 'Email is required!' })}
-        />
-      </div>
-      <div className="grid w-full items-center gap-1.5">
-        <Label htmlFor="password">Password</Label>
-        {errors.password && (
-          <p role="alert" className="text-red-600">
-            {errors.password?.message}
-          </p>
-        )}
-        <Input
-          id="password"
-          type="password"
-          placeholder="********"
-          {...register('password', {
-            required: 'Password is required!',
-          })}
-        />
-      </div>
-      <Button className="w-full" type="submit">
-        Sign in
-      </Button>
-    </form>
-    </CardContent>
+        <form
+          className="space-y-12"
+          // Note: This is a workaround for a bug in react-hook-form
+          // See: https://github.com/orgs/react-hook-form/discussions/8020#discussioncomment-3362300
+          onSubmit={(...args) => void handleSubmit(onSubmit)(...args)}
+        >
+          <div className="grid w-full items-center gap-1.5">
+            <Label htmlFor="email">Email</Label>
+            {errors.email && (
+              <p role="alert" className="text-red-600">
+                {errors.email?.message}
+              </p>
+            )}
+            <Input
+              id="username"
+              placeholder="user.name@example.com"
+              {...register('email', { required: 'Email is required!' })}
+            />
+          </div>
+          <div className="grid w-full items-center gap-1.5">
+            <Label htmlFor="password">Password</Label>
+            {errors.password && (
+              <p role="alert" className="text-red-600">
+                {errors.password?.message}
+              </p>
+            )}
+            <Input
+              id="password"
+              type="password"
+              placeholder="********"
+              {...register('password', {
+                required: 'Password is required!',
+              })}
+            />
+          </div>
+          <Button className="w-full" type="submit">
+            Sign in
+          </Button>
+        </form>
+      </CardContent>
     </Card>
-
   );
 }
 

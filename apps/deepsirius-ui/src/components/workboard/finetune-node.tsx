@@ -15,12 +15,6 @@ import {
   ErrorSheet,
   SuccessSheet,
 } from './node-components/node-sheet';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '~/components/ui/accordion';
 import { useUser } from '~/hooks/use-user';
 import { checkStatusRefetchInterval } from '~/lib/constants';
 

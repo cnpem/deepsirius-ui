@@ -14,17 +14,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./server.cer:${CA_CERT}:ro
     ports:
       - "3000:3000"
     environment:
       # run time variables
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - LDAP_URI=${LDAP_URI}
+      - TLDAP_API_URL=${TLDAP_API_URL}
       - SSH_HOST=${SSH_HOST}
-      - CA_CERT=${CA_CERT}
       - DATABASE_URL=${DATABASE_URL}
       - PRIVATE_KEY_PASSPHRASE=${PRIVATE_KEY_PASSPHRASE}
       - PROCESSING_CONTAINER_PATH=${PROCESSING_CONTAINER_PATH}

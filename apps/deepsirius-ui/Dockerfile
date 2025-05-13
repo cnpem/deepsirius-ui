@@ -1,6 +1,6 @@
 # ----
 #syntax=docker/dockerfile:1.4
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN npm install -g corepack@latest
@@ -10,7 +10,7 @@ RUN corepack enable
 # Install dependencies only when needed
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat 
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 RUN pnpm add --global turbo
 COPY . .
@@ -28,9 +28,8 @@ RUN pnpm install
 # These are the environment variables lodaded in the docker compose file
 ARG NEXTAUTH_URL
 ARG NEXTAUTH_SECRET
-ARG LDAP_URI
+ARG TLDAP_API_URL
 ARG SSH_HOST
-ARG CA_CERT
 ARG NEXT_PUBLIC_STORAGE_PATH
 ARG DATABASE_URL
 ARG PRIVATE_KEY_PASSPHRASE
@@ -42,9 +41,10 @@ ARG STORAGE_API_KEY
 COPY --from=deps /app/out/full .
 COPY turbo.json .
 
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN pnpm dlx prisma generate --schema=apps/deepsirius-ui/prisma/schema.prisma
+# Freezing prisma version until we decide to upgrade to v6
+RUN pnpm dlx prisma@^5 generate --schema=apps/deepsirius-ui/prisma/schema.prisma
 RUN SKIP_ENV_VALIDATION=1 turbo build --filter=@deepsirius-ui/app... 
 
 # ----
@@ -52,8 +52,8 @@ RUN SKIP_ENV_VALIDATION=1 turbo build --filter=@deepsirius-ui/app...
 FROM base AS runner
 RUN apk add --update --no-cache tzdata openssl
 ENV TZ=America/Sao_Paulo
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install openssh-keygen for writing the ssh host key in remotejob
 RUN apk update && apk add --no-cache openssh-keygen
